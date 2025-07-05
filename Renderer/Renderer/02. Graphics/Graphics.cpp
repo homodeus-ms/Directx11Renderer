@@ -1,7 +1,7 @@
 #include "pch.h"
-#include "GraphicsMain.h"
+#include "Graphics.h"
 
-GraphicsMain::GraphicsMain(HWND hWnd)
+Graphics::Graphics(HWND hWnd)
 {
 	_hWnd = hWnd;
 
@@ -10,22 +10,24 @@ GraphicsMain::GraphicsMain(HWND hWnd)
 	SetViewport();
 }
 
-GraphicsMain::~GraphicsMain()
+Graphics::~Graphics()
 {
 }
 
-void GraphicsMain::RenderBegin()
+void Graphics::RenderBegin()
 {
-	
+	_deviceContext->ClearRenderTargetView(_renderTargetView.Get(), _clearColor);
+	_deviceContext->OMSetRenderTargets(1, _renderTargetView.GetAddressOf(), nullptr);
+	_deviceContext->RSSetViewports(1, &_viewport);
 }
 
-void GraphicsMain::RenderEnd()
+void Graphics::RenderEnd()
 {
 	HRESULT hr = _swapChain->Present(1, 0);    // param1 : V-sync true
 	check(hr);
 }
 
-void GraphicsMain::CreateSwapChain()
+void Graphics::CreateSwapChain()
 {
 	DXGI_SWAP_CHAIN_DESC desc;
 	ZeroMemory(&desc, sizeof(desc));
@@ -34,7 +36,7 @@ void GraphicsMain::CreateSwapChain()
 	desc.BufferDesc.Height = GWinSizeY;
 	desc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	desc.BufferDesc.RefreshRate = { 60, 1 };
-	desc.SampleDesc.Count = 1;
+	desc.SampleDesc.Count = 1;    // No Multi Sampling
 	desc.SampleDesc.Quality = 0;
 	desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	desc.BufferCount = 1;    // 1: Double Buffering
@@ -61,7 +63,7 @@ void GraphicsMain::CreateSwapChain()
 	check(hr);
 }
 
-void GraphicsMain::CreateRenderTargetView()
+void Graphics::CreateRenderTargetView()
 {
 	ComPtr<ID3D11Texture2D> backBuffer = nullptr;
 	HRESULT hr = _swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)backBuffer.GetAddressOf());
@@ -72,6 +74,12 @@ void GraphicsMain::CreateRenderTargetView()
 	
 }
 
-void GraphicsMain::SetViewport()
+void Graphics::SetViewport()
 {
+	_viewport.TopLeftX = 0.0f;
+	_viewport.TopLeftY = 0.0f;
+	_viewport.Width = static_cast<float>(GWinSizeX);
+	_viewport.Height = static_cast<float>(GWinSizeY);
+	_viewport.MinDepth = 0.0f;
+	_viewport.MaxDepth = 1.0f;
 }

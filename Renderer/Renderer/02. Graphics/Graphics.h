@@ -1,10 +1,10 @@
 #pragma once
 
-class GraphicsMain
+class Graphics
 {
 public:
-	GraphicsMain(HWND hWnd);
-	~GraphicsMain();
+	Graphics(HWND hWnd);
+	~Graphics();
 
 	void RenderBegin();
 	void RenderEnd();
@@ -27,6 +27,6 @@ private:
 	ComPtr<ID3D11RenderTargetView> _renderTargetView{};
 
 	D3D11_VIEWPORT _viewport{};
-	const float _clearColor[4] = { 0.5f, };
+	const float _clearColor[4] = { 0.9f, 0.9f, 0.9f, 1.f };
 };
 
