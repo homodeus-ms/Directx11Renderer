@@ -1,13 +1,13 @@
 Renderer/.vs
 Renderer/Binaries
+Renderer/Intermediates
 Renderer/Libraries
 Renderer/Log
 Renderer/x64
-Renderer/Renderer/TempAssets
-Renderer/Renderer/x64
-Renderer/Renderer.sln
-Renderer/Renderer/ETC
+Renderer/Resources
+Renderer/Renderer/Utils
 
 *.vcxproj
 *.filters
 *.user
+*.sln
