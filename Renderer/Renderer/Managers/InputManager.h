@@ -46,8 +46,8 @@ class InputManager
 	DECLARE_SINGLE(InputManager);
 
 public:
-	void Init(HWND hwnd);
-	void Update();
+	void BeginPlay(HWND hwnd);
+	void Tick();
 	
 	bool ButtonPressed(KeyType key) { return GetState(key) == KeyState::Pressed; }
 	bool ButtonHold(KeyType key) { return GetState(key) == KeyState::Hold; }

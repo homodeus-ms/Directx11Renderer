@@ -1,11 +1,15 @@
 #pragma once
 
+#include "VertexData.h"
+
 template<typename T>
 class Geometry
 {
 public:
 	Geometry() {}
 	~Geometry() {}
+
+	const vector<D3D11_INPUT_ELEMENT_DESC>& GetInputDesc() const { return T::descs; }
 
 	uint32 GetVertexCount() const { return static_cast<uint32>(_vertices.size()); }
 	void* GetVertexData() const { return _vertices.data(); }
@@ -24,7 +28,8 @@ public:
 	void SetIndices(const vector<uint32>& indices) { _indices = indices; }
 
 private:
+	
 	vector<T> _vertices;
 	vector<uint32> _indices;
+	
 };
-

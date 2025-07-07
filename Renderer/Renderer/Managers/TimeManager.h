@@ -4,8 +4,8 @@ class TimeManager
 	DECLARE_SINGLE(TimeManager);
 
 public:
-	void Init();
-	void Update();
+	void BeginPlay();
+	void Tick();
 
 	uint32 GetFps() { return _fps; }
 	float GetDeltaTime() { return _deltaTime; }

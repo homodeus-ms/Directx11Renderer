@@ -1,0 +1,49 @@
+#pragma once
+
+class Actor;
+class TransformComponent;
+
+enum class ComponentType : uint8
+{
+	Transform,
+	MeshRenderer,
+	Camera,
+	Animator,
+
+	End,
+};
+
+enum
+{
+	FIXED_COMPONENT_COUNT = static_cast<uint8>(ComponentType::End) - 1
+};
+
+class Component
+{
+public:
+	Component(ComponentType type);
+	virtual ~Component();
+
+	virtual void Construct() {}
+	virtual void BeginPlay() {}
+	virtual void Tick() {}
+	virtual void LateTick() {}
+	virtual void FixedTick() {}
+
+public:
+	ComponentType GetType() { return _type; }
+
+	shared_ptr<Actor> GetOwner();
+	shared_ptr<TransformComponent> GetTransformComponent();
+
+private:
+	friend class Actor;
+	void SetOwner(shared_ptr<Actor> owner) { _owner = owner; }
+
+protected:
+	ComponentType _type;
+	weak_ptr<Actor> _owner;
+
+};
+
+

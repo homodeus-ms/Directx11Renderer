@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "Graphics.h"
 
-void Graphics::Init(HWND hwnd)
+void Graphics::BeginPlay(HWND hwnd)
 {
 	_hwnd = hwnd;
 

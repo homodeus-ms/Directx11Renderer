@@ -1,13 +1,13 @@
 ﻿#include "pch.h"
 #include "InputManager.h"
 
-void InputManager::Init(HWND hwnd)
+void InputManager::BeginPlay(HWND hwnd)
 {
 	_hwnd = hwnd;
 	_eachKeyStates.resize(KEY_TYPE_COUNT, KeyState::None);
 }
 
-void InputManager::Update()
+void InputManager::Tick()
 {
 	if (IsWindowFocused())
 	{
@@ -16,7 +16,6 @@ void InputManager::Update()
 	}
 	else
 	{
-		LOG(Log, "Window Not Focused");
 		ClearKeyStateAll();
 	}
 }

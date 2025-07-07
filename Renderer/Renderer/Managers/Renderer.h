@@ -28,7 +28,7 @@ private:
 	ATOM MyRegisterClass();
 	BOOL InitInstance(int cmdShow);
 
-	void Update();
+	void Tick();
 
 	static LRESULT CALLBACK WndProc(HWND handle, UINT message, WPARAM wParam, LPARAM lParam);
 

@@ -1,4 +1,5 @@
 #pragma once
 
-#include "Renderer/pch.h"
+#pragma comment(lib, "Renderer/Renderer.lib")
+#include "Headers/pch.h"
 

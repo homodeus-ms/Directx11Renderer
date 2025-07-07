@@ -5,7 +5,7 @@ class Graphics
 	DECLARE_SINGLE(Graphics);
 
 public:
-	void Init(HWND hwnd);
+	void BeginPlay(HWND hwnd);
 
 	void RenderBegin();
 	void RenderEnd();

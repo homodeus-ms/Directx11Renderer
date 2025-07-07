@@ -5,7 +5,9 @@ Renderer/Libraries
 Renderer/Log
 Renderer/x64
 Renderer/Resources
-Renderer/Renderer/Utils
+
+SimpleMath.*
+tinyxml2.*
 
 *.vcxproj
 *.filters

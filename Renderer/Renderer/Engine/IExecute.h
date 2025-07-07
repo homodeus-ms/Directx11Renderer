@@ -3,8 +3,8 @@
 class IExecute
 {
 public:
-	virtual void Init() abstract;
-	virtual void Update() abstract;
+	virtual void BeginPlay() abstract;
+	virtual void Tick() abstract;
 	virtual void Render() abstract;
 };
 

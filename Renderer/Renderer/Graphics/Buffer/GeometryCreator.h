@@ -4,6 +4,7 @@
 
 class GeometryCreator
 {
+public:
 	static void CreateQuad(shared_ptr<Geometry<VertexColorData>> geometry, Color color);
 
 	static void CreateQuad(shared_ptr<Geometry<VertexUVData>> geometry);

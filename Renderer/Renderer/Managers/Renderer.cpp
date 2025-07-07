@@ -14,11 +14,12 @@ WPARAM Renderer::Run(RenderDesc& desc)
 	if (!InitInstance(SW_SHOWNORMAL))
 		return FALSE;
 
-	GRAPHICS->Init(_desc.hWnd);
-	TIME_MANAGER->Init();
-	INPUT_MANAGER->Init(_desc.hWnd);
+	GRAPHICS->BeginPlay(_desc.hWnd);
+	TIME_MANAGER->BeginPlay();
+	INPUT_MANAGER->BeginPlay(_desc.hWnd);
+	RESOURCE_MANAGER->BeginPlay();
 
-	_desc.app->Init();
+	_desc.app->BeginPlay();
 
 	MSG msg = { 0 };
 
@@ -31,21 +32,21 @@ WPARAM Renderer::Run(RenderDesc& desc)
 		}
 		else
 		{
-			Update();
+			Tick();
 		}
 	}
 
 	return msg.wParam;
 }
 
-void Renderer::Update()
+void Renderer::Tick()
 {
-	TIME_MANAGER->Update();
-	INPUT_MANAGER->Update();
+	TIME_MANAGER->Tick();
+	INPUT_MANAGER->Tick();
 
 	GRAPHICS->RenderBegin();
 
-	_desc.app->Update();
+	_desc.app->Tick();
 	_desc.app->Render();
 
 	GRAPHICS->RenderEnd();
