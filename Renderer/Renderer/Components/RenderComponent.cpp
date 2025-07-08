@@ -1,5 +1,8 @@
 #include "pch.h"
 #include "RenderComponent.h"
+#include "Actor/Actor.h"
+#include "Components/Transform.h"
+#include "Components/CameraComponent.h"
 #include "Engine/Resource/Mesh.h"
 #include "Engine/Resource/Texture.h"
 #include "Graphics/Buffer/InputLayout.h"
@@ -9,11 +12,11 @@
 #include "Graphics/PipelineState/PipelineState.h"
 #include "Graphics/Buffer/VertexBuffer.h"
 #include "Graphics/Buffer/IndexBuffer.h"
-#include "Graphics/Buffer/ConstantBuffer.h"
+
+
 
 RenderComponent::RenderComponent() : Super(ComponentType::MeshRenderer)
 {
-	
 }
 
 RenderComponent::~RenderComponent()
@@ -27,10 +30,36 @@ void RenderComponent::SetStaticMeshInfo(const StaticMeshInfo& info)
 	SetPixelShader();
 	SetInputLayout();
 	GetDefaultStates();
-
 	bHasInfo = true;
 }
 
+
+void RenderComponent::Construct()
+{
+	Super::Construct();
+
+	_transformBuffer = make_shared<ConstantBuffer<TransformData>>();
+	_transformBuffer->Create();
+}
+
+void RenderComponent::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
+void RenderComponent::Tick()
+{
+	Super::Tick();
+
+	if (GetOwner()->IsTransformChanged())
+	{
+		_transformData.matWorld = Matrix::Identity; // GetOwnerTransform()->GetWorldMatrix();
+		_transformData.matView = CameraComponent::S_MatView;
+		_transformData.matProjection = CameraComponent::S_MatProjection;
+		_transformBuffer->CopyData(_transformData);
+		_transformBufferDirty = true;
+	}
+}
 
 void RenderComponent::Render()
 {
@@ -56,6 +85,13 @@ void RenderComponent::UpdatePipeline()
 	if (_vertexShader)
 		CONTEXT->VSSetShader(_vertexShader->GetComPtr().Get(), nullptr, 0);
 
+	// TEMP
+	if (_transformBufferDirty)
+	{
+		CONTEXT->VSSetConstantBuffers(0, 1, _transformBuffer->GetComPtr().GetAddressOf());
+		_transformBufferDirty = false;
+	}
+
 	// RS
 	CONTEXT->RSSetState(_pipelineState->GetRsState().Get());
 
@@ -65,7 +101,7 @@ void RenderComponent::UpdatePipeline()
 
 	// OM
 	CONTEXT->OMSetBlendState(_pipelineState->GetBlendState().Get(), _pipelineState->GetBlendFactor(), _pipelineState->GetSampleMask());
-
+	 
 	DrawIndexed(_staticMeshInfo.mesh->GetIndexBuffer()->GetCount());
 }
 

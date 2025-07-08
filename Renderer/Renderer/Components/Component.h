@@ -1,11 +1,12 @@
 #pragma once
 
 class Actor;
-class TransformComponent;
+class Transform;
 
 enum class ComponentType : uint8
 {
 	Transform,
+	Controller,
 	MeshRenderer,
 	Camera,
 	Animator,
@@ -34,7 +35,7 @@ public:
 	ComponentType GetType() { return _type; }
 
 	shared_ptr<Actor> GetOwner();
-	shared_ptr<TransformComponent> GetTransformComponent();
+	shared_ptr<Transform> GetOwnerTransform();
 
 private:
 	friend class Actor;

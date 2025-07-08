@@ -1,8 +1,10 @@
 #pragma once
 #include "Components/Component.h"
 #include "Structs/MeshStructDatas.h"
+#include "Graphics/Buffer/ConstantBuffer.h"
+#include "Structs/EShaderStage.h"
 
-class TransformComponent;
+class Transform;
 class Mesh;
 class RenderComponent;
 
@@ -20,20 +22,38 @@ public:
 
 	virtual void Render();
 
+	// Component
 	shared_ptr<Component> GetFixedComponent(ComponentType type);
-	shared_ptr<TransformComponent> GetTransformComponent();
-	shared_ptr<TransformComponent> GetOrAddTransform();
+	shared_ptr<Transform> GetTransform();
+	shared_ptr<Transform> GetOrAddTransform();
 	void AddComponent(shared_ptr<Component> component);
 
+	// Mesh
 	void SetStaticMeshInfo(const StaticMeshInfo& info);
 
-protected:
-	void AddRenderComponent();
-	shared_ptr<RenderComponent> GetRenderComponent() const;
+	// Transform
+	bool IsTransformChanged() { return _bTransformChanged; }
+	void SetTransformChanged(bool bChanged) { _bTransformChanged = bChanged; }
 
+	// Camera
+	virtual void AttachFollowCamera(shared_ptr<Actor> cameraActor, bool bKeyInputForCameraMovement = true);
+	bool HasCamera() const { return _bHasCamera; }
+
+	// For Debug
+	string _actorName{};
+
+protected:
+
+	void AddRenderComponent();
+
+	shared_ptr<RenderComponent> GetRenderComponent() const;
 	array<shared_ptr<Component>, FIXED_COMPONENT_COUNT> _components;
 	
-private:
+	bool _bHasCamera = false;
+	shared_ptr<Actor> _cameraActor = nullptr;
 
+private:
+	
+	bool _bTransformChanged = true;
 };
 

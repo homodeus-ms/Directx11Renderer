@@ -16,7 +16,7 @@ shared_ptr<Actor> Component::GetOwner()
 	return _owner.lock();
 }
 
-shared_ptr<TransformComponent> Component::GetTransformComponent()
+shared_ptr<Transform> Component::GetOwnerTransform()
 {
-	return _owner.lock()->GetTransformComponent();
+	return _owner.lock()->GetTransform();
 }

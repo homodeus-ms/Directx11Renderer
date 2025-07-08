@@ -3,7 +3,7 @@
 
 class ClientPawn;
 
-class TriangleDemo : public IExecute
+class CameraDemo : public IExecute
 {
 public:
 	virtual void Construct() override;
@@ -12,7 +12,7 @@ public:
 	virtual void Render() override;
 
 private:
-
 	shared_ptr<ClientPawn> _clientPawn;
+	shared_ptr<class Actor> _cameraActor;
 };
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "Types.h"
+#include "Headers/Types.h"
 
 enum class EShaderStage : uint8
 {

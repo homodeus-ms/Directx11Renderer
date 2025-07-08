@@ -19,6 +19,7 @@ WPARAM Renderer::Run(RenderDesc& desc)
 	INPUT_MANAGER->BeginPlay(_desc.hWnd);
 	RESOURCE_MANAGER->BeginPlay();
 
+	_desc.app->Construct();
 	_desc.app->BeginPlay();
 
 	MSG msg = { 0 };

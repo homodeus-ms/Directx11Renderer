@@ -19,9 +19,14 @@ public:
 
 	void SetStaticMeshInfo(const StaticMeshInfo& info);
 
+	virtual void Construct() override;
+	virtual void BeginPlay() override;
+	virtual void Tick() override;
 	void Render();
+	
 
 private:
+
 	void UpdatePipeline();
 	void SetInputLayout();
 	void SetVertexShader();
@@ -30,11 +35,12 @@ private:
 	void SetVertexBuffer();
 	void SetIndexBuffer();
 
-	template<typename T>
+	/*template<typename T>
 	void SetConstantBuffer(uint32 slot, EShaderStage stage, shared_ptr<ConstantBuffer<T>> buffer)
 	{
 		
-	}
+	}*/
+	// TEMP
 
 	void SetTexture(uint32 slot, EShaderStage stage, shared_ptr<Texture> texture);
 
@@ -52,5 +58,10 @@ private:
 	shared_ptr<PixelShader> _pixelShader;
 
 	shared_ptr<PipelineState> _pipelineState;
+
+	// TEMP ConstBuffer
+	bool _transformBufferDirty = false;
+	shared_ptr<ConstantBuffer<TransformData>> _transformBuffer;
+	TransformData _transformData{};
 };
 
