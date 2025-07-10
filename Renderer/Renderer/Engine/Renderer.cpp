@@ -22,6 +22,8 @@ WPARAM Renderer::Run(RenderDesc& desc)
 	_desc.app->Construct();
 	_desc.app->BeginPlay();
 
+	SCENE_MANAGER->BeginPlay();
+
 	MSG msg = { 0 };
 
 	while (msg.message != WM_QUIT)
@@ -47,8 +49,12 @@ void Renderer::Tick()
 
 	GRAPHICS->RenderBegin();
 
+	SCENE_MANAGER->Tick();
+
 	_desc.app->Tick();
 	_desc.app->Render();
+
+	SCENE_MANAGER->Render();
 
 	GRAPHICS->RenderEnd();
 }

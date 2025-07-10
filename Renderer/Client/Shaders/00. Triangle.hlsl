@@ -1,14 +1,14 @@
-
 #include "struct.hlsli"
 
 VertexOutput VS(VertexInput input)
 {
     VertexOutput output;
     
-    output.position = mul(input.position, matWorld);
+    output.position = mul(input.position, World);
     //output.position = mul(output.position, matView);
     //output.position = mul(output.position, matProjection);
     output.uv = input.uv;
+    output.normal = mul(input.normal, (float3x3) World);
     return output;
 }
 

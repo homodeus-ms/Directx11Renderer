@@ -1,6 +1,6 @@
 #pragma once
 
-struct ShaderInfos
+struct ShaderInfo
 {
 	enum class ShaderVersion
 	{
@@ -10,8 +10,9 @@ struct ShaderInfos
 	};
 
 public:
-	ShaderInfos(const wstring& shaderFileName, string vsEntryName = "VS", string psEntryName = "PS", ShaderVersion version = ShaderVersion::Ver5_0);
-	~ShaderInfos();
+
+	ShaderInfo(const wstring& shaderFileName, string vsEntryName = "VS", string psEntryName = "PS", ShaderVersion version = ShaderVersion::Ver5_0);
+	~ShaderInfo();
 
 	bool IsValidVersion(ShaderVersion version)
 	{
@@ -19,7 +20,7 @@ public:
 	}
 
 	wstring _shaderPath{};
-	string _vsEntryName{};
+	string _vsEntryName{}; 
 	string _psEntryName{};
 	string _vsVersion{};
 	string _psVersion{};

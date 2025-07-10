@@ -6,13 +6,9 @@ class ClientPawn;
 class TriangleDemo : public IExecute
 {
 public:
-	virtual void Construct() override;
-	virtual void BeginPlay() override;
-	virtual void Tick() override;
-	virtual void Render() override;
+	
 
 private:
 
-	shared_ptr<ClientPawn> _clientPawn;
 };
 

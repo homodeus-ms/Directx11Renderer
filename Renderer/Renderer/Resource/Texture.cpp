@@ -16,9 +16,9 @@ void Texture::Load(const wstring& path)
 	HRESULT hr = ::LoadFromWICFile(path.c_str(), WIC_FLAGS_NONE, &md, _img);
 	check(hr);
 
-	hr = ::CreateShaderResourceView(DEVICE.Get(), _img.GetImages(), _img.GetImageCount(), md, _shaderResourveView.GetAddressOf());
+	hr = ::CreateShaderResourceView(DEVICE.Get(), _img.GetImages(), _img.GetImageCount(), md, _shaderResourceView.GetAddressOf());
 	check(hr);
 
-	_size.x = md.width;
-	_size.y = md.height;
+	_size.x = static_cast<float>(md.width);
+	_size.y = static_cast<float>(md.height);
 }

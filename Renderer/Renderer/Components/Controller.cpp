@@ -30,7 +30,8 @@ void Controller::Tick()
 		return;
 	case EMoveMode::PawnMove:
 	{
-		MovePawn();
+		// TEMP
+		// MovePawn();
 		return;
 	}
 	case EMoveMode::CameraMove:

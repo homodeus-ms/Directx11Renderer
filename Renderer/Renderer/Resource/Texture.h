@@ -9,8 +9,8 @@ public:
 	Texture();
 	~Texture();
 
-	ComPtr<ID3D11ShaderResourceView> GetComPtr() const { return _shaderResourveView; }
-
+	ComPtr<ID3D11ShaderResourceView> GetSRV() const { return _shaderResourceView; }
+	ID3D11ShaderResourceView* const* GetSRVAddress() const { return _shaderResourceView.GetAddressOf(); }
 	virtual void Load(const wstring& path) override;
 
 	Vec2 GetSize() const { return _size; }
@@ -19,7 +19,7 @@ public:
 
 private:
 
-	ComPtr<ID3D11ShaderResourceView> _shaderResourveView;
+	ComPtr<ID3D11ShaderResourceView> _shaderResourceView;
 	Vec2 _size = { 0.f, 0.f };
 	DirectX::ScratchImage _img = {};
 };

@@ -1,14 +1,15 @@
 #pragma once
 
-#include "Engine/Resource/ResourceBase.h"
+#include "Resource/ResourceBase.h"
 
 class Shader;
 class Texture;
 class Mesh;
+class Material;
 
 class ResourceManager
 {
-	DECLARE_SINGLE(ResourceManager);
+	DECLARE_SINGLE(ResourceManager); 
 
 public:
 	void BeginPlay();
@@ -41,6 +42,12 @@ ResourceType ResourceManager::GetResourceType()
 		return ResourceType::Texture;
 	if (std::is_same_v<T, Mesh>)
 		return ResourceType::Mesh;
+	if (std::is_same_v<T, Material>)
+		return ResourceType::Material;
+	if (std::is_same_v<T, Shader>)
+		return ResourceType::Shader;
+	/*if (std::is_same_v<T, Animation>)
+		return ResourceType::Animation;*/
 
 	assert(false);
 	return ResourceType::None;

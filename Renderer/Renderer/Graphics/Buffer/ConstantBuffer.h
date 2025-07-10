@@ -1,4 +1,5 @@
 #pragma once
+#include "Interfaces/IConstantBuffer.h"
 
 struct TransformData
 {
@@ -8,15 +9,15 @@ struct TransformData
 };
 
 template<typename T>
-class ConstantBuffer
+class ConstantBuffer : public IConstantBuffer
 {
 public:
 	ConstantBuffer() {}
-	~ConstantBuffer() {}
+	virtual ~ConstantBuffer() {}
 
-	ComPtr<ID3D11Buffer> GetComPtr() { return _constantBuffer; }
+	ComPtr<ID3D11Buffer> GetComPtr() override { return _constantBuffer; }
 
-	void Create()
+	void Create() override
 	{
 		D3D11_BUFFER_DESC desc;
 		ZeroMemory(&desc, sizeof(desc));

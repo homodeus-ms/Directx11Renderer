@@ -3,9 +3,9 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <io.h>
-#include "Managers/Renderer.h"
-#include "TriangleDemo.h"
-#include "CameraDemo.h"
+#include "Engine/Renderer.h"
+
+#include "NormalDemo.h"
 
 void CreateConsole()
 {
@@ -29,10 +29,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	desc.hInstance = hInstance;
 	desc.vsync = false;
 	desc.hWnd = NULL;
-	desc.width = 800;
-	desc.height = 600;
-	desc.clearColor = Color(0.5f, 0.5f, 0.5f, 0.5f);
-	desc.app = make_shared<CameraDemo>();
+	desc.width = GWinSizeX;
+	desc.height = GWinSizeY;
+	desc.clearColor = Color(0.f, 0.f, 0.f, 0.f);
+	desc.app = make_shared<NormalDemo>();
 
 	RENDERER->Run(desc);
 

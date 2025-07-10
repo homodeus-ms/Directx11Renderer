@@ -14,6 +14,7 @@
 #include <list>
 #include <map>
 #include <unordered_map>
+#include <unordered_set>
 #include <algorithm>
 using namespace std;
 
@@ -49,22 +50,14 @@ using namespace Microsoft::WRL;
 #endif
 
 // Managers
-#include "Managers/Renderer.h"
-#include "Managers/Graphics.h"
+#include "Engine/Renderer.h"
+#include "Engine/Graphics.h"
 #include "Managers/InputManager.h"
 #include "Managers/TimeManager.h"
 #include "Managers/ResourceManager.h"
+#include "Managers/SceneManager.h"
 
-#define check(p)			assert(SUCCEEDED(p))
-#define RENDERER			GET_SINGLE(Renderer)	
-#define INPUT_MANAGER		GET_SINGLE(InputManager)
-#define TIME_MANAGER		GET_SINGLE(TimeManager)
-#define RESOURCE_MANAGER	GET_SINGLE(ResourceManager)
-#define GRAPHICS			GET_SINGLE(Graphics)
 
-#define DEVICE				GRAPHICS->GetDevice()
-#define CONTEXT				GRAPHICS->GetDeviceContext()
-#define DT					TIME_MANAGER->GetDeltaTime()
 
 
 // Engine

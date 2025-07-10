@@ -19,7 +19,6 @@ private:
 	Matrix _view = Matrix::Identity;
 	Matrix _projection = Matrix::Identity;
 
-	shared_ptr<ConstantBuffer<TransformData>> _constBuffer;
 	TransformData _transformData; 
 };
 

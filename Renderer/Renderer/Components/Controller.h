@@ -36,5 +36,6 @@ private:
 	float _moveSpeed = 3.f;
 	float _cameraRotateSpeed = 0.5f;
 	bool _bDirty = false;
+
 };
 

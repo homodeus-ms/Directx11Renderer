@@ -20,40 +20,33 @@ public:
 	virtual void LateTick();
 	virtual void FixedTick();
 
-	virtual void Render();
+	void Render();
 
 	// Component
 	shared_ptr<Component> GetFixedComponent(ComponentType type);
 	shared_ptr<Transform> GetTransform();
 	shared_ptr<Transform> GetOrAddTransform();
 	void AddComponent(shared_ptr<Component> component);
+	void AddRenderComponent();
 
-	// Mesh
-	void SetStaticMeshInfo(const StaticMeshInfo& info);
+	// Mesh, Material
+	void SetMesh(const shared_ptr<Mesh>& mesh);
+	void SetMaterial(const shared_ptr<Material>& material);
 
 	// Transform
 	bool IsTransformChanged() { return _bTransformChanged; }
 	void SetTransformChanged(bool bChanged) { _bTransformChanged = bChanged; }
-
-	// Camera
-	virtual void AttachFollowCamera(shared_ptr<Actor> cameraActor, bool bKeyInputForCameraMovement = true);
-	bool HasCamera() const { return _bHasCamera; }
 
 	// For Debug
 	string _actorName{};
 
 protected:
 
-	void AddRenderComponent();
-
 	shared_ptr<RenderComponent> GetRenderComponent() const;
 	array<shared_ptr<Component>, FIXED_COMPONENT_COUNT> _components;
-	
-	bool _bHasCamera = false;
-	shared_ptr<Actor> _cameraActor = nullptr;
 
 private:
-	
+	bool _bRenderable = false;
 	bool _bTransformChanged = true;
 };
 

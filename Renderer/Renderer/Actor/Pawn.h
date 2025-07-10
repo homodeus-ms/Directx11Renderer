@@ -13,16 +13,18 @@ public:
 
 	virtual void Construct() override;
 	virtual void BeginPlay() override;
-
-	virtual void AttachFollowCamera(shared_ptr<Actor> cameraActor, bool bKeyInputForCameraMovement = true) override;
+	virtual void Tick() override;
 
 	float GetMoveSpeed() const { return _moveSpeed; }
+	virtual void EnableController(bool bEnable);
 
 protected:
 	shared_ptr<Controller> GetController();
 
 	void AddController();
-	bool _bKeyInputForCamera = false;
+	
 	float _moveSpeed = 3.f;
+
+	bool _bEnableController = true;
 };
 

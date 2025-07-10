@@ -1,8 +1,10 @@
 #include "pch.h"
 #include "PipelineState.h"
+#include "SamplerState.h"
 
 PipelineState::PipelineState()
 {
+	_samplerState = make_shared<SamplerState>();
 }
 
 PipelineState::~PipelineState()
@@ -53,7 +55,7 @@ shared_ptr<PipelineState> PipelineState::GetDefaultState()
 	}
 
 	// Sampler
-	{
+	/*{
 		D3D11_SAMPLER_DESC desc;
 		ZeroMemory(&desc, sizeof(desc));
 		desc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
@@ -72,7 +74,7 @@ shared_ptr<PipelineState> PipelineState::GetDefaultState()
 
 		HRESULT hr = DEVICE->CreateSamplerState(&desc, state->_samplerState.GetAddressOf());
 		check(hr);
-	}
+	}*/
 
 	// DepthStencil
 	{
@@ -87,4 +89,11 @@ shared_ptr<PipelineState> PipelineState::GetDefaultState()
 	}
 
 	return state;
+}
+
+ComPtr<ID3D11SamplerState> PipelineState::GetSamplerState() const
+{
+	assert(_samplerState != nullptr);
+
+	return _samplerState->GetComPtr();
 }

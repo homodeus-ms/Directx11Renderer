@@ -12,7 +12,7 @@ struct RenderDesc
 	float height = GWinSizeY;
 	bool vsync = false;
 	bool windowed = true;
-	Color clearColor = Color(0.9f, 0.9f, 0.9f, 0.9f);
+	Color clearColor = Color(0.f, 0.f, 0.f, 0.f);
 };
 
 class Renderer

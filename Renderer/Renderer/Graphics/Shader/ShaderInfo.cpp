@@ -1,7 +1,7 @@
 #include "pch.h"
-#include "ShaderInfos.h"
+#include "ShaderInfo.h"
 
-ShaderInfos::ShaderInfos(const wstring& shaderFileName, string vsEntryName, string psEntryName, ShaderVersion version)
+ShaderInfo::ShaderInfo(const wstring& shaderFileName, string vsEntryName, string psEntryName, ShaderVersion version)
 	: _shaderPath(L"..\\Client\\Shaders\\" + shaderFileName)
 	, _vsEntryName(vsEntryName)
 	, _psEntryName(psEntryName)
@@ -31,6 +31,6 @@ ShaderInfos::ShaderInfos(const wstring& shaderFileName, string vsEntryName, stri
 	}
 }
 
-ShaderInfos::~ShaderInfos()
+ShaderInfo::~ShaderInfo()
 {
 }

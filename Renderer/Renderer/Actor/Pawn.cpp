@@ -24,21 +24,25 @@ void Pawn::Construct()
 void Pawn::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (_bHasCamera && _bKeyInputForCamera)
-	{
-		if (const shared_ptr<Controller>& myController = GetController())
-		{
-			myController->SetMoveMode(EMoveMode::NotUsing);
-		}
-	}
+	
 }
 
-void Pawn::AttachFollowCamera(shared_ptr<Actor> cameraActor, bool bKeyInputForCameraMovement)
+void Pawn::Tick()
 {
-	Super::AttachFollowCamera(cameraActor, bKeyInputForCameraMovement);
+	Super::Tick();
 
-	_bKeyInputForCamera = bKeyInputForCameraMovement;
+}
+
+void Pawn::EnableController(bool bEnable)
+{
+	if (bEnable)
+	{
+		GetController()->SetMoveMode(EMoveMode::NotUsing);
+	}
+	else
+	{
+		GetController()->SetMoveMode(EMoveMode::PawnMove);
+	}
 }
 
 

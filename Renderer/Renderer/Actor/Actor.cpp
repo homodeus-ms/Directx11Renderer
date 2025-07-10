@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "Actor.h"
 #include "Components/RenderComponent.h"
 #include "Components/Transform.h"
@@ -17,10 +17,6 @@ Actor::~Actor()
 void Actor::Construct()
 {
 	GetOrAddTransform();
-	AddRenderComponent();
-
-	if (HasCamera())
-		_cameraActor->Construct();
 
 	for (shared_ptr<Component>& component : _components)
 	{
@@ -31,9 +27,6 @@ void Actor::Construct()
 
 void Actor::BeginPlay()
 {
-	if (HasCamera())
-		_cameraActor->BeginPlay();
-
 	for (shared_ptr<Component>& component : _components)
 	{
 		if (component)
@@ -43,21 +36,18 @@ void Actor::BeginPlay()
 
 void Actor::Tick()
 {
-	if (HasCamera())
-		_cameraActor->Tick();
-
 	for (shared_ptr<Component>& component : _components)
 	{
 		if (component)
-			component->Tick();
+		{
+			if (component->GetType() != ComponentType::MeshRenderer)
+				component->Tick();
+		}
 	}
 }
 
 void Actor::LateTick()
 {
-	if (HasCamera())
-		_cameraActor->LateTick();
-
 	for (shared_ptr<Component>& component : _components)
 	{
 		if (component)
@@ -67,9 +57,6 @@ void Actor::LateTick()
 
 void Actor::FixedTick()
 {
-	if (HasCamera())
-		_cameraActor->FixedTick();
-
 	for (shared_ptr<Component>& component : _components)
 	{
 		if (component)
@@ -79,12 +66,10 @@ void Actor::FixedTick()
 
 void Actor::Render()
 {
-	// TEMP
-	if (HasCamera())
-	{
+	if (_bRenderable)
 		GetRenderComponent()->Render();
-	}
 }
+
 
 shared_ptr<Component> Actor::GetFixedComponent(ComponentType type)
 {
@@ -122,22 +107,20 @@ void Actor::AddComponent(shared_ptr<Component> component)
 	}
 }
 
-void Actor::SetStaticMeshInfo(const StaticMeshInfo& info)
-{
-	GetRenderComponent()->SetStaticMeshInfo(info);
-}
-
-
-void Actor::AttachFollowCamera(shared_ptr<Actor> cameraActor, bool bKeyInputForCameraMovement)
-{
-	_cameraActor = cameraActor;
-	_bHasCamera = true;
-}
-
-
 void Actor::AddRenderComponent()
 {
 	AddComponent(make_shared<RenderComponent>());
+	_bRenderable = true;
+}
+
+void Actor::SetMesh(const shared_ptr<Mesh>& mesh)
+{
+	GetRenderComponent()->SetMesh(mesh);
+}
+
+void Actor::SetMaterial(const shared_ptr<Material>& material)
+{
+	GetRenderComponent()->SetMaterial(material);
 }
 
 shared_ptr<RenderComponent> Actor::GetRenderComponent() const

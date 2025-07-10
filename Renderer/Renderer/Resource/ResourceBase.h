@@ -30,7 +30,7 @@ public:
 	uint32 GetID() { return _id; }
 
 protected:
-	virtual void Load(const wstring& path) abstract;
+	virtual void Load(const wstring& path) {}
 	virtual void Save(const wstring& path) {}
 
 protected:

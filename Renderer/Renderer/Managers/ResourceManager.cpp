@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "ResourceManager.h"
-#include "Engine/Resource/Texture.h"
-#include "Engine/Resource/Mesh.h"
+#include "Resource/Texture.h"
+#include "Resource/Mesh.h"
 #include "Graphics/Shader/Shader.h"
 
 void ResourceManager::BeginPlay()
