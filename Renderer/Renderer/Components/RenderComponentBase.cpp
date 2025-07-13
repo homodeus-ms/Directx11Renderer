@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "RenderComponent.h"
+#include "RenderComponentBase.h"
 #include "Actor/Actor.h"
 #include "Components/Transform.h"
 #include "Components/CameraComponent.h"
@@ -16,34 +16,36 @@
 #include "Resource/Material.h"
 
 
-RenderComponent::RenderComponent() : Super(ComponentType::MeshRenderer)
+RenderComponentBase::RenderComponentBase(EComponentType componentType) 
+	: Super(componentType)
 {
 }
 
-RenderComponent::~RenderComponent()
+RenderComponentBase::~RenderComponentBase()
 {
+
 }
 
-void RenderComponent::SetMesh(const shared_ptr<Mesh>& mesh)
+void RenderComponentBase::SetMesh(const shared_ptr<Mesh>& mesh)
 {
 	_mesh = mesh;
 	_bHasMesh = true;
 }
 
-void RenderComponent::SetMaterial(const shared_ptr<Material>& material)
+void RenderComponentBase::SetMaterial(const shared_ptr<Material>& material)
 {
 	_material = material;
-	SetVertexShader();
-	SetPixelShader();
+	SetVertexShader(_material->_shaderInfo);
+	SetPixelShader(_material->_shaderInfo);
 	_bHasMaterial = true;
 }
 
 
-void RenderComponent::BeginPlay()
+void RenderComponentBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (_bHasMesh && _bHasMaterial)
+	//if (_bHasMesh && _bHasMaterial)
 	{
 		SetInputLayout();
 		GetDefaultStates();
@@ -55,49 +57,32 @@ void RenderComponent::BeginPlay()
 }
 
 
-void RenderComponent::Render()
+void RenderComponentBase::Render()
 {
 	if (!_bHasMesh || !_bHasMaterial)
 		return;
 
-	//if (GetOwner()->IsTransformChanged())
-	{
-		TransformDesc desc;
-		desc.W = GetOwnerTransform()->GetWorldMatrix();
-		SHADER_PARAM_MANAGER->PushTransformData(desc);
-		SHADER_PARAM_MANAGER->Update();
-
-		/*{
-			LightDesc lightDesc;
-			lightDesc.ambient = Vec4(0.5);
-			lightDesc.diffuse = Vec4(1.f);
-			lightDesc.specular = Vec4(1.f);
-			lightDesc.direction = Vec3(0.f, 0.f, -1.f);
-			SHADER_PARAM_MANAGER->PushLightData(lightDesc);
-		}*/
-
-		UpdatePipeline();
-	}
-}
-
-void RenderComponent::UpdatePipeline()
-{
 	// IA
 	CONTEXT->IASetInputLayout(_inputLayout->GetComPtr().Get());
 	CONTEXT->IASetPrimitiveTopology(_pipelineState->GetTopology());
-	SetVertexBuffer();
-	SetIndexBuffer();
-	
+
 	// VS
 	if (_vertexShader)
 		CONTEXT->VSSetShader(_vertexShader->GetComPtr().Get(), nullptr, 0);
 
 	// SRV, Constant Buffers
+
+	{
+		TransformDesc desc;
+		desc.W = GetOwnerTransform()->GetWorldMatrix();
+		SHADER_PARAM_MANAGER->PushTransformData(desc);
+	}
+
 	if (_material != nullptr)
 	{
 		SHADER_PARAM_MANAGER->PushMaterial(_material);
 	}
-	SHADER_PARAM_MANAGER->BindAll();
+	// SHADER_PARAM_MANAGER->BindAll();
 
 	// RS
 	CONTEXT->RSSetState(_pipelineState->GetRsState().Get());
@@ -108,37 +93,40 @@ void RenderComponent::UpdatePipeline()
 
 	// OM
 	CONTEXT->OMSetBlendState(_pipelineState->GetBlendState().Get(), _pipelineState->GetBlendFactor(), _pipelineState->GetSampleMask());
-	 
+
+	SetVertexBuffer();
+	SetIndexBuffer();
+
 	DrawIndexed(_mesh->GetIndexBuffer()->GetCount());
+	
 }
 
-void RenderComponent::SetInputLayout()
+
+void RenderComponentBase::SetInputLayout()
 {
 	const vector<D3D11_INPUT_ELEMENT_DESC>& desc = _mesh->GetInputLayoutDesc();
 	_inputLayout = make_shared<InputLayout>();
 	_inputLayout->Create(desc, _vertexShader->GetBlob());
 }
 
-void RenderComponent::SetVertexShader()
+void RenderComponentBase::SetVertexShader(shared_ptr<ShaderInfo> shaderInfo)
 {
-	const shared_ptr<ShaderInfo>& info = _material->_shaderInfo;
 	_vertexShader = make_shared<VertexShader>();
-	_vertexShader->Create(info->_shaderPath, info->_vsEntryName, info->_vsVersion);
+	_vertexShader->Create(shaderInfo->_shaderPath, shaderInfo->_vsEntryName, shaderInfo->_vsVersion);
 }
 
-void RenderComponent::SetPixelShader()
+void RenderComponentBase::SetPixelShader(shared_ptr<ShaderInfo> shaderInfo)
 {
-	const shared_ptr<ShaderInfo>& info = _material->_shaderInfo;
 	_pixelShader = make_shared<PixelShader>();
-	_pixelShader->Create(info->_shaderPath, info->_psEntryName, info->_psVersion);
+	_pixelShader->Create(shaderInfo->_shaderPath, shaderInfo->_psEntryName, shaderInfo->_psVersion);
 }
 
-void RenderComponent::GetDefaultStates()
+void RenderComponentBase::GetDefaultStates()
 {
 	_pipelineState = PipelineState::GetDefaultState();
 }
 
-void RenderComponent::SetVertexBuffer()
+void RenderComponentBase::SetVertexBuffer()
 {
 	const shared_ptr<VertexBuffer>& buffer = _mesh->GetVertexBuffer();
 	uint32 stride = buffer->GetStride();
@@ -146,28 +134,28 @@ void RenderComponent::SetVertexBuffer()
 	CONTEXT->IASetVertexBuffers(0, 1, buffer->GetComPtr().GetAddressOf(), &stride, &offset);
 }
 
-void RenderComponent::SetIndexBuffer()
+void RenderComponentBase::SetIndexBuffer()
 {
 	const shared_ptr<IndexBuffer>& buffer = _mesh->GetIndexBuffer();
 	CONTEXT->IASetIndexBuffer(buffer->GetComPtr().Get(), DXGI_FORMAT_R32_UINT, 0);
 }
 
 
-void RenderComponent::Draw(UINT vertexCount, UINT startVertexLocation)
+void RenderComponentBase::Draw(UINT vertexCount, UINT startVertexLocation)
 {
 	CONTEXT->Draw(vertexCount, startVertexLocation);
 }
 
-void RenderComponent::DrawIndexed(UINT indexCount, UINT startIndexLocation, INT baseVertexLocation)
+void RenderComponentBase::DrawIndexed(UINT indexCount, UINT startIndexLocation, INT baseVertexLocation)
 {
 	CONTEXT->DrawIndexed(indexCount, startIndexLocation, baseVertexLocation);
 }
 
-void RenderComponent::DrawInstanced(UINT vertexCountPerInstance, UINT instanceCount, UINT startVertexLocation, UINT startInstanceLocation)
+void RenderComponentBase::DrawInstanced(UINT vertexCountPerInstance, UINT instanceCount, UINT startVertexLocation, UINT startInstanceLocation)
 {
 }
 
-void RenderComponent::DrawIndexedInstanced(UINT indexCountPerInstance, UINT instanceCount, UINT startIndexLocation, INT baseVertexLocation, UINT startInstanceLocation)
+void RenderComponentBase::DrawIndexedInstanced(UINT indexCountPerInstance, UINT instanceCount, UINT startIndexLocation, INT baseVertexLocation, UINT startInstanceLocation)
 {
 }
 

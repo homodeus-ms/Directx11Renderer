@@ -21,16 +21,15 @@ public:
 	const array<SRVBindingInfo, TEXTURE_TYPE_COUNT>& GetSRVBindingInfos() const { return _srvBindingInfos; }
 
 	void SetShaderInfo(shared_ptr<ShaderInfo> shaderInfo) { _shaderInfo = shaderInfo; }
+	void SetTextureMap(ETextureType textureType, shared_ptr<Texture> texture);
 	void SetDiffuseMap(shared_ptr<Texture> diffuseMap);
 	void SetNormalMap(shared_ptr<Texture> normalMap);
 	void SetSpecularMap(shared_ptr<Texture> specularMap);
-
-	void Update();
-
+	 
 	shared_ptr<Material> Clone();
 
 private:
-	friend class RenderComponent;
+	friend class RenderComponentBase;
 
 	MaterialDesc _desc;
 

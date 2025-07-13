@@ -1,16 +1,18 @@
 #pragma once
 #include "EShaderStage.h"
+#include "ETextureType.h"
 
 class IConstantBuffer;
 
-//enum class EConstBufferType : uint8
-//{
-//	Global = 0,
-//	Transform,
-//	Light,
-//	Material,
-//	End,
-//};
+enum class EConstBufferRegisterNumber : uint8
+{
+    Global = 0,
+	Transform,
+	Light,
+	Material,
+	BoneBuffer,
+	BoneIndex,
+};
 
 
 struct BufferBindingInfo
@@ -20,16 +22,6 @@ struct BufferBindingInfo
 	EShaderStage stage{};
 	bool dirty = true;
 };
-
-enum class ETextureType : uint8
-{
-	Diffuse = 0,
-	Normal,
-	Specular,
-	End,
-};
-
-enum { TEXTURE_TYPE_COUNT = static_cast<uint8>(ETextureType::End) };
 
 struct SRVBindingInfo
 {
@@ -50,6 +42,8 @@ struct GlobalDesc
 	Matrix V = Matrix::Identity;
 	Matrix P = Matrix::Identity;
 	Matrix VP = Matrix::Identity;
+	Vec3 CameraPosition{};
+	float dummy = 0.f;
 };
 
 struct TransformDesc
@@ -74,4 +68,17 @@ struct MaterialDesc
 	Color diffuse = Color(1.f, 1.f, 1.f, 1.f);
 	Color specular = Color(1.f, 1.f, 1.f, 1.f);
 	Color emissive = Color(0.f, 0.f, 0.f, 1.f);
+};
+
+#define MAX_BONE_COUNT 50
+
+struct BoneBuffer
+{
+	Matrix transforms[MAX_BONE_COUNT];
+};
+
+struct BoneIndex
+{
+	uint32 boneIndex;
+	float padding[3];
 };

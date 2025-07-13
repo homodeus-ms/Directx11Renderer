@@ -1,14 +1,13 @@
 #ifndef STRUCT_HLSLI
 #define STRUCT_HLSLI
 
-// Macros
-#define ROW_MAT row_major matrix
+#include "Defines.hlsli"
 
 // Input
 struct VertexColorInput
 {
-    float4 Position : POSITION;
-    float4 Color : COLOR;
+    float4 position : POSITION;
+    float4 color : COLOR;
 };
 
 struct VertexInput
@@ -29,8 +28,8 @@ struct VertexTangentInput
 // Output
 struct VertexColorOutput
 {
-    float4 Position : SV_POSITION;
-    float4 Color : COLOR;
+    float4 position : SV_POSITION;
+    float4 color : COLOR;
 };
 
 struct VertexOutput
@@ -49,17 +48,32 @@ struct MeshOutput
     float3 tangent : TANGENT;
 };
 
-cbuffer GlobalBuffer : register(b0)
+cbuffer GlobalBuffer : register(BUFFER_NUM_GLOBAL)
 {
-    ROW_MAT View;
-    ROW_MAT Projection;
+    ROW_MAT V;
+    ROW_MAT P;
     ROW_MAT VP;
+    float3 CameraPosition;
+    float dummy;
 };
 
-cbuffer TransformBuffer : register(b1)
+cbuffer TransformBuffer : register(BUFFER_NUM_TRANSFORM)
 {
-    ROW_MAT World;
+    ROW_MAT W;
 };
+
+#define MAX_BONE_COUNT 50
+
+cbuffer BoneBuffer : register(BUFFER_NUM_BONE)
+{
+    ROW_MAT BoneTransforms[MAX_BONE_COUNT];
+}
+
+cbuffer BoneIndex : register(BUFFER_NUM_BONEINDEX)
+{
+    uint BoneIndex;
+    float padding[3];
+}
 
 // SamplerState
 SamplerState LinearSampler
@@ -82,10 +96,12 @@ RasterizerState FillModeWireFrame
     FillMode = WireFrame;
 };
 
-// Functions
-float3 CameraPosition()
+// Function
+void Normalize(inout float3 normal, inout float3 tangent)
 {
-    return -View._41_42_43;
+    normal = normalize(normal);
+    tangent = normalize(tangent);
 }
+
 
 #endif /* STRUCT_HLSLI */

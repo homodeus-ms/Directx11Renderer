@@ -2,7 +2,7 @@
 #include "Transform.h"
 
 Transform::Transform()
-	: Super(ComponentType::Transform)
+	: Super(EComponentType::Transform)
 {
 }
 
@@ -154,7 +154,7 @@ void Transform::SetWorldScale(const Vec3& worldScale)
 
 void Transform::SetWorldRotation(const Vec3& worldRotation)
 {
-	if (HasParent())
+	/*if (HasParent())
 	{
 		Quaternion worldQuat = Quaternion::CreateFromYawPitchRoll(worldRotation.y, worldRotation.x, worldRotation.z);
 		Quaternion parentQuat = Quaternion::CreateFromRotationMatrix(_parent.lock()->GetWorldMatrix());
@@ -164,9 +164,9 @@ void Transform::SetWorldRotation(const Vec3& worldRotation)
 		SetLocalRotation(localEuler);
 	}
 	else
-		SetLocalRotation(worldRotation);
+		SetLocalRotation(worldRotation);*/
 
-	/*if (HasParent())
+	if (HasParent())
 	{
 		Matrix inverseMatrix = _parent.lock()->GetWorldMatrix().Invert();
 
@@ -176,7 +176,7 @@ void Transform::SetWorldRotation(const Vec3& worldRotation)
 		SetLocalRotation(rotation);
 	}
 	else
-		SetLocalRotation(worldRotation);*/
+		SetLocalRotation(worldRotation);
 }
 
 void Transform::SetWorldPosition(const Vec3& worldPosition)

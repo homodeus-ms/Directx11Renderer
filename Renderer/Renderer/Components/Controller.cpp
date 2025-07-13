@@ -4,7 +4,7 @@
 #include "Components/Transform.h"
 
 Controller::Controller()
-	: Super(ComponentType::Controller)
+	: Super(EComponentType::Controller)
 {
 }
 

@@ -14,11 +14,13 @@ void NormalDemo::Construct()
 	// 이쪽에서 정해줄 수 있게 하는 것들은 나중에 UI로 빼기 쉬움
 
 	// Resource Load
-	RESOURCE_MANAGER->Load<Texture>(L"Guitarist", L"..\\Resources\\Images\\Guitarist2.png");
+	RESOURCE_MANAGER->Load<Texture>(L"Leather", L"..\\Resources\\Images\\Leather.jpg");
+	RESOURCE_MANAGER->Load<Texture>(L"Leather_Normal", L"..\\Resources\\Images\\Leather_Normal.jpg");
 
 	// Material
 	shared_ptr<Material> material = make_shared<Material>();
-	material->SetDiffuseMap(RESOURCE_MANAGER->Get<Texture>(L"Guitarist"));
+	material->SetDiffuseMap(RESOURCE_MANAGER->Get<Texture>(L"Leather"));
+	material->SetNormalMap(RESOURCE_MANAGER->Get<Texture>(L"Leather_Normal"));
 	{
 		MaterialDesc& desc = material->GetMaterialDesc();
 		desc.ambient = Vec4(0.5f);
@@ -28,18 +30,18 @@ void NormalDemo::Construct()
 	}
 	shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"03. LightTest.hlsl");
 	material->SetShaderInfo(shaderInfo);
-	RESOURCE_MANAGER->Add(L"Guitarist", material);
+	RESOURCE_MANAGER->Add(L"Leather", material);
 
 	// Client Pawn
 	{
 		shared_ptr<Actor> pawn = make_shared<ClientPawn>();
-		pawn->AddRenderComponent();
+		//pawn->AddRenderComponent();
 		pawn->Construct();
 		pawn->_actorName = "ClientPawn";
-		pawn->GetTransform()->SetWorldPosition({ -1.f, 0.f, 2.f });
+		pawn->GetOrAddTransform()->SetWorldPosition({ -1.f, 0.f, 0.f });
 
 		shared_ptr<Mesh> mesh;
-		mesh = RESOURCE_MANAGER->Get<Mesh>(L"Cube");
+		mesh = RESOURCE_MANAGER->Get<Mesh>(L"Sphere");
 
 		pawn->SetMesh(mesh);
 		pawn->SetMaterial(material);
@@ -48,10 +50,10 @@ void NormalDemo::Construct()
 
 	{
 		shared_ptr<Actor> pawn = make_shared<ClientPawn>();
-		pawn->AddRenderComponent();
+		//pawn->AddRenderComponent();
 		pawn->Construct();
 		pawn->_actorName = "ClientPawn2";
-		pawn->GetTransform()->SetWorldPosition({ 1.f, 0.f, 2.f });
+		pawn->GetOrAddTransform()->SetWorldPosition({ 1.f, 0.f, 3.f });
 
 		shared_ptr<Mesh> mesh;
 		mesh = RESOURCE_MANAGER->Get<Mesh>(L"Cube");
@@ -83,7 +85,7 @@ void NormalDemo::Tick()
 		lightDesc.diffuse = Vec4(1.f);
 		lightDesc.specular = Vec4(1.f);
 		
-		lightDesc.direction = Vec3(0.0f, 0.f, 1.f);
+		lightDesc.direction = Vec3(1.0f, 0.0f, 1.f);
 		SHADER_PARAM_MANAGER->PushLightData(lightDesc);
 	}
 

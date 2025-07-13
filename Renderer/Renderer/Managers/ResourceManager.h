@@ -1,11 +1,19 @@
 #pragma once
 
 #include "Resource/ResourceBase.h"
+#include "Structs/ImportedMeshData.h"
+#include "Structs/ETextureType.h"
 
 class Shader;
 class Texture;
 class Mesh;
 class Material;
+class StaticMesh;
+
+namespace tinyxml2
+{
+	class XMLElement;
+}
 
 class ResourceManager
 {
@@ -17,6 +25,10 @@ public:
 	template<typename T>
 	shared_ptr<T> Load(const wstring& key, const wstring& path);
 
+	// Can load file in a default path only
+	// default path : ../Resource/Assets/
+	shared_ptr<StaticMesh> LoadStaticMeshFromXML(const wstring& key, const wstring& filenameInAssetFolderOnly);
+
 	template<typename T>
 	bool Add(const wstring& key, shared_ptr<T> object);
 
@@ -24,33 +36,48 @@ public:
 	shared_ptr<T> Get(const wstring& key);
 
 	template<typename T>
-	ResourceType GetResourceType();
+	EResourceType GetResourceType();
 
 private:
 	void CreateDefaultMesh();
 
+	// Read Data From XML(Saved fbx Data) 
+	bool GetFullPathFromAssetFolderByFileName(const wstring& filename, wstring& OUT meshPath, wstring& OUT materialPath);
+	void ReadMaterialsFromXML(const wstring& filepath, vector<shared_ptr<Material>>& OUT materials);
+	void ReadMeshesFromXML(const wstring& filepath, vector<shared_ptr<ImportedStaticBone>>& OUT bones, vector<shared_ptr<ImportedStaticMesh>>& OUT meshes);
+	shared_ptr<Texture> GetOrAddTexture(const wstring& key, const wstring& path);
+	void SetTextureToMaterial(const char* keyname, const wstring& parentPath, shared_ptr<Material> material, ETextureType textureType);
+	Color ReadColorInfo(tinyxml2::XMLElement* node);
+
+	
 	wstring _resourcePath;
+	wstring _assetPath = L"../Resources/Assets/";
 
 	using KeyObjMap = map<wstring /*key*/, shared_ptr<ResourceBase>>;
 	array<KeyObjMap, RESOURCE_TYPE_COUNT> _resources;
 };
 
 template<typename T>
-ResourceType ResourceManager::GetResourceType()
+EResourceType ResourceManager::GetResourceType()
 {
 	if (std::is_same_v<T, Texture>)
-		return ResourceType::Texture;
+		return EResourceType::Texture;
 	if (std::is_same_v<T, Mesh>)
-		return ResourceType::Mesh;
+		return EResourceType::Mesh;
 	if (std::is_same_v<T, Material>)
-		return ResourceType::Material;
+		return EResourceType::Material;
 	if (std::is_same_v<T, Shader>)
-		return ResourceType::Shader;
-	/*if (std::is_same_v<T, Animation>)
+		return EResourceType::Shader;
+	if (std::is_same_v<T, StaticMesh>)
+		return EResourceType::StaticMesh;
+	/*if (std::is_same_v<T, SkeletalMesh>)
+		return EResourceType::SkeletalMesh;
+	if (std::is_same_v<T, Animation>)
 		return ResourceType::Animation;*/
+	
 
 	assert(false);
-	return ResourceType::None;
+	return EResourceType::None;
 }
 
 template<typename T>
@@ -73,7 +100,7 @@ shared_ptr<T> ResourceManager::Load(const wstring& key, const wstring& path)
 template<typename T>
 bool ResourceManager::Add(const wstring& key, shared_ptr<T> object)
 {
-	ResourceType resourceType = GetResourceType<T>();
+	EResourceType resourceType = GetResourceType<T>();
 	KeyObjMap& keyObjMap = _resources[static_cast<uint8>(resourceType)];
 
 	auto findIt = keyObjMap.find(key);
@@ -87,7 +114,7 @@ bool ResourceManager::Add(const wstring& key, shared_ptr<T> object)
 template<typename T>
 shared_ptr<T> ResourceManager::Get(const wstring& key)
 {
-	ResourceType resourceType = GetResourceType<T>();
+	EResourceType resourceType = GetResourceType<T>();
 	KeyObjMap& keyObjMap = _resources[static_cast<uint8>(resourceType)];
 
 	auto findIt = keyObjMap.find(key);

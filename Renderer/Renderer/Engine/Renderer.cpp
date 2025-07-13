@@ -2,6 +2,8 @@
 #include "Renderer.h"
 #include "Engine/IExecute.h"
 
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 WPARAM Renderer::Run(RenderDesc& desc)
 {
 	_desc = desc;
@@ -17,6 +19,7 @@ WPARAM Renderer::Run(RenderDesc& desc)
 	GRAPHICS->BeginPlay(_desc.hWnd);
 	TIME_MANAGER->BeginPlay();
 	INPUT_MANAGER->BeginPlay(_desc.hWnd);
+	GUI->BeginPlay();
 	RESOURCE_MANAGER->BeginPlay();
 
 	_desc.app->Construct();
@@ -48,14 +51,14 @@ void Renderer::Tick()
 	INPUT_MANAGER->Tick();
 
 	GRAPHICS->RenderBegin();
+	GUI->Tick();
 
 	SCENE_MANAGER->Tick();
-
 	_desc.app->Tick();
 	_desc.app->Render();
-
 	SCENE_MANAGER->Render();
 
+	GUI->Render();
 	GRAPHICS->RenderEnd();
 }
 
@@ -99,6 +102,9 @@ BOOL Renderer::InitInstance(int cmdShow)
 
 LRESULT Renderer::WndProc(HWND handle, UINT message, WPARAM wParam, LPARAM lParam)
 {
+	if (ImGui_ImplWin32_WndProcHandler(handle, message, wParam, lParam))
+		return true;
+
 	switch (message)
 	{
 	case WM_SIZE:

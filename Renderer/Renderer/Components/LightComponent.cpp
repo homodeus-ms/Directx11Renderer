@@ -2,7 +2,7 @@
 #include "LightComponent.h"
 
 LightComponent::LightComponent()
-	: Super(ComponentType::Light)
+	: Super(EComponentType::Light)
 {
 }
 

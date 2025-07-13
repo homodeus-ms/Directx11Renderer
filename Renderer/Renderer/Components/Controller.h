@@ -33,8 +33,8 @@ private:
 	weak_ptr<Pawn> _owner;
 	EMoveMode _moveMode = EMoveMode::PawnMove;
 	Vec3 _moveDelta{};
-	float _moveSpeed = 3.f;
-	float _cameraRotateSpeed = 0.5f;
+	float _moveSpeed = 7.f;
+	float _cameraRotateSpeed = 2.f;
 	bool _bDirty = false;
 
 };

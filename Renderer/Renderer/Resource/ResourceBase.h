@@ -1,29 +1,32 @@
 #pragma once
 
-enum class ResourceType : uint8
+enum class EResourceType : int8
 {
-	None = 0xFF,
+	None = -1,
 	Mesh = 0,
+	StaticMesh,
+	SkeletalMesh,
 	Shader,
 	Texture,
 	Material,
 	Animation,
+	XML,
 
 	End
 };
 
 enum
 {
-	RESOURCE_TYPE_COUNT = static_cast<uint8>(ResourceType::End)
+	RESOURCE_TYPE_COUNT = static_cast<uint8>(EResourceType::End)
 };
 
 class ResourceBase : public enable_shared_from_this<ResourceBase>
 {
 public:
-	ResourceBase(ResourceType type);
+	ResourceBase(EResourceType type);
 	virtual ~ResourceBase();
 
-	ResourceType GetType() { return _type; }
+	EResourceType GetType() { return _type; }
 
 	void SetName(const wstring& name) { _name = name; }
 	const wstring& GetName() { return _name; }
@@ -34,7 +37,7 @@ protected:
 	virtual void Save(const wstring& path) {}
 
 protected:
-	ResourceType _type = ResourceType::None;
+	EResourceType _type = EResourceType::None;
 	wstring _name;
 	wstring _path;
 	uint32 _id = 0;

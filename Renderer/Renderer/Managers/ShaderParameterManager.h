@@ -36,31 +36,22 @@ public:
 
 		_constbuffers[bufferName] = info;
 	}
-
+	
 	void Update();
 
 	// Constant Buffer
 	void PushGlobalData(const Matrix& view, const Matrix& projection);
 	void PushTransformData(const TransformDesc& desc);
 	void PushLightData(const LightDesc& desc);
-
-	template<typename T>
-	void PushExtraBufferData(const string& bufferName, const T& data)
-	{
-		if (_constbuffers.find(bufferName) == _constbuffers.end())
-		{
-			LOG(Error, "No Such a BufferName");
-			assert(false);
-		}
-		UpdateData(bufferName, data);
-	}
+	void PushBoneBuffer(const BoneBuffer& desc);
+	void PushBoneIndex(const BoneIndex& desc);
 
 	// Material
 	void PushMaterial(shared_ptr<Material> material);
 	void PushMaterialData(const MaterialDesc& desc);
 	void PushSRV(const array<SRVBindingInfo, TEXTURE_TYPE_COUNT>& srvs);
 
-	void BindAll();
+	void BindAllDirtyBuffers();
 
 private:
 
@@ -68,7 +59,11 @@ private:
 	void UpdateData(const string& bufferName, const T& data)
 	{
 		BufferBindingInfo& info = _constbuffers.at(bufferName);
-		static_pointer_cast<ConstantBuffer<T>>(info.buffer)->CopyData(data);
+		uint32 size = sizeof(T);
+		shared_ptr<IConstantBuffer> temp = info.buffer;
+		shared_ptr<ConstantBuffer<T>> temp2 = static_pointer_cast<ConstantBuffer<T>>(temp);
+		temp2->CopyData(data);
+		//static_pointer_cast<ConstantBuffer<T>>(info.buffer)->CopyData(data);
 		info.dirty = true;
 	}
 

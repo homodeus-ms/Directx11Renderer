@@ -27,6 +27,13 @@ void Graphics::RenderEnd()
 
 void Graphics::CreateDeviceAndSwapChain()
 {
+	UINT deviceFlags = 0;
+
+#if defined(_DEBUG)
+	deviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
+
+
 	DXGI_SWAP_CHAIN_DESC desc;
 	ZeroMemory(&desc, sizeof(desc));
 	{
@@ -50,7 +57,7 @@ void Graphics::CreateDeviceAndSwapChain()
 		nullptr,
 		D3D_DRIVER_TYPE_HARDWARE,
 		nullptr,
-		0,
+		deviceFlags,
 		nullptr,
 		0,
 		D3D11_SDK_VERSION,
@@ -109,10 +116,17 @@ void Graphics::CreateDepthStencilView()
 
 void Graphics::SetViewport()
 {
-	_viewport.TopLeftX = 0.0f;
+	/*_viewport.TopLeftX = 0.0f;
 	_viewport.TopLeftY = 0.0f;
 	_viewport.Width = static_cast<float>(RENDERER->GetGameDesc().width);
 	_viewport.Height = static_cast<float>(RENDERER->GetGameDesc().height);
+	_viewport.MinDepth = 0.0f;
+	_viewport.MaxDepth = 1.0f;*/
+	
+	_viewport.TopLeftX = 200.0f;
+	_viewport.TopLeftY = 0.0f;
+	_viewport.Width = static_cast<float>(RENDERER->GetGameDesc().width) - GUI_AreaX;
+	_viewport.Height = static_cast<float>(RENDERER->GetGameDesc().height) - GUI_AreaY;
 	_viewport.MinDepth = 0.0f;
 	_viewport.MaxDepth = 1.0f;
 }

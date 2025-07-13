@@ -16,7 +16,7 @@ public:
 
 	virtual void Load(const wstring& path) override;
 
-	// TODO : Currently Hardcoded using VertexUVNormal Only
+	// TODO : Currently Hardcoded using VertexUVNormalTangent Only
 	void CreateQuad();
 	void CreateCube();
 	void CreateGrid(int32 sizeX, int32 sizeZ);
@@ -31,7 +31,7 @@ private:
 	void CreateBuffers();
 
 	// Mesh
-	shared_ptr<Geometry<VertexUVNormalData>> _geometry;
+	shared_ptr<Geometry<VertexUVNormalTangentData>> _geometry;
 	shared_ptr<VertexBuffer> _vertexBuffer;
 	shared_ptr<IndexBuffer> _indexBuffer;
 };

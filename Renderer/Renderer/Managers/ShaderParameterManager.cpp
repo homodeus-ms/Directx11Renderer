@@ -7,15 +7,18 @@
 void ShaderParameterManager::BeginPlay()
 {
 	// Register Default Constant Buffers
-	RegisterBuffer<GlobalDesc>("Global", 0, EShaderStage::VsStage);
-	RegisterBuffer<TransformDesc>("Transform", 1, EShaderStage::VsStage);
-	RegisterBuffer<LightDesc>("Light", 2, EShaderStage::PsStage);
-	RegisterBuffer<MaterialDesc>("Material", 3, EShaderStage::PsStage);
+	
+	RegisterBuffer<GlobalDesc>("Global", static_cast<uint8>(EConstBufferRegisterNumber::Global), EShaderStage::Both);
+	RegisterBuffer<TransformDesc>("Transform", static_cast<uint8>(EConstBufferRegisterNumber::Transform), EShaderStage::VsStage);
+	RegisterBuffer<LightDesc>("Light", static_cast<uint8>(EConstBufferRegisterNumber::Light), EShaderStage::PsStage);
+	RegisterBuffer<MaterialDesc>("Material", static_cast<uint8>(EConstBufferRegisterNumber::Material), EShaderStage::PsStage);
+	RegisterBuffer<BoneBuffer>("BoneBuffer", static_cast<uint8>(EConstBufferRegisterNumber::BoneBuffer), EShaderStage::VsStage);
+	RegisterBuffer<BoneIndex>("BoneIndex", static_cast<uint8>(EConstBufferRegisterNumber::BoneIndex), EShaderStage::VsStage);
+	
 }
 
 void ShaderParameterManager::Update()
 {
-	PushGlobalData(CameraComponent::S_MatView, CameraComponent::S_MatProjection);
 }
 
 void ShaderParameterManager::PushGlobalData(const Matrix& view, const Matrix& projection)
@@ -24,6 +27,10 @@ void ShaderParameterManager::PushGlobalData(const Matrix& view, const Matrix& pr
 	desc.V = view;
 	desc.P = projection;
 	desc.VP = desc.V * desc.P;
+
+	Matrix invV = view.Invert();
+	desc.CameraPosition = { invV._41, invV._42, invV._43 };
+
 	UpdateData("Global", desc);
 }
 
@@ -35,6 +42,16 @@ void ShaderParameterManager::PushTransformData(const TransformDesc& desc)
 void ShaderParameterManager::PushLightData(const LightDesc& desc)
 {
 	UpdateData("Light", desc);
+}
+
+void ShaderParameterManager::PushBoneBuffer(const BoneBuffer& desc)
+{
+	UpdateData("BoneBuffer", desc);
+}
+
+void ShaderParameterManager::PushBoneIndex(const BoneIndex& desc)
+{
+	UpdateData("BoneIndex", desc);
 }
 
 void ShaderParameterManager::PushMaterial(shared_ptr<Material> material)
@@ -53,7 +70,7 @@ void ShaderParameterManager::PushSRV(const array<SRVBindingInfo, TEXTURE_TYPE_CO
 	_srvBindings = srvs;
 }
 
-void ShaderParameterManager::BindAll()
+void ShaderParameterManager::BindAllDirtyBuffers()
 {
 	// Constant Buffers
 	for (auto& [name, info] : _constbuffers)
@@ -68,8 +85,6 @@ void ShaderParameterManager::BindAll()
 
 		if (IsStagePS(info.stage))
 			CONTEXT->PSSetConstantBuffers(info.slot, 1, comBuffer.GetAddressOf());
-
-		// TODO: 
 
 		info.dirty = false;
 	}

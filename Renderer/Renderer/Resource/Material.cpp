@@ -3,12 +3,31 @@
 #include "Resource/Texture.h"
 
 Material::Material()
-    : Super(ResourceType::Material)
+    : Super(EResourceType::Material)
 {
 }
 
 Material::~Material()
 {
+}
+
+void Material::SetTextureMap(ETextureType textureType, shared_ptr<Texture> texture)
+{
+    switch (textureType)
+    {
+    case ETextureType::Diffuse:
+        SetDiffuseMap(texture);
+        break;
+    case ETextureType::Normal:
+        SetNormalMap(texture);
+        break;
+    case ETextureType::Specular:
+        SetSpecularMap(texture);
+        break;
+    default:
+        LOG(Log, "Not Supported Texture");
+        break;
+    }
 }
 
 void Material::SetDiffuseMap(shared_ptr<Texture> diffuseMap)
@@ -50,11 +69,16 @@ void Material::SetSpecularMap(shared_ptr<Texture> specularMap)
     };
 }
 
-void Material::Update()
-{
-}
-
 shared_ptr<Material> Material::Clone()
 {
-    return shared_ptr<Material>();
+    shared_ptr<Material> material = make_shared<Material>();
+
+    material->_desc = _desc;
+    material->_diffuseMap = _diffuseMap;
+    material->_normalMap = _normalMap;
+    material->_specularMap = _specularMap;
+    material->_srvBindingInfos = _srvBindingInfos;
+    material->_shaderInfo = _shaderInfo;
+
+    return material;
 }

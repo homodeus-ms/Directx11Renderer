@@ -6,7 +6,7 @@ Matrix CameraComponent::S_MatView = Matrix::Identity;
 Matrix CameraComponent::S_MatProjection = Matrix::Identity;
 
 CameraComponent::CameraComponent()
-	: Super(ComponentType::Camera)
+	: Super(EComponentType::Camera)
 {
 	_width = static_cast<float>(RENDERER->GetGameDesc().width);
 	_height = static_cast<float>(RENDERER->GetGameDesc().height);

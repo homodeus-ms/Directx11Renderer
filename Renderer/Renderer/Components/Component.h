@@ -3,11 +3,11 @@
 class Actor;
 class Transform;
 
-enum class ComponentType : uint8
+enum class EComponentType : uint8
 {
 	Transform,
 	Controller,
-	MeshRenderer,
+	StaticMeshRenderer,
 	Camera,
 	Animator,
 	Light,
@@ -17,13 +17,13 @@ enum class ComponentType : uint8
 
 enum
 {
-	FIXED_COMPONENT_COUNT = static_cast<uint8>(ComponentType::End) - 1
+	FIXED_COMPONENT_COUNT = static_cast<uint8>(EComponentType::End) - 1
 };
 
 class Component
 {
 public:
-	Component(ComponentType type);
+	Component(EComponentType type);
 	virtual ~Component();
 
 	virtual void Construct() {}
@@ -33,7 +33,7 @@ public:
 	virtual void FixedTick() {}
 
 public:
-	ComponentType GetType() { return _type; }
+	EComponentType GetType() { return _type; }
 
 	shared_ptr<Actor> GetOwner();
 	shared_ptr<Transform> GetOwnerTransform();
@@ -43,7 +43,7 @@ private:
 	void SetOwner(shared_ptr<Actor> owner) { _owner = owner; }
 
 protected:
-	ComponentType _type;
+	EComponentType _type;
 	weak_ptr<Actor> _owner;
 
 };

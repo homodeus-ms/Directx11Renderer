@@ -48,7 +48,7 @@ void Pawn::EnableController(bool bEnable)
 
 shared_ptr<Controller> Pawn::GetController()
 {
-	return static_pointer_cast<Controller>(GetFixedComponent(ComponentType::Controller));
+	return static_pointer_cast<Controller>(GetFixedComponent(EComponentType::Controller));
 }
 
 void Pawn::AddController()

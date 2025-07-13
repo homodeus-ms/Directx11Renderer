@@ -6,6 +6,7 @@
 #include "Engine/Renderer.h"
 
 #include "NormalDemo.h"
+#include "LoadMaterialDemo.h"
 
 void CreateConsole()
 {
@@ -32,7 +33,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	desc.width = GWinSizeX;
 	desc.height = GWinSizeY;
 	desc.clearColor = Color(0.f, 0.f, 0.f, 0.f);
-	desc.app = make_shared<NormalDemo>();
+	desc.app = make_shared<LoadMaterialDemo>();
 
 	RENDERER->Run(desc);
 

@@ -5,6 +5,9 @@
 #include "Components/Transform.h"
 #include "Managers/RenderManager.h"
 
+// TEMP
+#include "Managers/ShaderParameterManager.h"
+
 void Scene::Construct()
 {
 	_mainCamera = make_shared<CameraActor>();
@@ -34,8 +37,10 @@ void Scene::Tick()
 
 	_mainCamera->Tick();
 
+	// TEMP
+	SHADER_PARAM_MANAGER->Update();
+
 	// 여기서 actor들 Render
-	
 	for (shared_ptr<Actor> actor : actors)
 	{
 		actor->Render();

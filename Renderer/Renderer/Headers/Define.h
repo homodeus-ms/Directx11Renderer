@@ -1,7 +1,9 @@
 #pragma once
 
-constexpr int32 GWinSizeX = 800;
-constexpr int32 GWinSizeY = 600;
+constexpr int32 GWinSizeX = 1400;
+constexpr int32 GWinSizeY = 700;
+constexpr int32 GUI_AreaX = 400;
+constexpr int32 GUI_AreaY = 100;
 
 #define DECLARE_SINGLE(classname)			\
 private:									\
@@ -25,6 +27,7 @@ public:										\
 #define GRAPHICS			GET_SINGLE(Graphics)
 #define SCENE_MANAGER		GET_SINGLE(SceneManager)
 #define SCENE				SCENE_MANAGER->GetCurrentScene()
+#define GUI                 GET_SINGLE(ImGuiManager)
 
 #define DEVICE				GRAPHICS->GetDevice()
 #define CONTEXT				GRAPHICS->GetDeviceContext()

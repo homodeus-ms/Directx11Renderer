@@ -2,7 +2,7 @@
 #include "Component.h"
 #include "Actor/Actor.h"
 
-Component::Component(ComponentType type)
+Component::Component(EComponentType type)
 	: _type(type)
 {
 }

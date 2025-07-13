@@ -1,6 +1,5 @@
 #pragma once
 #include "Component.h"
-#include "Structs/MeshStructDatas.h"
 #include "Structs/EShaderStage.h"
 
 class InputLayout;
@@ -9,28 +8,26 @@ class PixelShader;
 class PipelineState;
 class Mesh;
 class Material;
+struct ShaderInfo;
 
-class RenderComponent : public Component
+class RenderComponentBase : public Component
 {
 	using Super = Component;
 
 public:
-	RenderComponent();
-	virtual ~RenderComponent();
+	RenderComponentBase(EComponentType componentType);
+	virtual ~RenderComponentBase();
 
-	//void SetStaticMeshInfo(const StaticMeshInfo& info);
 	void SetMesh(const shared_ptr<Mesh>& mesh);
 	void SetMaterial(const shared_ptr<Material>& material);
 	
 	virtual void BeginPlay() override;
 	virtual void Render();
 
-private:
-
-	void UpdatePipeline();
+protected:
 	void SetInputLayout();
-	void SetVertexShader();
-	void SetPixelShader();
+	void SetVertexShader(shared_ptr<ShaderInfo> shaderInfo);
+	void SetPixelShader(shared_ptr<ShaderInfo> shaderInfo);
 	void GetDefaultStates();
 	void SetVertexBuffer();
 	void SetIndexBuffer();
@@ -40,14 +37,8 @@ private:
 	void DrawInstanced(UINT vertexCountPerInstance, UINT instanceCount, UINT startVertexLocation = 0, UINT startInstanceLocation = 0);
 	void DrawIndexedInstanced(UINT indexCountPerInstance, UINT instanceCount, UINT startIndexLocation = 0, INT baseVertexLocation = 0, UINT startInstanceLocation = 0);
 	
-
 	bool _bHasMesh = false;
 	bool _bHasMaterial = false;
-
-	//StaticMeshInfo _staticMeshInfo;
-
-	//vector<shared_ptr<Mesh>> _meshes;
-	//vector<shared_ptr<Material>> _materials;
 
 	shared_ptr<Mesh> _mesh;
 	shared_ptr<Material> _material;
