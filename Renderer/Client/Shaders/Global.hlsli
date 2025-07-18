@@ -48,13 +48,26 @@ struct MeshOutput
     float3 tangent : TANGENT;
 };
 
+struct MaterialDesc
+{
+    float4 ambient;
+    float4 diffuse;
+    float4 specular;
+    float4 emissive;
+};
+
+cbuffer MaterialBuffer : register(BUFFER_NUM_MATERIAL)
+{
+    MaterialDesc Material;
+}
+
 cbuffer GlobalBuffer : register(BUFFER_NUM_GLOBAL)
 {
     ROW_MAT V;
     ROW_MAT P;
     ROW_MAT VP;
     float3 CameraPosition;
-    float dummy;
+    float globalBufferPadding;
 };
 
 cbuffer TransformBuffer : register(BUFFER_NUM_TRANSFORM)
@@ -72,16 +85,17 @@ cbuffer BoneBuffer : register(BUFFER_NUM_BONE)
 cbuffer BoneIndex : register(BUFFER_NUM_BONEINDEX)
 {
     uint BoneIndex;
-    float padding[3];
+    float3 boneIndexPadding;
 }
 
 // SamplerState
-SamplerState LinearSampler
-{
-    Filter = MIN_MAG_MIP_LINEAR;
-    AddressU = Wrap;
-    AddressV = Wrap;
-};
+//SamplerState LinearSampler
+//{
+//    Filter = MIN_MAG_MIP_LINEAR;
+//    AddressU = Wrap;
+//    AddressV = Wrap;
+//};
+SamplerState LinearSampler : register(s0);
 
 SamplerState PointSampler
 {

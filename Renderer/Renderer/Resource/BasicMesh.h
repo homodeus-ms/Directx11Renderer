@@ -6,13 +6,13 @@
 class VertexBuffer;
 class IndexBuffer;
 
-class Mesh : public ResourceBase
+class BasicMesh : public ResourceBase
 {
 	using Super = ResourceBase;
 
 public:
-	Mesh();
-	virtual ~Mesh();
+	BasicMesh();
+	virtual ~BasicMesh();
 
 	virtual void Load(const wstring& path) override;
 

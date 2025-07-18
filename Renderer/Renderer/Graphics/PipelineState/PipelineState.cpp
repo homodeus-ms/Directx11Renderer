@@ -2,9 +2,11 @@
 #include "PipelineState.h"
 #include "SamplerState.h"
 
+shared_ptr<SamplerState> PipelineState::_samplerState;
+
 PipelineState::PipelineState()
 {
-	_samplerState = make_shared<SamplerState>();
+	
 }
 
 PipelineState::~PipelineState()
@@ -53,6 +55,9 @@ shared_ptr<PipelineState> PipelineState::GetDefaultState()
 		HRESULT hr = DEVICE->CreateBlendState(&desc, state->_blendState.GetAddressOf());
 		check(hr);
 	}
+
+	// Sampler
+	_samplerState = make_shared<SamplerState>();
 
 	// Sampler
 	/*{

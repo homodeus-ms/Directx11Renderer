@@ -1,9 +1,12 @@
 #include "pch.h"
 #include "SceneManager.h"
+#include "Managers/ShaderParameterManager.h"
 
 void SceneManager::BeginPlay()
 {
+	_onBeforeSceneConstruct.Broadcast();
 	_currentScene->Construct();
+	_onBeforeSceneBeginPlay.Broadcast();
 	_currentScene->BeginPlay();
 }
 
@@ -28,7 +31,7 @@ void SceneManager::AddActors(const vector<shared_ptr<Actor>>& actors)
 		return;
 	
 	for (const shared_ptr<Actor>& actor : actors)
-		_currentScene->Add(actor);
+		_currentScene->AddActor(actor);
 }
 
 void SceneManager::RemoveActor(const shared_ptr<Actor>& actor)
@@ -36,5 +39,5 @@ void SceneManager::RemoveActor(const shared_ptr<Actor>& actor)
 	if (_currentScene == nullptr)
 		return;
 
-	_currentScene->Remove(actor);
+	_currentScene->RemoveActor(actor);
 }

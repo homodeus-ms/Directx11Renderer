@@ -18,6 +18,24 @@ MeshOutput VS(VertexTangentInput input)
 float4 PS(MeshOutput input) : SV_Target
 {
     ComputeNormalMapping(input.normal, input.tangent, input.uv);
+    input.normal = normalize(input.normal);
     
-    return ComputeLight(input.normal, input.uv, input.worldPosition);
+    float4 directionalColor = ComputeDirectionalLight(input.normal, input.uv, input.worldPosition);
+    
+    float4 spotColor = { 0.0f, 0.0f, 0.0f, 1.f };
+    for (uint i = 0; i < SpotlightCount; ++i)
+    {
+        spotColor += ComputeSpotLight(SpotLights[i], input.normal, input.uv, input.worldPosition);
+    }
+    
+    float4 pointColor = { 0.f, 0.f, 0.f, 0.f };
+    for (uint j = 0; j < PointlightCount; ++j)
+    {
+        pointColor += ComputePointLight(PointLights[j], input.normal, input.uv, input.worldPosition);
+    }
+    
+    float4 color = directionalColor + spotColor + pointColor;
+    color.w = DiffuseMap.Sample(LinearSampler, input.uv).w;
+    
+    return color;
 }

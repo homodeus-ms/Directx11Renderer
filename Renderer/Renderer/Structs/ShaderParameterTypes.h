@@ -1,6 +1,7 @@
 #pragma once
 #include "EShaderStage.h"
 #include "ETextureType.h"
+#include "LightTypes.h"
 
 class IConstantBuffer;
 
@@ -8,7 +9,9 @@ enum class EConstBufferRegisterNumber : uint8
 {
     Global = 0,
 	Transform,
-	Light,
+	DirectionalLight,
+	SpotLight,
+	PointLight,
 	Material,
 	BoneBuffer,
 	BoneIndex,
@@ -51,22 +54,25 @@ struct TransformDesc
 	Matrix W = Matrix::Identity;
 };
 
-struct LightDesc
+struct SpotLightBuffer
 {
-	Color ambient = Color(1.f, 1.f, 1.f, 1.f);
-	Color diffuse = Color(1.f, 1.f, 1.f, 1.f);
-	Color specular = Color(1.f, 1.f, 1.f, 1.f);
-	Color emissive = Color(0.f, 0.f, 0.f, 0.f);
+	SpotLightDesc spotLightDescs[MAX_SPOT_LIGHT_COUNT];
+	uint32 spotLightCount = 0;
+	Vec3 padding;
+};
 
-	Vec3 direction{};
-	float padding0 = 0;
+struct PointLightBuffer
+{
+	PointLightDesc pointLightDescs[MAX_POINT_LIGHT_COUNT];
+	uint32 pointLightCount = 0;
+	Vec3 padding;
 };
 
 struct MaterialDesc
 {
 	Color ambient = Color(1.f, 1.f, 1.f, 1.f);
 	Color diffuse = Color(1.f, 1.f, 1.f, 1.f);
-	Color specular = Color(1.f, 1.f, 1.f, 1.f);
+	Color specular = Color(1.f, 1.f, 1.f, 1.f); 
 	Color emissive = Color(0.f, 0.f, 0.f, 1.f);
 };
 

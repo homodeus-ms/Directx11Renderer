@@ -5,7 +5,7 @@
 #include "Utils/Utils.h"
 #include "Utils/FileUtils.h"
 #include "Resource/Texture.h"
-#include "Resource/Mesh.h"
+#include "Resource/BasicMesh.h"
 #include "Resource/Material.h"
 #include "Resource/StaticMesh.h"
 #include "Graphics/Shader/Shader.h"
@@ -18,17 +18,17 @@ void ResourceManager::BeginPlay()
 void ResourceManager::CreateDefaultMesh()
 {
 	{
-		shared_ptr<Mesh> mesh = make_shared<Mesh>();
+		shared_ptr<BasicMesh> mesh = make_shared<BasicMesh>();
 		mesh->CreateQuad();
 		Add(L"Quad", mesh);
 	}
 	{
-		shared_ptr<Mesh> mesh = make_shared<Mesh>();
+		shared_ptr<BasicMesh> mesh = make_shared<BasicMesh>();
 		mesh->CreateCube();
 		Add(L"Cube", mesh);
 	}
 	{
-		shared_ptr<Mesh> mesh = make_shared<Mesh>();
+		shared_ptr<BasicMesh> mesh = make_shared<BasicMesh>();
 		mesh->CreateSphere();
 		Add(L"Sphere", mesh);
 	}

@@ -3,7 +3,7 @@
 #include "Actor/Actor.h"
 #include "Components/Transform.h"
 #include "Components/CameraComponent.h"
-#include "Resource/Mesh.h"
+#include "Resource/BasicMesh.h"
 #include "Resource/Texture.h"
 #include "Graphics/Buffer/InputLayout.h"
 #include "Graphics/Buffer/VertexBuffer.h"
@@ -14,6 +14,7 @@
 #include "Graphics/PipelineState/PipelineState.h"
 #include "Managers/ShaderParameterManager.h"
 #include "Resource/Material.h"
+#include "Graphics/PipelineState/SamplerState.h"
 
 
 RenderComponentBase::RenderComponentBase(EComponentType componentType) 
@@ -26,87 +27,57 @@ RenderComponentBase::~RenderComponentBase()
 
 }
 
-void RenderComponentBase::SetMesh(const shared_ptr<Mesh>& mesh)
-{
-	_mesh = mesh;
-	_bHasMesh = true;
-}
-
-void RenderComponentBase::SetMaterial(const shared_ptr<Material>& material)
-{
-	_material = material;
-	SetVertexShader(_material->_shaderInfo);
-	SetPixelShader(_material->_shaderInfo);
-	_bHasMaterial = true;
-}
-
-
 void RenderComponentBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//if (_bHasMesh && _bHasMaterial)
+	if (_bRenderReady)
 	{
 		SetInputLayout();
 		GetDefaultStates();
-
-		TransformDesc desc;
-		desc.W = GetOwnerTransform()->GetWorldMatrix();
-		SHADER_PARAM_MANAGER->PushTransformData(desc);
 	}
 }
 
 
 void RenderComponentBase::Render()
 {
-	if (!_bHasMesh || !_bHasMaterial)
-		return;
-
-	// IA
-	CONTEXT->IASetInputLayout(_inputLayout->GetComPtr().Get());
-	CONTEXT->IASetPrimitiveTopology(_pipelineState->GetTopology());
-
-	// VS
-	if (_vertexShader)
-		CONTEXT->VSSetShader(_vertexShader->GetComPtr().Get(), nullptr, 0);
-
-	// SRV, Constant Buffers
-
 	{
-		TransformDesc desc;
-		desc.W = GetOwnerTransform()->GetWorldMatrix();
-		SHADER_PARAM_MANAGER->PushTransformData(desc);
+		CONTEXT->IASetInputLayout(_inputLayout->GetComPtr().Get());
+		CONTEXT->IASetPrimitiveTopology(_pipelineState->GetTopology());
+
+		if (_vertexShader)
+			CONTEXT->VSSetShader(_vertexShader->GetComPtr().Get(), nullptr, 0);
+		if (_pixelShader)
+			CONTEXT->PSSetShader(_pixelShader->GetComPtr().Get(), nullptr, 0);
+
+		// Test
+		{
+			D3D11_SAMPLER_DESC desc = {};
+			desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+			desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+			desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+			desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+			desc.MinLOD = 0.0f;
+			desc.MaxLOD = D3D11_FLOAT32_MAX;
+			desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+
+			// »ùÇÃ·¯ °´Ã¼ »ý¼º
+			HRESULT hr = DEVICE->CreateSamplerState(&desc, _samplerState.GetAddressOf());
+			check(hr);
+
+			// ½½·Ô 0¿¡ ¹ÙÀÎµù
+			CONTEXT->PSSetSamplers(0, 1, _samplerState.GetAddressOf());
+		}
+
+		auto rsState = _pipelineState->GetRsState();
+		CONTEXT->RSSetState(rsState.Get());
+
+		auto blendState = _pipelineState->GetBlendState();
+		CONTEXT->OMSetBlendState(blendState.Get(), _pipelineState->GetBlendFactor(), _pipelineState->GetSampleMask());
 	}
 
-	if (_material != nullptr)
-	{
-		SHADER_PARAM_MANAGER->PushMaterial(_material);
-	}
-	// SHADER_PARAM_MANAGER->BindAll();
+	SHADER_PARAM_MANAGER->PushGlobalData(CameraComponent::S_MatView, CameraComponent::S_MatProjection);
 
-	// RS
-	CONTEXT->RSSetState(_pipelineState->GetRsState().Get());
-
-	// PS
-	if (_pixelShader)
-		CONTEXT->PSSetShader(_pixelShader->GetComPtr().Get(), nullptr, 0);
-
-	// OM
-	CONTEXT->OMSetBlendState(_pipelineState->GetBlendState().Get(), _pipelineState->GetBlendFactor(), _pipelineState->GetSampleMask());
-
-	SetVertexBuffer();
-	SetIndexBuffer();
-
-	DrawIndexed(_mesh->GetIndexBuffer()->GetCount());
-	
-}
-
-
-void RenderComponentBase::SetInputLayout()
-{
-	const vector<D3D11_INPUT_ELEMENT_DESC>& desc = _mesh->GetInputLayoutDesc();
-	_inputLayout = make_shared<InputLayout>();
-	_inputLayout->Create(desc, _vertexShader->GetBlob());
 }
 
 void RenderComponentBase::SetVertexShader(shared_ptr<ShaderInfo> shaderInfo)
@@ -124,20 +95,6 @@ void RenderComponentBase::SetPixelShader(shared_ptr<ShaderInfo> shaderInfo)
 void RenderComponentBase::GetDefaultStates()
 {
 	_pipelineState = PipelineState::GetDefaultState();
-}
-
-void RenderComponentBase::SetVertexBuffer()
-{
-	const shared_ptr<VertexBuffer>& buffer = _mesh->GetVertexBuffer();
-	uint32 stride = buffer->GetStride();
-	uint32 offset = buffer->GetOffset();
-	CONTEXT->IASetVertexBuffers(0, 1, buffer->GetComPtr().GetAddressOf(), &stride, &offset);
-}
-
-void RenderComponentBase::SetIndexBuffer()
-{
-	const shared_ptr<IndexBuffer>& buffer = _mesh->GetIndexBuffer();
-	CONTEXT->IASetIndexBuffer(buffer->GetComPtr().Get(), DXGI_FORMAT_R32_UINT, 0);
 }
 
 

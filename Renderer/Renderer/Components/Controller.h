@@ -23,6 +23,7 @@ public:
 
 	EMoveMode GetMoveMode() const { return _moveMode; }
 	void SetMoveMode(EMoveMode moveMode) { _moveMode = moveMode; }
+	
 
 private:
 

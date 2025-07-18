@@ -4,15 +4,24 @@
 #include "Structs/EShaderStage.h"
 
 class Transform;
-class Mesh;
+class BasicMesh;
 class RenderComponentBase;
+class BasicMeshRenderer;
 class StaticMeshRenderer;
 class StaticMesh;
+
+enum class EActorType : uint8
+{
+	Actor,
+	Pawn,
+	CameraActor,
+	LightActor,
+};
 
 class Actor : public enable_shared_from_this<Actor>
 {
 public:
-	Actor();
+	Actor(EActorType actorType);
 	virtual ~Actor();
 
 	virtual void Construct();
@@ -23,6 +32,8 @@ public:
 
 	void Render();
 
+	EActorType GetActorType() const { return _actorType; }
+
 	// Component
 	shared_ptr<Component> GetFixedComponent(EComponentType type);
 	shared_ptr<Transform> GetTransform();
@@ -30,24 +41,25 @@ public:
 	void AddComponent(shared_ptr<Component> component);
 
 	// Mesh, Material
-	void SetMesh(const shared_ptr<Mesh>& mesh);
+	void SetBasicMesh(const shared_ptr<BasicMesh>& mesh);
+	void SetBasicMaterial(const shared_ptr<Material>& material);
 	void SetStaticMesh(const shared_ptr<StaticMesh>& staticMesh);
-	void SetMaterial(const shared_ptr<Material>& material);
+	shared_ptr<BasicMeshRenderer> GetOrAddBasicMeshRenderer();
 	shared_ptr<StaticMeshRenderer> GetOrAddStaticMeshRenderer();
 
 	// Transform
 	bool IsTransformChanged() { return _bTransformChanged; }
-	void SetTransformChanged(bool bChanged) { _bTransformChanged = bChanged; }
+	virtual void SetTransformChanged(bool bChanged) { _bTransformChanged = bChanged; }
 
-	// For Debug
-	string _actorName{};
 
 protected:
 
 	array<shared_ptr<Component>, FIXED_COMPONENT_COUNT> _components;
 	
 	// Renderer Cache
-	shared_ptr<StaticMeshRenderer> _staticMeshRenderer;
+	shared_ptr<RenderComponentBase> _renderer;
+
+	EActorType _actorType;
 
 private:
 	

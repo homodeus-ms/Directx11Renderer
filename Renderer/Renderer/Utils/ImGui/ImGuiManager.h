@@ -1,4 +1,7 @@
 #pragma once
+#include "Utils/Delegate.h"
+
+DECLARE_MULTICAST_DELEGATE(OnTick);
 
 class ImGuiManager
 {
@@ -9,14 +12,11 @@ public:
 	void Tick();
 	void Render();
 
-	void Test();
+	OnTick _onTick;
 
-	void ShowDefaultGUI();
 
 private:
-	bool show_demo_window = true;
-	bool show_another_window = true;
-
-	Vec4 clear_color = Vec4(0.5f);
+	
+	
 };
 

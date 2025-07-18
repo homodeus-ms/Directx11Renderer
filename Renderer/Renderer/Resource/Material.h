@@ -18,6 +18,7 @@ public:
 	shared_ptr<Texture> GetDiffuseMap() { return _diffuseMap; }
 	shared_ptr<Texture> GetNormalMap() { return _normalMap; }
 	shared_ptr<Texture> GetSpecularMap() { return _specularMap; }
+	shared_ptr<ShaderInfo> GetShaderInfo() { return _shaderInfo; }
 	const array<SRVBindingInfo, TEXTURE_TYPE_COUNT>& GetSRVBindingInfos() const { return _srvBindingInfos; }
 
 	void SetShaderInfo(shared_ptr<ShaderInfo> shaderInfo) { _shaderInfo = shaderInfo; }
@@ -29,8 +30,6 @@ public:
 	shared_ptr<Material> Clone();
 
 private:
-	friend class RenderComponentBase;
-
 	MaterialDesc _desc;
 
 	shared_ptr<Texture> _diffuseMap;

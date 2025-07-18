@@ -1,11 +1,12 @@
 ﻿#include "pch.h"
 #include "Actor.h"
+#include "Components/BasicMeshRenderer.h"
 #include "Components/StaticMeshRenderer.h"
 #include "Components/Transform.h"
 #include "Components/CameraComponent.h"
 
-Actor::Actor()
-	: _actorName("BaseActor")
+Actor::Actor(EActorType actorType)
+	: _actorType(actorType)
 {
 	
 }
@@ -65,8 +66,8 @@ void Actor::FixedTick()
 
 void Actor::Render()
 {
-	if (_staticMeshRenderer)
-		_staticMeshRenderer->Render();
+	if (_renderer)
+		_renderer->Render();
 }
 
 
@@ -105,15 +106,23 @@ void Actor::AddComponent(shared_ptr<Component> component)
 		_components[index] = component;
 
 		// Renderer Caching
-		if (index == static_cast<uint8>(EComponentType::StaticMeshRenderer))
-			_staticMeshRenderer = static_pointer_cast<StaticMeshRenderer>(component);
+		if (index == static_cast<uint8>(EComponentType::StaticMeshRenderer) ||
+			index == static_cast<uint8>(EComponentType::BasicMeshRenderer))
+		{
+			_renderer = static_pointer_cast<RenderComponentBase>(component);
+		}
 	}
 }
 
-void Actor::SetMesh(const shared_ptr<Mesh>& mesh)
+void Actor::SetBasicMesh(const shared_ptr<BasicMesh>& mesh)
 {
 	// TODO : Default Basic Mesh 처리를 어떻게 할지?
-	//GetRenderComponent()->SetMesh(mesh);
+	GetOrAddBasicMeshRenderer()->SetBasicMesh(mesh);
+}
+
+void Actor::SetBasicMaterial(const shared_ptr<Material>& material)
+{
+	GetOrAddBasicMeshRenderer()->SetBasicMaterial(material);
 }
 
 void Actor::SetStaticMesh(const shared_ptr<StaticMesh>& staticMesh)
@@ -121,9 +130,17 @@ void Actor::SetStaticMesh(const shared_ptr<StaticMesh>& staticMesh)
 	GetOrAddStaticMeshRenderer()->SetStaticMesh(staticMesh);
 }
 
-void Actor::SetMaterial(const shared_ptr<Material>& material)
+shared_ptr<BasicMeshRenderer> Actor::GetOrAddBasicMeshRenderer()
 {
-	//GetRenderComponent()->SetMaterial(material);
+	if (shared_ptr<Component> component = _components[static_cast<uint8>(EComponentType::BasicMeshRenderer)])
+	{
+		return static_pointer_cast<BasicMeshRenderer>(component);
+	}
+
+	shared_ptr<Component> basicMeshRenderer = make_shared<BasicMeshRenderer>();
+	AddComponent(basicMeshRenderer);
+
+	return static_pointer_cast<BasicMeshRenderer>(basicMeshRenderer);
 }
 
 shared_ptr<StaticMeshRenderer> Actor::GetOrAddStaticMeshRenderer()

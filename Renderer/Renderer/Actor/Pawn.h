@@ -9,6 +9,7 @@ class Pawn : public Actor
 
 public:
 	Pawn();
+	Pawn(EActorType actorType);
 	virtual ~Pawn();
 
 	virtual void Construct() override;

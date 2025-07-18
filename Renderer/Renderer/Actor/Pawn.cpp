@@ -5,9 +5,14 @@
 #include "Components/Transform.h"
 
 Pawn::Pawn()
-	: Super()
+	: Super(EActorType::Pawn)
 {
 	
+}
+
+Pawn::Pawn(EActorType actorType)
+	: Super(actorType)
+{
 }
 
 Pawn::~Pawn()

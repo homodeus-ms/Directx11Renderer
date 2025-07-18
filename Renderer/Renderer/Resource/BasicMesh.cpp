@@ -1,58 +1,58 @@
 #include "pch.h"
-#include "Mesh.h"
+#include "BasicMesh.h"
 #include "Graphics/Buffer/GeometryCreator.h"
 #include "Graphics/Buffer/VertexBuffer.h"
 #include "Graphics/Buffer/IndexBuffer.h"
 
-Mesh::Mesh()
+BasicMesh::BasicMesh()
 	: Super(EResourceType::Mesh)
 {
 }
 
-Mesh::~Mesh()
+BasicMesh::~BasicMesh()
 {
 }
 
-void Mesh::Load(const wstring& path)
+void BasicMesh::Load(const wstring& path)
 {
 
 }
 
-void Mesh::CreateQuad()
+void BasicMesh::CreateQuad()
 {
 	_geometry = make_shared<Geometry<VertexUVNormalTangentData>>();
 	GeometryCreator::CreateQuad(_geometry);
 	CreateBuffers();
 }
 
-void Mesh::CreateCube()
+void BasicMesh::CreateCube()
 {
 	_geometry = make_shared<Geometry<VertexUVNormalTangentData>>();
 	GeometryCreator::CreateCube(_geometry);
 	CreateBuffers();
 }
 
-void Mesh::CreateGrid(int32 sizeX, int32 sizeZ)
+void BasicMesh::CreateGrid(int32 sizeX, int32 sizeZ)
 {
 	_geometry = make_shared<Geometry<VertexUVNormalTangentData>>();
 	GeometryCreator::CreateGrid(_geometry, sizeX, sizeZ);
 	CreateBuffers();
 }
 
-void Mesh::CreateSphere()
+void BasicMesh::CreateSphere()
 {
 	_geometry = make_shared<Geometry<VertexUVNormalTangentData>>();
 	GeometryCreator::CreateSphere(_geometry);
 	CreateBuffers();
 }
 
-const vector<D3D11_INPUT_ELEMENT_DESC>& Mesh::GetInputLayoutDesc() const
+const vector<D3D11_INPUT_ELEMENT_DESC>& BasicMesh::GetInputLayoutDesc() const
 {
 	// TODO : Currently hardcoded to VertexUVNormalData. 
 	return VertexUVNormalTangentData::descs;
 }
 
-void Mesh::CreateBuffers()
+void BasicMesh::CreateBuffers()
 {
 	_vertexBuffer = make_shared<VertexBuffer>();
 	_vertexBuffer->Create(_geometry->GetVertices());

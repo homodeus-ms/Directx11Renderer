@@ -27,7 +27,7 @@ private:
 
 	ComPtr<ID3D11BlendState> _blendState;
 	//ComPtr<ID3D11SamplerState> _samplerState;
-	shared_ptr<SamplerState> _samplerState;
+	static shared_ptr<SamplerState> _samplerState;
 	ComPtr<ID3D11DepthStencilState> _dsState;
 
 	float _blendFactor = 0.f;

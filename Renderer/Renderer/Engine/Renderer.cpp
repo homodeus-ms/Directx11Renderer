@@ -1,6 +1,8 @@
 ﻿#include "pch.h"
 #include "Renderer.h"
 #include "Engine/IExecute.h"
+#include "Managers/SceneManager.h"
+#include "Managers/ShaderParameterManager.h"    // TEMP
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -21,11 +23,14 @@ WPARAM Renderer::Run(RenderDesc& desc)
 	INPUT_MANAGER->BeginPlay(_desc.hWnd);
 	GUI->BeginPlay();
 	RESOURCE_MANAGER->BeginPlay();
-
+	SHADER_PARAM_MANAGER->BeginPlay();
+	
+	// Keep Order
+	// app Construct -> Scene Construct -> Scene BeginPly -> app BeginPlay
 	_desc.app->Construct();
+	SCENE_MANAGER->BeginPlay();
 	_desc.app->BeginPlay();
 
-	SCENE_MANAGER->BeginPlay();
 
 	MSG msg = { 0 };
 
@@ -89,7 +94,7 @@ BOOL Renderer::InitInstance(int cmdShow)
 	::AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, false);
 
 	_desc.hWnd = CreateWindowW(_desc.appName.c_str(), _desc.appName.c_str(), WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT, 0, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, nullptr, nullptr, _desc.hInstance, nullptr);
+		GWinStartX, GWinStartY, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, nullptr, nullptr, _desc.hInstance, nullptr);
 
 	if (!_desc.hWnd)
 		return FALSE;

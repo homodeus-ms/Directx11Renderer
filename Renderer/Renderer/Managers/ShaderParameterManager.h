@@ -42,7 +42,20 @@ public:
 	// Constant Buffer
 	void PushGlobalData(const Matrix& view, const Matrix& projection);
 	void PushTransformData(const TransformDesc& desc);
-	void PushLightData(const LightDesc& desc);
+	void PushDirectionalLightData(const DirectionalLightDesc& desc);
+	
+	void PushSpotLightData(const vector<SpotLightDesc>& descs);
+	void PushPointLightData(const vector<PointLightDesc>& descs);
+
+	// TEMP
+	void PushSpotLightData(const SpotLightDesc& desc);
+	void PushPointLightData(const PointLightDesc& desc);
+	SpotLightBuffer _spotLightBuffer;
+	PointLightBuffer _pointLightBuffer;
+	void UpdateAddedLights();
+	void CleanUpAddedLightBuffers();
+
+
 	void PushBoneBuffer(const BoneBuffer& desc);
 	void PushBoneIndex(const BoneIndex& desc);
 

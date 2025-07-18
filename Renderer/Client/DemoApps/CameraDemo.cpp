@@ -1,7 +1,7 @@
 ﻿#include "pch.h"
 #include "CameraDemo.h"
 #include "Main/ClientPawn.h"
-#include "Resource/Mesh.h"
+#include "Resource/BasicMesh.h"
 #include "Resource/Texture.h"
 #include "Graphics/Shader/ShaderInfo.h"
 #include "Graphics/Buffer/ConstantBuffer.h"
@@ -30,7 +30,7 @@ void CameraDemo::Construct()
 	// Create Actor
 	_clientPawn = make_shared<ClientPawn>();
 	_clientPawn->Construct();
-	_clientPawn->_actorName = "ClientPawn";
+	
 
 	// Attach Camera
 	/*_cameraActor = make_shared<CameraActor>(_clientPawn);
@@ -39,15 +39,15 @@ void CameraDemo::Construct()
 	_clientPawn->AttachFollowCamera(_cameraActor);*/
 
 	// Create and Set Mesh Info
-	shared_ptr<Mesh> mesh;
-	mesh = RESOURCE_MANAGER->Get<Mesh>(L"Cube");
+	shared_ptr<BasicMesh> mesh;
+	mesh = RESOURCE_MANAGER->Get<BasicMesh>(L"Cube");
 	
 
-	_clientPawn->SetMesh(mesh);
-	_clientPawn->SetMaterial(material);
+	_clientPawn->SetBasicMesh(mesh);
+	_clientPawn->SetBasicMaterial(material);
 
 	// Scene에 등장
-	SCENE->Add(_clientPawn);
+	SCENE->AddActor(_clientPawn);
 }
 
 void CameraDemo::BeginPlay()
@@ -61,12 +61,7 @@ void CameraDemo::Tick()
 	SHADER_PARAM_MANAGER->Update();
 
 	{
-		LightDesc lightDesc;
-		lightDesc.ambient = Vec4(0.5f);
-		lightDesc.diffuse = Vec4(1.f);
-		lightDesc.specular = Vec4(1.f, 1.f, 1.f, 1.f);
-		lightDesc.direction = Vec3(0.f, -1.f, 0.f);
-		SHADER_PARAM_MANAGER->PushLightData(lightDesc);
+		
 	}
 
 	_clientPawn->Tick();

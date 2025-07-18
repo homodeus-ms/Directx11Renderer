@@ -6,7 +6,7 @@
 
 class Shader;
 class Texture;
-class Mesh;
+class BasicMesh;
 class Material;
 class StaticMesh;
 
@@ -62,7 +62,7 @@ EResourceType ResourceManager::GetResourceType()
 {
 	if (std::is_same_v<T, Texture>)
 		return EResourceType::Texture;
-	if (std::is_same_v<T, Mesh>)
+	if (std::is_same_v<T, BasicMesh>)
 		return EResourceType::Mesh;
 	if (std::is_same_v<T, Material>)
 		return EResourceType::Material;

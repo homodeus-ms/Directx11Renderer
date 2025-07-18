@@ -21,6 +21,8 @@ constexpr LogLevel g_minLogLevel =
 	LogLevel::Error;  // 릴리즈에서는 Error만 출력
 #endif
 
+OnLogDelegate g_OnLogDelegate;
+
 // ANSI Color Code
 const char* GetLogColor(LogLevel level)
 {
@@ -93,6 +95,8 @@ void LogMessage(LogLevel level, const char* file, int32 line, const char* func, 
 		<< "[" << fileName << ":" << line << "@" << func << "] ";
 
 	std::string LogStr = oss.str();
+
+	g_OnLogDelegate.Broadcast(LogStr);
 
 	// 콘솔 출력 (색상 적용)
 	std::cout << GetLogColor(level) << LogStr << "\033[0m" << std::endl;

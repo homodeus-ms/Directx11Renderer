@@ -5,11 +5,12 @@
 #include "Components/CameraComponent.h"
 
 CameraActor::CameraActor()
+	: Super(EActorType::CameraActor)
 {
 }
 
 CameraActor::CameraActor(shared_ptr<Pawn> owner)
-	: Super()
+	: Super(EActorType::CameraActor)
 	, _owner(owner)
 {
 	
@@ -40,4 +41,12 @@ void CameraActor::EnableController(bool bEnable)
 	{
 		GetController()->SetMoveMode(EMoveMode::CameraMove);
 	}
+}
+
+void CameraActor::SetTransformChanged(bool bChanged)
+{
+	Super::SetTransformChanged(bChanged);
+
+	if (bChanged)
+		_onCameraLookChanged.Broadcast(GetTransform()->GetLook());
 }

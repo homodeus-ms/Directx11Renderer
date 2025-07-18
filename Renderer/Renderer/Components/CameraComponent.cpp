@@ -8,8 +8,8 @@ Matrix CameraComponent::S_MatProjection = Matrix::Identity;
 CameraComponent::CameraComponent()
 	: Super(EComponentType::Camera)
 {
-	_width = static_cast<float>(RENDERER->GetGameDesc().width);
-	_height = static_cast<float>(RENDERER->GetGameDesc().height);
+	_width = static_cast<float>(GWinSizeX - GUI_AreaX);
+	_height = static_cast<float>(GWinSizeY - GUI_AreaY);
 }
 
 CameraComponent::~CameraComponent()

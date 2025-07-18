@@ -4,91 +4,234 @@
 #include "Defines.hlsli"
 #include "Global.hlsli"
 
-struct LightDesc
+#define SPECULAR_INTENSITY (30)
+#define EMISSIVE_INTENSITY (10)
+
+struct DirectionalLightDesc
 {
     float4 ambient;
     float4 diffuse;
     float4 specular;
     float4 emissive;
+    
     float3 direction;
-    float padding;
+    uint isOn;
 };
 
-struct MaterialDesc
+struct SpotLightDesc
 {
     float4 ambient;
     float4 diffuse;
     float4 specular;
     float4 emissive;
+    
+    float3 position;
+    float range;
+    float3 direction;
+    float spotPower;
+    float3 attenuation; // constant, linear, quadratic
+    uint isOn;
 };
 
-cbuffer LightBuffer : register(BUFFER_NUM_LIGHT)
+struct PointLightDesc
 {
-    LightDesc GlobalLight;
+    float4 ambient;
+    float4 diffuse;
+    float4 specular;
+    float4 emissive;
+    
+    float3 position;
+    float range;
+    float3 attenuation; // constant, linear, quadratic
+    uint isOn;
+};
+
+cbuffer DirectionalLightBuffer : register(BUFFER_NUM_DIRECTIONAL_LIGHT)
+{
+    DirectionalLightDesc GlobalLight;
 }
 
-cbuffer MaterialBuffer : register(BUFFER_NUM_MATERIAL)
+cbuffer SpotLightBuffer : register(BUFFER_NUM_SPOT_LIGHT)
 {
-    MaterialDesc Material;
+    SpotLightDesc SpotLights[MAX_SPOT_LIGHT_COUNT];
+    uint SpotlightCount;
+    float3 spotLight_padding;
 }
 
+cbuffer PointLightBuffer : register(BUFFER_NUM_POINT_LIGHT)
+{
+    PointLightDesc PointLights[MAX_POINT_LIGHT_COUNT];
+    uint PointlightCount;
+    float3 pointLight_padding;
+}
 
 // SRV
 Texture2D DiffuseMap : register(t0);
 Texture2D NormalMap : register(t1);
 Texture2D SpecularMap : register(t2);
 
-
-
 // Compute Light Functions
-float4 ComputeAmbient(float3 normal, float2 uv)
+void GetSpecular(float4 lightSpec, float4 matSpec, float3 toEye, float3 lightDir, float3 normal, out float4 specular)
 {
-    float4 ambient = GlobalLight.ambient * Material.ambient;
-    return DiffuseMap.Sample(LinearSampler, uv) * ambient;
-}
-
-float4 ComputeDiffuse(float3 normal, float2 uv)
-{
-    float4 diffuse = saturate(dot(-GlobalLight.direction, normal));
-    float4 sampledColor = DiffuseMap.Sample(LinearSampler, uv);
-    return sampledColor * diffuse * GlobalLight.diffuse * Material.diffuse;
-}
-
-float4 ComputeSpecular(float3 normal, float3 worldPosition)
-{
-    float3 reflection = GlobalLight.direction - (2 * normal * dot(GlobalLight.direction, normal));
-    reflection = normalize(reflection);
+    float3 R = normalize(lightDir - (2 * normal * dot(lightDir, normal)));
+    float RDotEye = saturate(dot(R, toEye));
     
-    float3 toEye = normalize(CameraPosition - worldPosition);
-
-    float value = saturate(dot(reflection, toEye));
-    float specular = pow(value, 10);
-
-    return GlobalLight.specular * Material.specular * specular;
+    float factor = pow(RDotEye, SPECULAR_INTENSITY);
+    specular = lightSpec * matSpec * factor;
 }
 
-float4 ComputeEmmisive(float3 normal, float3 worldPosition)
+void GetSpecular2(float4 lightSpec, float4 matSpec, float3 toEye, float3 lightDir, float3 normal, out float4 specular)
 {
-    float3 toEye = normalize(CameraPosition - worldPosition);
-
-    float value = saturate(dot(toEye, normal));
-    float emissive = 1.0f - value;
-
-	// min, max, value
-    emissive = smoothstep(0.0f, 1.0f, emissive);
-    emissive = pow(emissive, 3);
-
-    return GlobalLight.emissive * Material.emissive * emissive;
+    float3 R = normalize(reflect(lightDir, normal));
+    float RDotEye = saturate(dot(R, toEye));
+    
+    float factor = pow(RDotEye, SPECULAR_INTENSITY);
+    specular = lightSpec * matSpec * factor;
 }
 
-float4 ComputeLight(float3 normal, float2 uv, float3 worldPosition)
+void GetEmissive(float4 lightE, float4 matE, float3 toEye, float3 normal, out float4 emissive)
 {
-    float4 ambient = ComputeAmbient(normal, uv);
-    float4 diffuse = ComputeDiffuse(normal, uv);
-    float4 specular = ComputeSpecular(normal, worldPosition);
-    float4 emmisive = ComputeEmmisive(normal, worldPosition);
+    float eyeDotNormal = saturate(dot(toEye, normal));
+    float factor = 1.f - eyeDotNormal;
+    
+    factor = smoothstep(0.0f, 1.0f, factor);
+    factor = pow(factor, EMISSIVE_INTENSITY);
+    emissive = lightE * matE * factor;
+}
+
+float4 ComputeDirectionalLight(float3 normal, float2 uv, float3 worldPosition)
+{
+    if (GlobalLight.isOn == 0)
+        return float4(0.f, 0.f, 0.f, 0.f);
+    
+    float4 ambient = { 0.f, 0.f, 0.f, 0.f };
+    float4 diffuse = { 0.f, 0.f, 0.f, 0.f };
+    float4 specular = { 0.f, 0.f, 0.f, 0.f };
+    float4 emissive = { 0.f, 0.f, 0.f, 0.f };
+ 
+    float4 sampledColor = DiffuseMap.Sample(LinearSampler, uv);
+    
+    // ambient
+    float4 ambientFactor = GlobalLight.ambient * Material.ambient;
+    ambient = sampledColor * ambientFactor;
+    
+    // diffuse, specular
+    float3 toEye = normalize(CameraPosition - worldPosition);
+    float lDotN = dot(-GlobalLight.direction, normal);
+    
+    [flatten]
+    if (lDotN > 0)
+    {
+        float4 diffuseFactor = GlobalLight.diffuse * Material.diffuse * lDotN;
+        diffuse = sampledColor * diffuseFactor;
+        GetSpecular(GlobalLight.specular, Material.specular, toEye, GlobalLight.direction, normal, specular);
+    }
+    
+    // emissive
+    GetEmissive(GlobalLight.emissive, Material.emissive, toEye, normal, emissive);
+    
+    return ambient + diffuse + specular + emissive;
+}
+
+float4 ComputeSpotLight(SpotLightDesc L, float3 normal, float2 uv, float3 worldPosition)
+{
+    if (L.isOn == 0)
+        return float4(0.f, 0.f, 0.f, 0.f);
+    
+    float3 toLightVec = L.position - worldPosition;
+    
+    float d = length(toLightVec);
+    
+    if (d > L.range)
+        return float4(0.f, 0.f, 0.f, 0.f);
+    if (d < 0.01f)
+        return float4(1.f, 1.f, 1.f, 1.f);
+    
+    toLightVec = toLightVec / d; // normalize
+    
+    float4 ambient = { 0.f, 0.f, 0.f, 0.f };
+    float4 diffuse = { 0.f, 0.f, 0.f, 0.f };
+    float4 specular = { 0.f, 0.f, 0.f, 0.f };
+    float4 emissive = { 0.f, 0.f, 0.f, 0.f };
    
-    return ambient + diffuse + specular + emmisive;
+    // Ambient
+    float4 sampledColor = DiffuseMap.Sample(LinearSampler, uv);
+    ambient = sampledColor * L.ambient * Material.ambient;
+    
+    // Diffuse
+    float3 toEye = normalize(CameraPosition - worldPosition);
+    float lDotN = dot(toLightVec, normal);
+    
+    [flatten]
+    if (lDotN > 0.f)
+    {
+        float4 diffuseFactor = L.diffuse * Material.diffuse * lDotN;
+        diffuse = sampledColor * diffuseFactor;
+    
+        // Specular
+        GetSpecular(L.specular, Material.specular, toEye, -toLightVec, normal, specular);
+    }
+    
+    // emissive
+    GetEmissive(GlobalLight.emissive, Material.emissive, toEye, normal, emissive);
+    
+    // SpotPower
+    float spot = pow(max(dot(-toLightVec, L.direction), 0.0f), L.spotPower);
+    float att = spot / dot(L.attenuation, float3(1.0f, d, d * d));
+    
+    ambient *= spot;
+    diffuse *= att;
+    specular *= att;
+    
+    return ambient + diffuse + specular + emissive;
+}
+
+float4 ComputePointLight(PointLightDesc L, float3 normal, float2 uv, float3 worldPosition)
+{
+    if (L.isOn == 0)
+        return float4(0.f, 0.f, 0.f, 0.f);
+    
+    float3 toLightVec = L.position - worldPosition;
+    float d = length(toLightVec);
+    
+    if (d > L.range)
+        return float4(0.f, 0.f, 0.f, 0.f);
+    if (d < 0.01f)
+        return float4(1.f, 1.f, 1.f, 1.f);
+    
+    toLightVec = toLightVec / d; // normalize
+    
+    float4 ambient = { 0.f, 0.f, 0.f, 0.f };
+    float4 diffuse = { 0.f, 0.f, 0.f, 0.f };
+    float4 specular = { 0.f, 0.f, 0.f, 0.f };
+    float4 emissive = { 0.f, 0.f, 0.f, 0.f };
+   
+    // Ambient
+    float4 sampledColor = DiffuseMap.Sample(LinearSampler, uv);
+    ambient = sampledColor * L.ambient * Material.ambient;
+    
+    // Diffuse
+    float lDotN = dot(toLightVec, normal);
+    float3 toEye = normalize(CameraPosition - worldPosition);
+
+    [flatten]
+    if (lDotN > 0.f)
+    {
+        float4 diffuseFactor = L.diffuse * Material.diffuse * lDotN;
+        diffuse = sampledColor * diffuseFactor;
+        GetSpecular(L.specular, Material.specular, toEye, -toLightVec, normal, specular);
+    }
+    
+    // emissive
+    GetEmissive(GlobalLight.emissive, Material.emissive, toEye, normal, emissive);
+    
+    // Attenuate
+    float att = 1.0f / dot(L.attenuation, float3(1.0f, d, d * d));
+    diffuse *= att;
+    specular *= att;
+    emissive *= att;
+    
+    return ambient + diffuse + specular + emissive;
 }
 
 

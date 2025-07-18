@@ -9,3 +9,8 @@ LightComponent::LightComponent()
 LightComponent::~LightComponent()
 {
 }
+
+void LightComponent::Tick()
+{
+	Super::Tick();
+}

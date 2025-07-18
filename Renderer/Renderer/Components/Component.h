@@ -7,6 +7,7 @@ enum class EComponentType : uint8
 {
 	Transform,
 	Controller,
+	BasicMeshRenderer,
 	StaticMeshRenderer,
 	Camera,
 	Animator,
@@ -17,7 +18,7 @@ enum class EComponentType : uint8
 
 enum
 {
-	FIXED_COMPONENT_COUNT = static_cast<uint8>(EComponentType::End) - 1
+	FIXED_COMPONENT_COUNT = static_cast<uint8>(EComponentType::End)
 };
 
 class Component
