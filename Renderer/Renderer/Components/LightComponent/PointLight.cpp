@@ -24,4 +24,5 @@ void PointLight::Tick()
 void PointLight::SetIsOn(bool bIsOn)
 {
 	_desc.isOn = bIsOn ? 1 : 0;
+	SHADER_PARAM_MANAGER->PushPointLightData(_desc);
 }

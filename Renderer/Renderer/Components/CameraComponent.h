@@ -23,10 +23,8 @@ public:
 	void SetFOV(float value) { _fov = value; }
 	void SetWidth(float value) { _width = value; }
 	void SetHeight(float value) { _height = value; }
-
-	Matrix& GetViewMatrix() { return _matView; }
-	Matrix& GetProjectionMatrix() { return _matProjection; }
-
+	
+	const Matrix GetVP() { return S_MatView * S_MatProjection; }
 
 private:
 	Matrix _matView = Matrix::Identity;

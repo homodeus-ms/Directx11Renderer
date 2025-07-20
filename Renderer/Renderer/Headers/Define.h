@@ -33,6 +33,7 @@ public:										\
 #define RESOURCE_MANAGER	GET_SINGLE(ResourceManager)
 #define GRAPHICS			GET_SINGLE(Graphics)
 #define GUI                 GET_SINGLE(ImGuiManager)
+#define NAME_MANAGER        (RENDERER->GetNamaManager())
 
 #define DEVICE				GRAPHICS->GetDevice()
 #define CONTEXT				GRAPHICS->GetDeviceContext()

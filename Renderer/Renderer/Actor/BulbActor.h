@@ -8,7 +8,7 @@ class BulbActor : public LightActor
 	using Super = LightActor;
 
 public:
-	BulbActor();
+	BulbActor(const string& name = "Bulb");
 	virtual ~BulbActor();
 
 	virtual void Construct() override;

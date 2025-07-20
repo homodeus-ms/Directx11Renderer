@@ -13,8 +13,10 @@ public:
 	virtual ~BasicMeshRenderer();
 
 	virtual void SetInputLayout() override;
+	virtual vector<shared_ptr<Material>> GetMaterials() override;
 	void SetBasicMesh(const shared_ptr<BasicMesh>& mesh);
 	void SetBasicMaterial(const shared_ptr<Material>& material);
+	virtual void ChangeMaterialType(EMaterialType type) override;
 	
 	virtual void Construct() override;
 	virtual void BeginPlay() override;

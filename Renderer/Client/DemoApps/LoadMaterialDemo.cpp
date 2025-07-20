@@ -18,18 +18,32 @@
 #include "Actor/BulbActor.h"
 
 
+LoadMaterialDemo::~LoadMaterialDemo()
+{
+}
+
 void LoadMaterialDemo::Construct()
 {
 	// 이쪽에서 정해줄 수 있게 하는 것들은 나중에 UI로 빼기 쉬움
 	
 	// GUI Controller -> TODO : 공통 시작 코드 부분 모으기
-	FLOW_MANAGER->BeginPlay();
+	//FLOW_MANAGER->BeginPlay();
+	g_FlowManager->BeginPlay();
 
 	// Resource Load
 	//RESOURCE_MANAGER->Load<Texture>(L"Guitarist", L"..\\Resources\\Images\\Guitarist2.png");
 	RESOURCE_MANAGER->LoadStaticMeshFromXML(L"Tank", L"Tank");
+	RESOURCE_MANAGER->LoadStaticMeshFromXML(L"Zelda", L"Zelda");
 	RESOURCE_MANAGER->Load<Texture>(L"Leather", L"..\\Resources\\Images\\Leather.jpg");
 	RESOURCE_MANAGER->Load<Texture>(L"Leather_Normal", L"..\\Resources\\Images\\Leather_Normal.jpg");
+	// C:\\Users\\seekc\\OneDrive\\Documents\\Renderer\\Renderer
+	RESOURCE_MANAGER->Load<Texture>(L"Snow", L"..\\Resources\\Images\\DDS\\Areskutan.dds");
+	RESOURCE_MANAGER->Load<Texture>(L"CubeMap1", L"..\\Resources\\Images\\DDS\\SanFrancisco2.dds");
+	RESOURCE_MANAGER->Load<Texture>(L"CubeMap2", L"..\\Resources\\Images\\DDS\\SanFrancisco4.dds");
+	RESOURCE_MANAGER->Load<Texture>(L"CubeMap3", L"..\\Resources\\Images\\DDS\\DropdownTriangle.dds");
+	RESOURCE_MANAGER->Load<Texture>(L"CubeMap4", L"..\\Resources\\Images\\DDS\\Lycksele3.dds");
+	RESOURCE_MANAGER->Load<Texture>(L"Night", L"..\\Resources\\Images\\DDS\\NightPath.dds");
+	RESOURCE_MANAGER->Load<Texture>(L"Skybox", L"..\\Resources\\Images\\DDS\\Skybox.dds");
 
 	// Material
 	shared_ptr<Material> material = make_shared<Material>();
@@ -40,30 +54,77 @@ void LoadMaterialDemo::Construct()
 		desc.ambient = Vec4(0.5f);
 		desc.diffuse = Vec4(1.f);
 		desc.specular = Vec4(1.f);
-
+		desc.emissive = Vec4(1.f, 0.f, 0.0f, 1.f);
+		desc.bUnLit = 0;
+		desc.MaterialType = EMaterialType::RimLight;
 	}
 	shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"BasicMeshShader.hlsl");
 	material->SetShaderInfo(shaderInfo);
 	RESOURCE_MANAGER->Add(L"Leather", material);
 	
 	// Client
-	if (0)
+	if (1)
 	{
-		_clientPawn = make_shared<ClientPawn>();
-		_clientPawn->Construct();
+		shared_ptr<ClientPawn> clientPawn = make_shared<ClientPawn>("Tank");
 
 		shared_ptr<StaticMesh> staticMesh = RESOURCE_MANAGER->Get<StaticMesh>(L"Tank");
-		_clientPawn->SetStaticMesh(staticMesh);
+
+		clientPawn->SetStaticMesh(staticMesh);
 		//_clientPawn->GetOrAddTransform()->SetLocalScale(Vec3(0.03f));
-		_clientPawn->GetOrAddTransform()->SetWorldPosition({ 0.f, 0.f, 0.f });
-		_clientPawn->GetOrAddTransform()->SetWorldRotation({ -0.1f, 0.0f, 0.0f });
+		clientPawn->GetOrAddTransform()->SetWorldPosition({ 0.f, 0.f, 0.f });
+		clientPawn->GetOrAddTransform()->SetWorldRotation({ -0.1f, 0.0f, 0.0f });
 
 		shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"03. LightTest.hlsl");
-		_clientPawn->GetOrAddStaticMeshRenderer()->SetShaderInfo(shaderInfo);
-		SCENE->AddActor(_clientPawn);
+		clientPawn->GetOrAddStaticMeshRenderer()->SetShaderInfo(shaderInfo);
+		SCENE->AddActor(clientPawn);
 	}
 
-	if (1)
+	if (0)
+	{
+		shared_ptr<ClientPawn> clientPawn = make_shared<ClientPawn>("Zelda");
+
+		shared_ptr<StaticMesh> staticMesh = RESOURCE_MANAGER->Get<StaticMesh>(L"Zelda");
+		
+		clientPawn->SetStaticMesh(staticMesh);
+		clientPawn->GetOrAddTransform()->SetLocalScale(Vec3(0.03f));
+		clientPawn->GetOrAddTransform()->SetWorldPosition({ 0.f, 0.f, 0.f });
+		shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"03. LightTest.hlsl");
+		clientPawn->GetOrAddStaticMeshRenderer()->SetShaderInfo(shaderInfo);
+		SCENE->AddActor(clientPawn);
+	}
+
+	// CubeMap
+	if (0)
+	{
+		shared_ptr<Material> cubeMapMat = make_shared<Material>();
+		shared_ptr<Texture> texture = RESOURCE_MANAGER->Get<Texture>(L"Skybox");
+		cubeMapMat->SetDiffuseMap(texture);
+		{
+			MaterialDesc& desc = cubeMapMat->GetMaterialDesc();
+			desc.ambient = Vec4(1.f);
+			desc.diffuse = Vec4(1.f);
+			desc.specular = Vec4(1.f);
+			desc.emissive = Vec4(0.f, 0.f, 0.0f, 1.f);
+		}
+		shared_ptr<ShaderInfo> cubeMapShader = make_shared<ShaderInfo>(L"CubeMapShader.hlsl");
+		cubeMapMat->SetShaderInfo(cubeMapShader);
+		RESOURCE_MANAGER->Add(L"CubeMap", cubeMapMat);
+
+		shared_ptr<Actor> pawn = make_shared<ClientPawn>();
+		pawn->Construct();
+		pawn->GetTransform()->SetWorldPosition({ 0.f, 0.f, 0.f });
+
+		shared_ptr<BasicMesh> mesh;
+		mesh = RESOURCE_MANAGER->Get<BasicMesh>(L"CubeMap");
+
+		pawn->SetBasicMesh(mesh);
+		pawn->SetBasicMaterial(cubeMapMat);
+
+		SCENE->AddActor(pawn);
+	}
+
+
+	if (0)
 	{
 		{
 			shared_ptr<Actor> pawn = make_shared<ClientPawn>();
@@ -81,25 +142,24 @@ void LoadMaterialDemo::Construct()
 		}
 
 		{
-			_clientPawn = make_shared<ClientPawn>();
+			shared_ptr<Actor> pawn2 = make_shared<ClientPawn>();
 
-			_clientPawn->Construct();
-			_clientPawn->GetOrAddTransform()->SetWorldPosition({ 0.f, 0.f, 0.f });
+			pawn2->GetOrAddTransform()->SetWorldPosition({ 0.f, 0.f, 0.f });
 
 			shared_ptr<BasicMesh> mesh;
 			mesh = RESOURCE_MANAGER->Get<BasicMesh>(L"Sphere");
 
-			_clientPawn->SetBasicMesh(mesh);
-			_clientPawn->SetBasicMaterial(material);
+			pawn2->SetBasicMesh(mesh);
+			pawn2->SetBasicMaterial(material);
 
-			SCENE->AddActor(_clientPawn);
+			SCENE->AddActor(pawn2);
 		}
 	}
 
-	// 전구
-	//_bulb = make_shared<BulbActor>();
-	//_bulb->Construct();
-	//SCENE->Add(_bulb);
+	// IBL
+	//SCENE->CreateEnvironment(L"Night");
+	//SCENE->SetEnvLightTexture(L"Night");
+	
 }
 
 void LoadMaterialDemo::BeginPlay()

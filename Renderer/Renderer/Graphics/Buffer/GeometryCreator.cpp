@@ -1,6 +1,72 @@
 ﻿#include "pch.h"
 #include "GeometryCreator.h"
 
+void GeometryCreator::CreateCubeMap(shared_ptr<Geometry<VertexData>> geometry, uint32 width)
+{
+	const float w = width;
+	const float h = width;
+	const float d = width;
+
+	vector<VertexData> vtx(24);
+
+	// 앞면
+	vtx[0] = VertexData{ Vec3(-w, -h, -d) };
+	vtx[1] = VertexData{ Vec3(-w, +h, -d) };
+	vtx[2] = VertexData{ Vec3(+w, +h, -d) };
+	vtx[3] = VertexData{ Vec3(+w, -h, -d) };
+	// 뒷면	
+	vtx[4] = VertexData{ Vec3(-w, -h, +d) };
+	vtx[5] = VertexData{ Vec3(+w, -h, +d) };
+	vtx[6] = VertexData{ Vec3(+w, +h, +d) };
+	vtx[7] = VertexData{ Vec3(-w, +h, +d) };
+	// 윗면
+	vtx[8] = VertexData{ Vec3(-w, +h, -d) };
+	vtx[9] = VertexData{ Vec3(-w, +h, +d) };
+	vtx[10] = VertexData{ Vec3(+w, +h, +d) };
+	vtx[11] = VertexData{ Vec3(+w, +h, -d) };
+	// 아랫면
+	vtx[12] = VertexData{ Vec3(-w, -h, -d) };
+	vtx[13] = VertexData{ Vec3(+w, -h, -d) };
+	vtx[14] = VertexData{ Vec3(+w, -h, +d) };
+	vtx[15] = VertexData{ Vec3(-w, -h, +d) };
+	// 왼쪽면	
+	vtx[16] = VertexData{ Vec3(-w, -h, +d) };
+	vtx[17] = VertexData{ Vec3(-w, +h, +d) };
+	vtx[18] = VertexData{ Vec3(-w, +h, -d) };
+	vtx[19] = VertexData{ Vec3(-w, -h, -d) };
+	// 오른쪽면
+	vtx[20] = VertexData{ Vec3(+w, -h, -d) };
+	vtx[21] = VertexData{ Vec3(+w, +h, -d) };
+	vtx[22] = VertexData{ Vec3(+w, +h, +d) };
+	vtx[23] = VertexData{ Vec3(+w, -h, +d) };
+
+	geometry->SetVertices(vtx);
+
+	vector<uint32> idx(36);
+
+	// Indices 거꾸로 (반시계방향)
+	// 앞면
+	idx[0] = 0; idx[1] = 2; idx[2] = 1;
+	idx[3] = 0; idx[4] = 3; idx[5] = 2;
+	// 뒷면
+	idx[6] = 4; idx[7] = 6; idx[8] = 5;
+	idx[9] = 4; idx[10] = 7; idx[11] = 6;
+	// 윗면
+	idx[12] = 8; idx[13] = 10; idx[14] = 9;
+	idx[15] = 8; idx[16] = 11; idx[17] = 10;
+	// 아랫면
+	idx[18] = 12; idx[19] = 14; idx[20] = 13;
+	idx[21] = 12; idx[22] = 15; idx[23] = 14;
+	// 왼쪽면
+	idx[24] = 16; idx[25] = 18; idx[26] = 17;
+	idx[27] = 16; idx[28] = 19; idx[29] = 18;
+	// 오른쪽면
+	idx[30] = 20; idx[31] = 22; idx[32] = 21;
+	idx[33] = 20; idx[34] = 23; idx[35] = 22;
+
+	geometry->SetIndices(idx);
+}
+
 void GeometryCreator::CreateQuad(shared_ptr<Geometry<VertexColorData>> geometry, Color color)
 {
 	vector<VertexColorData> vertices;

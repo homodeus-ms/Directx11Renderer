@@ -8,7 +8,7 @@ public:
 
 	virtual void Construct(string sliderName, float* values, bool useSync = true, float min = 0.f, float max = 1.f);
 	virtual void Tick() {};
-
+	virtual float* TickSlider() { return _values; }
 protected:
 	
 	string _sliderName{};

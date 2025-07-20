@@ -4,14 +4,14 @@
 #include "Components/CameraComponent.h"
 #include "Components/Transform.h"
 
-Pawn::Pawn()
-	: Super(EActorType::Pawn)
+Pawn::Pawn(const string& name)
+	: Super(EActorType::Pawn, name)
 {
 	
 }
 
-Pawn::Pawn(EActorType actorType)
-	: Super(actorType)
+Pawn::Pawn(EActorType actorType, const string& name)
+	: Super(actorType, name)
 {
 }
 

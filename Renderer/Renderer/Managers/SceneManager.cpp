@@ -8,6 +8,7 @@ void SceneManager::BeginPlay()
 	_currentScene->Construct();
 	_onBeforeSceneBeginPlay.Broadcast();
 	_currentScene->BeginPlay();
+	_onAfterSceneBeginPlay.Broadcast();
 }
 
 void SceneManager::Tick()

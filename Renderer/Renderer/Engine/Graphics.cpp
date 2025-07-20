@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Graphics.h"
+#include "Graphics/RenderPass/ShadowMap.h"
 
 void Graphics::BeginPlay(HWND hwnd)
 {
@@ -9,6 +10,9 @@ void Graphics::BeginPlay(HWND hwnd)
 	CreateRenderTargetView();
 	CreateDepthStencilView();
 	SetViewport();
+
+	_shadowMap = make_shared<ShadowMap>();
+	_shadowMap->Construct();
 }
 
 void Graphics::RenderBegin()

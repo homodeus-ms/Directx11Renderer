@@ -13,6 +13,7 @@ struct RenderDesc
 	bool vsync = false;
 	bool windowed = true;
 	Color clearColor = Color(0.f, 0.f, 0.f, 0.f);
+
 };
 
 class Renderer
@@ -20,9 +21,11 @@ class Renderer
 	DECLARE_SINGLE(Renderer);
 
 public:
+	~Renderer();
 	WPARAM Run(RenderDesc& desc);
 
 	RenderDesc& GetGameDesc() { return _desc; }
+	shared_ptr<class NameManager> GetNameManager() { return _nameManager; }
 
 private:
 	ATOM MyRegisterClass();
@@ -33,6 +36,7 @@ private:
 	static LRESULT CALLBACK WndProc(HWND handle, UINT message, WPARAM wParam, LPARAM lParam);
 
 private:
+	shared_ptr<class NameManager> _nameManager = nullptr;
 	RenderDesc _desc;
 };
 

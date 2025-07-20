@@ -8,8 +8,8 @@ class Pawn : public Actor
 	using Super = Actor;
 
 public:
-	Pawn();
-	Pawn(EActorType actorType);
+	Pawn(const string& name = "Pawn");
+	Pawn(EActorType actorType, const string& name = "Pawn");
 	virtual ~Pawn();
 
 	virtual void Construct() override;

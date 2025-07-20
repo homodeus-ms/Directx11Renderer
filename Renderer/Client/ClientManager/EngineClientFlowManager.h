@@ -9,12 +9,12 @@
 
 DECLARE_MULTICAST_DELEGATE(AddPreSceneConstructFuncsDelegate);
 DECLARE_MULTICAST_DELEGATE(AddPreSceneBeginPlayFuncsDelegate);
+DECLARE_MULTICAST_DELEGATE(AddPostSceneBeginPlayFuncsDelegate);
 
 class GUIController;
 
-class EngineClientFlowManager
+class EngineClientFlowManager : public enable_shared_from_this<EngineClientFlowManager>
 {
-	DECLARE_SINGLE(EngineClientFlowManager)
 
 public:
 	~EngineClientFlowManager();
@@ -24,9 +24,11 @@ public:
 
 	void ExecutePreSceneConstructFuncs();
 	void ExecutePreSceneBeginPlayFuncs();
+	void ExecutePostSceneBeginPlayFuncs();
 
 	AddPreSceneConstructFuncsDelegate AddPreSceneConstructFuncs;
 	AddPreSceneBeginPlayFuncsDelegate AddPreSceneBeginPlayFuncs;
+	AddPostSceneBeginPlayFuncsDelegate AddPostSceneBeginPlayFuncs;
 
 private:
 	

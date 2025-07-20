@@ -15,6 +15,7 @@
 #include "Managers/ShaderParameterManager.h"
 #include "Resource/Material.h"
 #include "Graphics/PipelineState/SamplerState.h"
+#include "Graphics/RenderPass/ShadowMap.h"
 
 
 RenderComponentBase::RenderComponentBase(EComponentType componentType) 
@@ -36,6 +37,8 @@ void RenderComponentBase::BeginPlay()
 		SetInputLayout();
 		GetDefaultStates();
 	}
+
+	_shadowMapResources = GRAPHICS->GetShadowMap()->GetShadowMapResources();
 }
 
 
@@ -80,6 +83,23 @@ void RenderComponentBase::Render()
 
 }
 
+void RenderComponentBase::RenderDepthOnly()
+{
+	CONTEXT->IASetInputLayout(_shadowMapResources.inputLayout->GetComPtr().Get());
+	CONTEXT->IASetPrimitiveTopology(_pipelineState->GetTopology());
+
+	if (_vertexShader)
+		CONTEXT->VSSetShader(_shadowMapResources.vertexShader->GetComPtr().Get(), nullptr, 0);
+	if (_pixelShader)
+		CONTEXT->PSSetShader(_shadowMapResources.pixelShader->GetComPtr().Get(), nullptr, 0);
+
+	CONTEXT->RSSetState(_shadowMapResources.rasterizerState.Get());
+	CONTEXT->OMSetDepthStencilState(_shadowMapResources.DepthStencilState.Get(), 0);
+
+	// Light·Î
+	SHADER_PARAM_MANAGER->PushGlobalData(CameraComponent::S_MatView, CameraComponent::S_MatProjection);
+}
+
 void RenderComponentBase::SetVertexShader(shared_ptr<ShaderInfo> shaderInfo)
 {
 	_vertexShader = make_shared<VertexShader>();
@@ -96,7 +116,6 @@ void RenderComponentBase::GetDefaultStates()
 {
 	_pipelineState = PipelineState::GetDefaultState();
 }
-
 
 void RenderComponentBase::Draw(UINT vertexCount, UINT startVertexLocation)
 {

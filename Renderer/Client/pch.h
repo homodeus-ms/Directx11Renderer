@@ -7,4 +7,5 @@
 #include "Managers/ShaderParameterManager.h"
 #include "ClientManager/EngineClientFlowManager.h"
 
-#define FLOW_MANAGER GET_SINGLE(EngineClientFlowManager)
+#include "Main/Main.h"
+#define FLOW_MANAGER g_FlowManager

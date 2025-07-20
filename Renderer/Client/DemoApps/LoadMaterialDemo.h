@@ -11,11 +11,13 @@ class BulbActor;
 class LoadMaterialDemo : public IExecute
 {
 public:
+	virtual ~LoadMaterialDemo();
+
 	virtual void Construct() override;
 	virtual void BeginPlay() override;
 	virtual void Tick() override;
 	virtual void Render() override;
-
+	
 	OnTest _onTestDelegate;
 
 private:

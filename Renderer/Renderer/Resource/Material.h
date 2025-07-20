@@ -14,6 +14,7 @@ public:
 	virtual ~Material();
 
 	MaterialDesc& GetMaterialDesc() { return _desc; }
+	MaterialDesc* GetDesc() { return &_desc; }
 
 	shared_ptr<Texture> GetDiffuseMap() { return _diffuseMap; }
 	shared_ptr<Texture> GetNormalMap() { return _normalMap; }
@@ -32,7 +33,7 @@ public:
 private:
 	MaterialDesc _desc;
 
-	shared_ptr<Texture> _diffuseMap;
+	shared_ptr<Texture> _diffuseMap; // or CubeMap (When Making CubeMap)
 	shared_ptr<Texture> _normalMap;
 	shared_ptr<Texture> _specularMap;
 

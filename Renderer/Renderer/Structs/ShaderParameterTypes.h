@@ -17,6 +17,31 @@ enum class EConstBufferRegisterNumber : uint8
 	BoneIndex,
 };
 
+enum class EMaterialType : uint32
+{
+	Default = 0,
+	RimLight = 1,
+	Toon = 2,
+	Monotone = 3,
+
+	END,
+};
+
+constexpr uint32 GetEMaterialTypeCount()
+{
+	return static_cast<uint32>(EMaterialType::END);
+}
+constexpr string GetEMaterialTypeString(EMaterialType type)
+{
+	switch (type)
+	{
+	case EMaterialType::Default: return "Default";
+	case EMaterialType::RimLight: return "RimLight";
+	case EMaterialType::Toon: return "Toon";
+	case EMaterialType::Monotone: return "Monotone";
+	default: return "";
+	}
+}
 
 struct BufferBindingInfo
 {
@@ -46,7 +71,7 @@ struct GlobalDesc
 	Matrix P = Matrix::Identity;
 	Matrix VP = Matrix::Identity;
 	Vec3 CameraPosition{};
-	float dummy = 0.f;
+	uint32 bEnvLightUsing = 0;
 };
 
 struct TransformDesc
@@ -74,7 +99,11 @@ struct MaterialDesc
 	Color diffuse = Color(1.f, 1.f, 1.f, 1.f);
 	Color specular = Color(1.f, 1.f, 1.f, 1.f); 
 	Color emissive = Color(0.f, 0.f, 0.f, 1.f);
+	uint32 bUnLit = 0;
+	EMaterialType MaterialType = EMaterialType::Default;
+	uint32 pad[2]{};
 };
+
 
 #define MAX_BONE_COUNT 50
 

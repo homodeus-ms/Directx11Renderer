@@ -32,6 +32,8 @@ void BasicMeshRenderer::Construct()
 void BasicMeshRenderer::BeginPlay()
 {
 	Super::BeginPlay();
+
+	
 }
 
 void BasicMeshRenderer::Render()
@@ -64,9 +66,17 @@ void BasicMeshRenderer::SetInputLayout()
 	_inputLayout->Create(desc, _vertexShader->GetBlob());
 }
 
+vector<shared_ptr<Material>> BasicMeshRenderer::GetMaterials()
+{
+	vector<shared_ptr<Material>> materials;
+	materials.push_back(_basicMaterial);
+	return materials;
+}
+
 void BasicMeshRenderer::SetBasicMesh(const shared_ptr<BasicMesh>& mesh)
 {
 	_basicMesh = mesh;
+	_bRenderReady = _basicMesh != nullptr && _basicMaterial != nullptr;
 }
 
 void BasicMeshRenderer::SetBasicMaterial(const shared_ptr<Material>& material)
@@ -74,6 +84,12 @@ void BasicMeshRenderer::SetBasicMaterial(const shared_ptr<Material>& material)
 	_basicMaterial = material;
 	SetVertexShader(_basicMaterial->GetShaderInfo());
 	SetPixelShader(_basicMaterial->GetShaderInfo());
+	_bRenderReady = _basicMesh != nullptr && _basicMaterial != nullptr;
+}
+
+void BasicMeshRenderer::ChangeMaterialType(EMaterialType type)
+{
+	_basicMaterial->GetDesc()->MaterialType = type;
 }
 
 

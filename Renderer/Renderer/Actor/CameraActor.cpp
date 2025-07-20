@@ -4,13 +4,14 @@
 #include "Components/Controller.h"
 #include "Components/CameraComponent.h"
 
-CameraActor::CameraActor()
-	: Super(EActorType::CameraActor)
+
+CameraActor::CameraActor(const string& name)
+	: Super(EActorType::CameraActor, name)
 {
 }
 
-CameraActor::CameraActor(shared_ptr<Pawn> owner)
-	: Super(EActorType::CameraActor)
+CameraActor::CameraActor(shared_ptr<Pawn> owner, const string& name)
+	: Super(EActorType::CameraActor, name)
 	, _owner(owner)
 {
 	
@@ -27,7 +28,8 @@ void CameraActor::Construct()
 	_moveSpeed = 10.f;
 	GetTransform()->SetWorldPosition(Vec3(0.f, 0.f, -15.f));
 	//GetTransform()->SetLocalRotation(Vec3(0.4f, 0.f, 0.f));
-	AddComponent(make_shared<CameraComponent>());
+	_cameraComponent = make_shared<CameraComponent>();
+	AddComponent(_cameraComponent);
 	GetController()->SetMoveMode(EMoveMode::CameraMove);
 }
 
@@ -49,4 +51,9 @@ void CameraActor::SetTransformChanged(bool bChanged)
 
 	if (bChanged)
 		_onCameraLookChanged.Broadcast(GetTransform()->GetLook());
+}
+
+const Matrix& CameraActor::GetCameraVP()
+{
+	return _cameraComponent->GetVP();
 }

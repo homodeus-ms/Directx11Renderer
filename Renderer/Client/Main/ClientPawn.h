@@ -6,7 +6,7 @@ class ClientPawn : public Pawn
 	using Super = Pawn;
 
 public:
-	ClientPawn();
+	ClientPawn(const string& name = "Pawn");
 	virtual ~ClientPawn();
 
 	virtual void BeginPlay() override;

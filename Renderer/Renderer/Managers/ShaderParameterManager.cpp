@@ -18,7 +18,6 @@ void ShaderParameterManager::BeginPlay()
 	RegisterBuffer<BoneBuffer>("BoneBuffer", static_cast<uint8>(EConstBufferRegisterNumber::BoneBuffer), EShaderStage::VsStage);
 	RegisterBuffer<BoneIndex>("BoneIndex", static_cast<uint8>(EConstBufferRegisterNumber::BoneIndex), EShaderStage::VsStage);
 	
-	
 }
 
 void ShaderParameterManager::Update()
@@ -34,6 +33,7 @@ void ShaderParameterManager::PushGlobalData(const Matrix& view, const Matrix& pr
 
 	Matrix invV = view.Invert();
 	desc.CameraPosition = { invV._41, invV._42, invV._43 };
+	desc.bEnvLightUsing = _bEnvLigthOn ? 1 : 0;
 
 	UpdateData("Global", desc);
 }
@@ -132,6 +132,18 @@ void ShaderParameterManager::PushSRV(const array<SRVBindingInfo, TEXTURE_TYPE_CO
 	_srvBindings = srvs;
 }
 
+void ShaderParameterManager::PushEnvLight(shared_ptr<SRVBindingInfo> info)
+{
+	_envLightInfo = info;
+	PushEnvLightOnOff(true);
+	_bEnvLightDirty = true;
+}
+
+void ShaderParameterManager::PushEnvLightOnOff(bool bOn)
+{
+	_bEnvLigthOn = bOn;
+}
+
 void ShaderParameterManager::BindAllDirtyBuffers()
 {
 	UpdateAddedLights();
@@ -153,6 +165,7 @@ void ShaderParameterManager::BindAllDirtyBuffers()
 		info.dirty = false;
 	}
 
+	// SRVs From Material
 	for (const auto& info : _srvBindings)
 	{
 		if (IsStageVS(info.stage))
@@ -160,6 +173,13 @@ void ShaderParameterManager::BindAllDirtyBuffers()
 
 		if (IsStagePS(info.stage))
 			CONTEXT->PSSetShaderResources(info.slot, 1, info.srv.GetAddressOf());
+	}
+
+	// other SRVs
+	if (_bEnvLightDirty)
+	{
+		CONTEXT->PSSetShaderResources(_envLightInfo->slot, 1, _envLightInfo->srv.GetAddressOf());
+		_bEnvLightDirty = false;
 	}
 
 	CleanUpAddedLightBuffers();

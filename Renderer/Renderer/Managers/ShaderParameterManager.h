@@ -46,15 +46,13 @@ public:
 	
 	void PushSpotLightData(const vector<SpotLightDesc>& descs);
 	void PushPointLightData(const vector<PointLightDesc>& descs);
-
-	// TEMP
+	
 	void PushSpotLightData(const SpotLightDesc& desc);
 	void PushPointLightData(const PointLightDesc& desc);
-	SpotLightBuffer _spotLightBuffer;
-	PointLightBuffer _pointLightBuffer;
+	SpotLightBuffer _spotLightBuffer{};
+	PointLightBuffer _pointLightBuffer{};
 	void UpdateAddedLights();
 	void CleanUpAddedLightBuffers();
-
 
 	void PushBoneBuffer(const BoneBuffer& desc);
 	void PushBoneIndex(const BoneIndex& desc);
@@ -63,6 +61,10 @@ public:
 	void PushMaterial(shared_ptr<Material> material);
 	void PushMaterialData(const MaterialDesc& desc);
 	void PushSRV(const array<SRVBindingInfo, TEXTURE_TYPE_COUNT>& srvs);
+
+	// Other SRV
+	void PushEnvLight(shared_ptr<SRVBindingInfo> info);
+	void PushEnvLightOnOff(bool bOn);
 
 	void BindAllDirtyBuffers();
 
@@ -82,6 +84,10 @@ private:
 
 	unordered_map<string, BufferBindingInfo> _constbuffers;
 	array<SRVBindingInfo, TEXTURE_TYPE_COUNT> _srvBindings;
+	shared_ptr<SRVBindingInfo> _envLightInfo = nullptr;
 	vector<SamplerBindingInfo> _samplerBindings;
+
+	bool _bEnvLigthOn = false;
+	bool _bEnvLightDirty = false;
 };
 

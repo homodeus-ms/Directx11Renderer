@@ -34,6 +34,27 @@ void Widget_Slider4::Tick()
 	ImGui::Checkbox(_syncLabel.c_str(), &_bUseSync);
 }
 
+float* Widget_Slider4::TickSlider()
+{
+	if (ImGui::SliderFloat4(_sliderName.c_str(), _values, _min, _max, "%.1f"))
+	{
+		if (_bUseSync)
+			HandleSync();
+	}
+	ImGui::SameLine();
+	ImGui::Checkbox(_syncLabel.c_str(), &_bUseSync);
+
+	return _values;
+}
+
+void Widget_Slider4::UpdateValue(float* val)
+{
+	for (int32 i = 0; i < 4; ++i)
+	{
+		_values[i] = val[i];
+	}
+}
+
 void Widget_Slider4::HandleSync()
 {
 	float diff = 0.f;

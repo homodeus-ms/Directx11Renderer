@@ -1,5 +1,7 @@
 #pragma once
 
+class ShadowMap;
+
 class Graphics
 {
 	DECLARE_SINGLE(Graphics);
@@ -10,6 +12,7 @@ public:
 	void RenderBegin();
 	void RenderEnd();
 
+	shared_ptr<ShadowMap> GetShadowMap() const { return _shadowMap; }
 	ComPtr<ID3D11Device> GetDevice() { return _device; }
 	ComPtr<ID3D11DeviceContext> GetDeviceContext() { return _deviceContext; }
 
@@ -31,5 +34,7 @@ private:
 	ComPtr<ID3D11DepthStencilView> _depthStencilView;
 
 	D3D11_VIEWPORT _viewport{};
+
+	shared_ptr<ShadowMap> _shadowMap;
 };
 

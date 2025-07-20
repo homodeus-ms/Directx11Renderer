@@ -1,5 +1,6 @@
 #include "Global.hlsli"
 #include "Light.hlsli"
+#include "GetColorFuncs.hlsli"
 
 MeshOutput VS(VertexTangentInput input)
 {
@@ -17,25 +18,42 @@ MeshOutput VS(VertexTangentInput input)
 
 float4 PS(MeshOutput input) : SV_Target
 {
+    float3 toEye = normalize(CameraPosition - input.worldPosition);
+    float3 inputNormal = normalize(input.normal);
     ComputeNormalMapping(input.normal, input.tangent, input.uv);
     input.normal = normalize(input.normal);
     
-    float4 directionalColor = ComputeDirectionalLight(input.normal, input.uv, input.worldPosition);
+    float4 litColor = BLACK;
+    bool bUnLit = Material.bUnLit == 0 ? false : true;
     
-    float4 spotColor = { 0.0f, 0.0f, 0.0f, 1.f };
-    for (uint i = 0; i < SpotlightCount; ++i)
+    if (!bUnLit)
+        litColor = CalculateLitColor(input);
+    
+    int matType = Material.MaterialType;
+    switch (matType)
     {
-        spotColor += ComputeSpotLight(SpotLights[i], input.normal, input.uv, input.worldPosition);
+        case MATERIAL_TYPE_DEFAULT:
+            break; 
+        case MATERIAL_TYPE_LIM_LIGHT:
+            float4 limLight = ComputeRimLight(false, DEFAULT_LIM_LIGHT_COLOR, toEye, inputNormal);
+            litColor += limLight;
+            break;
+        case MATERIAL_TYPE_TOON:
+            return GetToonShadingByGlobalLight(litColor, input.normal, input.uv);
+        default:
+            return float4(0.f, 1.f, 0.f, 1.f);
     }
     
-    float4 pointColor = { 0.f, 0.f, 0.f, 0.f };
-    for (uint j = 0; j < PointlightCount; ++j)
+    // Env Lighting
+    if (bEnvLightUsing == 1)
     {
-        pointColor += ComputePointLight(PointLights[j], input.normal, input.uv, input.worldPosition);
+        inputNormal = float3(0.f, 0.f, 1.f);
+        float3 viewR = reflect(-toEye, inputNormal);
+        float4 envColor = textureCube.Sample(LinearSampler, normalize(input.worldPosition));
+        litColor = litColor * 0.7f + envColor * 0.3f;
+        return float4(litColor.xyz, 1.f); 
     }
     
-    float4 color = directionalColor + spotColor + pointColor;
-    color.w = DiffuseMap.Sample(LinearSampler, input.uv).w;
+    return litColor;
     
-    return color;
 }

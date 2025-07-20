@@ -57,6 +57,8 @@ using namespace Microsoft::WRL;
 #pragma comment(lib, "Assimp/assimp-vc143-mt.lib")
 #endif
 
+#pragma comment(lib, "C:/vcpkg/installed/x64-windows/lib/DirectXTK.lib")
+
 // Managers
 #include "Engine/Renderer.h"
 #include "Engine/Graphics.h"
@@ -64,7 +66,7 @@ using namespace Microsoft::WRL;
 #include "Managers/TimeManager.h"
 #include "Managers/ResourceManager.h"
 #include "Utils/ImGui/ImGuiManager.h"
-
+#include "Managers/NameManager.h"
 
 
 

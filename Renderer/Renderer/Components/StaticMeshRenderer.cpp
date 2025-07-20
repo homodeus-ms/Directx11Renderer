@@ -34,11 +34,21 @@ void StaticMeshRenderer::SetInputLayout()
 	_inputLayout->Create(desc, _vertexShader->GetBlob());
 }
 
+vector<shared_ptr<Material>> StaticMeshRenderer::GetMaterials()
+{
+	return _staticMesh->GetMaterials();
+}
+
 void StaticMeshRenderer::SetShaderInfo(shared_ptr<ShaderInfo> shaderInfo)
 {
 	_shaderInfo = shaderInfo;
 	SetVertexShader(_shaderInfo);
 	SetPixelShader(_shaderInfo);
+}
+
+void StaticMeshRenderer::ChangeMaterialType(EMaterialType type)
+{
+	_staticMesh->ChangeMaterialType(type);
 }
 
 void StaticMeshRenderer::Construct()

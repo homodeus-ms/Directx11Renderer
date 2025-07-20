@@ -5,14 +5,18 @@
 #include "Components/Transform.h"
 #include "Components/CameraComponent.h"
 
-Actor::Actor(EActorType actorType)
+Actor::Actor(EActorType actorType, const string& name)
 	: _actorType(actorType)
 {
-	
+	_actorName = RENDERER->GetNameManager()->AddOrGetNewNameIfDuplicated(name);
+
+	if (_actorType == EActorType::LightActor || _actorType == EActorType::CameraActor)
+		_bCastShadow = false;
 }
 
 Actor::~Actor()
 {
+	RENDERER->GetNameManager()->RemoveName(_actorName);
 }
 
 void Actor::Construct()
@@ -70,6 +74,12 @@ void Actor::Render()
 		_renderer->Render();
 }
 
+void Actor::RenderDepthOnly()
+{
+	if (_bCastShadow && _renderer)
+		_renderer->RenderDepthOnly();
+}
+
 
 shared_ptr<Component> Actor::GetFixedComponent(EComponentType type)
 {
@@ -114,6 +124,19 @@ void Actor::AddComponent(shared_ptr<Component> component)
 	}
 }
 
+bool Actor::IsRenderedActor()
+{
+	return _renderer != nullptr;
+}
+
+vector<shared_ptr<Material>> Actor::GetMaterials()
+{
+	if (!IsRenderedActor())
+		return vector<shared_ptr<Material>>();
+
+	return _renderer->GetMaterials();
+}
+
 void Actor::SetBasicMesh(const shared_ptr<BasicMesh>& mesh)
 {
 	// TODO : Default Basic Mesh 처리를 어떻게 할지?
@@ -128,6 +151,14 @@ void Actor::SetBasicMaterial(const shared_ptr<Material>& material)
 void Actor::SetStaticMesh(const shared_ptr<StaticMesh>& staticMesh)
 {
 	GetOrAddStaticMeshRenderer()->SetStaticMesh(staticMesh);
+}
+
+void Actor::ChangeMaterialType(EMaterialType type)
+{
+	if (!IsRenderedActor())
+		return;
+
+	return _renderer->ChangeMaterialType(type);
 }
 
 shared_ptr<BasicMeshRenderer> Actor::GetOrAddBasicMeshRenderer()

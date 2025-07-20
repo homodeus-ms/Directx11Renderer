@@ -54,6 +54,9 @@ struct MaterialDesc
     float4 diffuse;
     float4 specular;
     float4 emissive;
+    uint bUnLit;
+    uint MaterialType;
+    uint pad[2];
 };
 
 cbuffer MaterialBuffer : register(BUFFER_NUM_MATERIAL)
@@ -67,7 +70,7 @@ cbuffer GlobalBuffer : register(BUFFER_NUM_GLOBAL)
     ROW_MAT P;
     ROW_MAT VP;
     float3 CameraPosition;
-    float globalBufferPadding;
+    uint bEnvLightUsing;
 };
 
 cbuffer TransformBuffer : register(BUFFER_NUM_TRANSFORM)
@@ -87,6 +90,13 @@ cbuffer BoneIndex : register(BUFFER_NUM_BONEINDEX)
     uint BoneIndex;
     float3 boneIndexPadding;
 }
+
+
+// SRV
+Texture2D DiffuseMap : register(t0);
+Texture2D NormalMap : register(t1);
+Texture2D SpecularMap : register(t2);
+TextureCube textureCube : register(t3);
 
 // SamplerState
 //SamplerState LinearSampler

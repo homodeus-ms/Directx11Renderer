@@ -7,6 +7,7 @@
 
 DECLARE_MULTICAST_DELEGATE(BeforeSceneConstructDelegate);
 DECLARE_MULTICAST_DELEGATE(BeforeSceneBeginPlayDelegate);
+DECLARE_MULTICAST_DELEGATE(AfterSceneBeginPlayDelegate);
 
 class SceneManager
 {
@@ -32,6 +33,7 @@ public:
 	// Delegates
 	BeforeSceneConstructDelegate _onBeforeSceneConstruct;
 	BeforeSceneBeginPlayDelegate _onBeforeSceneBeginPlay;
+	AfterSceneBeginPlayDelegate _onAfterSceneBeginPlay;
 
 private:
 

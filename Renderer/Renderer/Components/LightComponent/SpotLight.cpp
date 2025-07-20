@@ -24,5 +24,6 @@ void SpotLight::Tick()
 void SpotLight::SetIsOn(bool bIsOn)
 {
 	_desc.isOn = bIsOn ? 1 : 0;
+	SHADER_PARAM_MANAGER->PushSpotLightData(_desc);
 }
 

@@ -1,11 +1,10 @@
 #ifndef LIGHT_HLSLI
 #define LIGHT_HLSLI
 
-#include "Defines.hlsli"
 #include "Global.hlsli"
 
 #define SPECULAR_INTENSITY (30)
-#define EMISSIVE_INTENSITY (10)
+#define EMISSIVE_INTENSITY (4)
 
 struct DirectionalLightDesc
 {
@@ -65,11 +64,6 @@ cbuffer PointLightBuffer : register(BUFFER_NUM_POINT_LIGHT)
     float3 pointLight_padding;
 }
 
-// SRV
-Texture2D DiffuseMap : register(t0);
-Texture2D NormalMap : register(t1);
-Texture2D SpecularMap : register(t2);
-
 // Compute Light Functions
 void GetSpecular(float4 lightSpec, float4 matSpec, float3 toEye, float3 lightDir, float3 normal, out float4 specular)
 {
@@ -89,14 +83,35 @@ void GetSpecular2(float4 lightSpec, float4 matSpec, float3 toEye, float3 lightDi
     specular = lightSpec * matSpec * factor;
 }
 
-void GetEmissive(float4 lightE, float4 matE, float3 toEye, float3 normal, out float4 emissive)
+float4 ComputeRimLight(bool useLight, float4 matE, float3 toEye, float3 normal)
 {
+    float4 emissive = BLACK;
+    
     float eyeDotNormal = saturate(dot(toEye, normal));
     float factor = 1.f - eyeDotNormal;
-    
     factor = smoothstep(0.0f, 1.0f, factor);
     factor = pow(factor, EMISSIVE_INTENSITY);
-    emissive = lightE * matE * factor;
+    
+    if (!useLight)
+    {
+        emissive = matE * factor;
+        return emissive;
+    }
+    
+    float E = matE * factor;
+    
+    emissive = GlobalLight.emissive * E;
+    
+    for (int i = 0; i < SpotlightCount; ++i)
+    {
+        emissive += SpotLights[i].emissive * E;
+    }
+    for (int j = 0; j < PointlightCount; ++j)
+    {
+        emissive += PointLights[j].emissive * E;
+    }
+    
+    return emissive;
 }
 
 float4 ComputeDirectionalLight(float3 normal, float2 uv, float3 worldPosition)
@@ -127,10 +142,7 @@ float4 ComputeDirectionalLight(float3 normal, float2 uv, float3 worldPosition)
         GetSpecular(GlobalLight.specular, Material.specular, toEye, GlobalLight.direction, normal, specular);
     }
     
-    // emissive
-    GetEmissive(GlobalLight.emissive, Material.emissive, toEye, normal, emissive);
-    
-    return ambient + diffuse + specular + emissive;
+    return ambient + diffuse + specular;
 }
 
 float4 ComputeSpotLight(SpotLightDesc L, float3 normal, float2 uv, float3 worldPosition)
@@ -172,9 +184,6 @@ float4 ComputeSpotLight(SpotLightDesc L, float3 normal, float2 uv, float3 worldP
         GetSpecular(L.specular, Material.specular, toEye, -toLightVec, normal, specular);
     }
     
-    // emissive
-    GetEmissive(GlobalLight.emissive, Material.emissive, toEye, normal, emissive);
-    
     // SpotPower
     float spot = pow(max(dot(-toLightVec, L.direction), 0.0f), L.spotPower);
     float att = spot / dot(L.attenuation, float3(1.0f, d, d * d));
@@ -183,7 +192,7 @@ float4 ComputeSpotLight(SpotLightDesc L, float3 normal, float2 uv, float3 worldP
     diffuse *= att;
     specular *= att;
     
-    return ambient + diffuse + specular + emissive;
+    return ambient + diffuse + specular;
 }
 
 float4 ComputePointLight(PointLightDesc L, float3 normal, float2 uv, float3 worldPosition)
@@ -222,18 +231,14 @@ float4 ComputePointLight(PointLightDesc L, float3 normal, float2 uv, float3 worl
         GetSpecular(L.specular, Material.specular, toEye, -toLightVec, normal, specular);
     }
     
-    // emissive
-    GetEmissive(GlobalLight.emissive, Material.emissive, toEye, normal, emissive);
-    
     // Attenuate
     float att = 1.0f / dot(L.attenuation, float3(1.0f, d, d * d));
     diffuse *= att;
     specular *= att;
     emissive *= att;
     
-    return ambient + diffuse + specular + emissive;
+    return ambient + diffuse + specular;
 }
-
 
 void ComputeNormalMapping(inout float3 worldNormal, float3 worldTangent, float2 uv)
 {
@@ -254,6 +259,31 @@ void ComputeNormalMapping(inout float3 worldNormal, float3 worldTangent, float2 
 
     // 탄젠트 스페이스 노멀 → 월드 스페이스 노멀
     worldNormal = normalize(mul(tangentSpaceNormal, tangentToWorld));
+}
+
+float4 CalculateLitColor(in MeshOutput input)
+{
+    //ComputeNormalMapping(input.normal, input.tangent, input.uv);
+    //input.normal = normalize(input.normal);
+    
+    float4 directionalColor = ComputeDirectionalLight(input.normal, input.uv, input.worldPosition);
+    
+    float4 spotColor = { 0.0f, 0.0f, 0.0f, 1.f };
+    for (uint i = 0; i < SpotlightCount; ++i)
+    {
+        spotColor += ComputeSpotLight(SpotLights[i], input.normal, input.uv, input.worldPosition);
+    }
+    
+    float4 pointColor = { 0.f, 0.f, 0.f, 0.f };
+    for (uint j = 0; j < PointlightCount; ++j)
+    {
+        pointColor += ComputePointLight(PointLights[j], input.normal, input.uv, input.worldPosition);
+    }
+    
+    float4 color = directionalColor + spotColor + pointColor;
+    color.w = 1.f;
+    
+    return color;
 }
 
 #endif /* LIGHT_HLSLI */

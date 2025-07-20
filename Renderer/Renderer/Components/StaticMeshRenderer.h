@@ -12,8 +12,10 @@ public:
 	virtual ~StaticMeshRenderer();
 
 	virtual void SetInputLayout() override;
+	virtual vector<shared_ptr<Material>> GetMaterials() override;
 	void SetStaticMesh(const shared_ptr<StaticMesh>& staticMesh) { _staticMesh = staticMesh; }
 	void SetShaderInfo(shared_ptr<ShaderInfo> shaderInfo);
+	virtual void ChangeMaterialType(EMaterialType type) override;
 
 	virtual void Construct() override;
 	virtual void BeginPlay() override;

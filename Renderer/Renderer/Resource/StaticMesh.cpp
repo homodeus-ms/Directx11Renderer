@@ -26,6 +26,12 @@ shared_ptr<Material> StaticMesh::GetMaterialByName(const wstring& name)
 	return nullptr;
 }
 
+void StaticMesh::ChangeMaterialType(EMaterialType type)
+{
+	for (auto& mat : _materials)
+		mat->GetDesc()->MaterialType = type;
+}
+
 shared_ptr<ImportedStaticMesh> StaticMesh::GetMeshByName(const wstring& name)
 {
 	for (auto& mesh : _meshes)

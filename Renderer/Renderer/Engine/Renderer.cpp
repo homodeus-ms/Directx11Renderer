@@ -6,6 +6,11 @@
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+Renderer::~Renderer()
+{
+	_nameManager.reset();
+}
+
 WPARAM Renderer::Run(RenderDesc& desc)
 {
 	_desc = desc;
@@ -24,6 +29,9 @@ WPARAM Renderer::Run(RenderDesc& desc)
 	GUI->BeginPlay();
 	RESOURCE_MANAGER->BeginPlay();
 	SHADER_PARAM_MANAGER->BeginPlay();
+
+	// NameManager : static Singleton으로 했을 때 종료 순서가 보장이 안됨 -> shared_ptr로 관리
+	_nameManager = NameManager::CreateNameManager();
 	
 	// Keep Order
 	// app Construct -> Scene Construct -> Scene BeginPly -> app BeginPlay
@@ -59,13 +67,18 @@ void Renderer::Tick()
 	GUI->Tick();
 
 	SCENE_MANAGER->Tick();
-	_desc.app->Tick();
-	_desc.app->Render();
+	if (_desc.app)
+	{
+		_desc.app->Tick();
+		_desc.app->Render();
+	}
 	SCENE_MANAGER->Render();
 
 	GUI->Render();
 	GRAPHICS->RenderEnd();
 }
+
+
 
 ATOM Renderer::MyRegisterClass()
 {
@@ -105,6 +118,8 @@ BOOL Renderer::InitInstance(int cmdShow)
 	return TRUE;
 }
 
+
+
 LRESULT Renderer::WndProc(HWND handle, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	if (ImGui_ImplWin32_WndProcHandler(handle, message, wParam, lParam))
@@ -118,6 +133,7 @@ LRESULT Renderer::WndProc(HWND handle, UINT message, WPARAM wParam, LPARAM lPara
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		break;
+
 	default:
 		return ::DefWindowProc(handle, message, wParam, lParam);
 	}

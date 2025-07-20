@@ -1,12 +1,12 @@
 #pragma once
 
 #include "Resource/ResourceBase.h"
+#include "Resource/BasicMesh.h"
 #include "Structs/ImportedMeshData.h"
 #include "Structs/ETextureType.h"
 
 class Shader;
 class Texture;
-class BasicMesh;
 class Material;
 class StaticMesh;
 
@@ -62,7 +62,7 @@ EResourceType ResourceManager::GetResourceType()
 {
 	if (std::is_same_v<T, Texture>)
 		return EResourceType::Texture;
-	if (std::is_same_v<T, BasicMesh>)
+	if (std::is_base_of_v<BasicMesh, T>)
 		return EResourceType::Mesh;
 	if (std::is_same_v<T, Material>)
 		return EResourceType::Material;

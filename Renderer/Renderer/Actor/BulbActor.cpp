@@ -5,9 +5,11 @@
 #include "Resource/BasicMesh.h"
 #include "Resource/Material.h"
 #include "Graphics/Shader/ShaderInfo.h"
+#include "Managers/ShaderParameterManager.h"
+#include "Managers/SceneManager.h"
 
-BulbActor::BulbActor()
-	: Super(ELightType::Point)
+BulbActor::BulbActor(const string& name)
+	: Super(ELightType::Point, name)
 {
 }
 
@@ -18,17 +20,16 @@ BulbActor::~BulbActor()
 void BulbActor::Construct()
 {
 	Super::Construct();
-
-	RESOURCE_MANAGER->Load<Texture>(L"Bulb", L"..\\Resources\\Images\\Yellow.jpg");
-	_basicMesh = RESOURCE_MANAGER->Get<BasicMesh>(L"Cube");
-
+	
+	_basicMesh = RESOURCE_MANAGER->Get<BasicMesh>(L"Sphere");
 	_material = make_shared<Material>();
-	_material->SetDiffuseMap(RESOURCE_MANAGER->Get<Texture>(L"Bulb"));
 	{
 		MaterialDesc& desc = _material->GetMaterialDesc();
-		desc.ambient = Vec4(0.5f);
-		desc.diffuse = Vec4(1.f);
+		desc.ambient = Vec4(0.0f);
+		desc.diffuse = Vec4(1.f, 1.f, 0.5f, 1.f);
 		desc.specular = Vec4(1.f);
+		desc.emissive = Vec4(1.f, 0.8f, 0.2f, 1.f);
+		desc.bUnLit = 1;
 	}
 
 	shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"BasicMeshShader.hlsl");
@@ -36,7 +37,7 @@ void BulbActor::Construct()
 	RESOURCE_MANAGER->Add(L"Bulb", _material);
 
 	GetTransform()->SetWorldPosition({ 0.f, 5.f, 0.f });
-	GetTransform()->SetLocalScale({ 0.5f, 0.5f, 0.5f });
+	//GetTransform()->SetLocalScale({ 0.5f, 0.5f, 0.5f });
 
 	SetBasicMaterial(_material);
 	SetBasicMesh(_basicMesh);
@@ -50,4 +51,6 @@ void BulbActor::BeginPlay()
 void BulbActor::Tick()
 {
 	Super::Tick();
+
+	
 }

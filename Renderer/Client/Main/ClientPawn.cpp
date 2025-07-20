@@ -1,7 +1,8 @@
 #include "pch.h"
 #include "ClientPawn.h"
 
-ClientPawn::ClientPawn()
+ClientPawn::ClientPawn(const string& name)
+	: Super(name)
 {
 }
 

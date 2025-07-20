@@ -1,6 +1,7 @@
 #pragma once
 #include "ResourceBase.h"
 #include "Structs/ImportedMeshData.h"
+#include "Structs/ShaderParameterTypes.h"
 
 class StaticMesh : public ResourceBase
 {
@@ -14,6 +15,7 @@ public:
 	vector<shared_ptr<Material>>& GetMaterials() { return _materials; }
 	shared_ptr<Material> GetMaterialByIndex(uint32 index) { return _materials[index]; }
 	shared_ptr<Material> GetMaterialByName(const wstring& name);
+	void ChangeMaterialType(EMaterialType type);
 
 	uint32 GetMeshCount() { return static_cast<uint32>(_meshes.size()); }
 	vector<shared_ptr<ImportedStaticMesh>>& GetMeshes() { return _meshes; }

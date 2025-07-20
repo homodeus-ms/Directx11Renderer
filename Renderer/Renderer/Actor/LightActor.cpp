@@ -5,8 +5,8 @@
 #include "Components/LightComponent/SpotLight.h"
 #include "Components/LightComponent/PointLight.h"
 
-LightActor::LightActor(ELightType lightType)
-	: Super(EActorType::LightActor), _lightType(lightType)
+LightActor::LightActor(ELightType lightType, const string& name)
+	: Super(EActorType::LightActor, name), _lightType(lightType)
 {
 	switch (_lightType)
 	{
@@ -26,7 +26,8 @@ LightActor::LightActor(ELightType lightType)
 }
 
 LightActor::~LightActor()
-{
+{	
+	int a = 3;
 }
 
 LightDesc* LightActor::GetDesc() const

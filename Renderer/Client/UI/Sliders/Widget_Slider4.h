@@ -11,6 +11,9 @@ public:
 
 	virtual void Construct(string sliderName, float* values, bool useSync = true, float min = 0.f, float max = 1.f) override;
 	virtual void Tick() override;
+	virtual float* TickSlider() override;
+
+	void UpdateValue(float* val);
 
 private:
 	void HandleSync();

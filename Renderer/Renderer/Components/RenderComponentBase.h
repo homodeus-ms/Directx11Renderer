@@ -1,6 +1,8 @@
 #pragma once
 #include "Component.h"
 #include "Structs/EShaderStage.h"
+#include "Structs/ShaderParameterTypes.h"
+#include "Graphics/RenderPass/ShadowMapResources.h"
 
 class InputLayout;
 class VertexShader;
@@ -20,6 +22,10 @@ public:
 	
 	virtual void BeginPlay() override;
 	virtual void Render();
+	void RenderDepthOnly();
+
+	virtual vector<shared_ptr<Material>> GetMaterials() abstract;
+	virtual void ChangeMaterialType(EMaterialType type) abstract;
 
 protected:
 	virtual void SetInputLayout() abstract;
@@ -32,15 +38,21 @@ protected:
 	void DrawInstanced(UINT vertexCountPerInstance, UINT instanceCount, UINT startVertexLocation = 0, UINT startInstanceLocation = 0);
 	void DrawIndexedInstanced(UINT indexCountPerInstance, UINT instanceCount, UINT startIndexLocation = 0, INT baseVertexLocation = 0, UINT startInstanceLocation = 0);
 
-
 	shared_ptr<InputLayout> _inputLayout = nullptr;
 	shared_ptr<VertexShader> _vertexShader;
 	shared_ptr<PixelShader> _pixelShader;
 	shared_ptr<PipelineState> _pipelineState;
-
 	ComPtr<ID3D11SamplerState> _samplerState;
 
 	bool _bRenderReady = false;
 
+	// ShadowMap
+	ShadowMapResources _shadowMapResources;
+
+	shared_ptr<InputLayout> _shadowInputLayout = nullptr;
+	shared_ptr<VertexShader> _shadowVertexShader = nullptr;
+	shared_ptr<PixelShader> _shadowPixelShader = nullptr;
+	ComPtr<ID3D11RasterizerState> _shadowRS = nullptr;
+	ComPtr<ID3D11DepthStencilState> _shadowDSS = nullptr;
 };
 

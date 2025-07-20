@@ -8,6 +8,8 @@
 #include "NormalDemo.h"
 #include "LoadMaterialDemo.h"
 
+shared_ptr<EngineClientFlowManager> g_FlowManager;
+
 void CreateConsole()
 {
 	// Show Console for debug
@@ -25,6 +27,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 {
 	CreateConsole();
 
+	g_FlowManager = make_shared<EngineClientFlowManager>();
+
 	RenderDesc desc;
 	desc.appName = L"Renderer";
 	desc.hInstance = hInstance;
@@ -36,6 +40,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	desc.app = make_shared<LoadMaterialDemo>();
 
 	RENDERER->Run(desc);
+
+	g_FlowManager.reset();
 
 	return 0;
 }

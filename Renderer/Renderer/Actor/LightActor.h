@@ -9,7 +9,7 @@ class LightActor : public Pawn
 	using Super = Pawn;
 
 public:
-	LightActor(ELightType lightType);
+	LightActor(ELightType lightType, const string& name = "LightActor");
 	virtual ~LightActor();
 
 	ELightType GetLightType() const { return _lightType; }
