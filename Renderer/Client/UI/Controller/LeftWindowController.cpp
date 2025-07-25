@@ -6,11 +6,13 @@
 #include "Components/LightComponent/DirectionalLight.h"
 #include "Components/LightComponent/SpotLight.h"
 #include "Components/LightComponent/PointLight.h"
+#include "Components/Transform.h"
 #include "Resource/Material.h"
 #include "UI/Sliders/Widget_Slider4.h"
 #include "UI/Sliders/Widget_Slider3.h"
 #include "Actor/BulbActor.h"
 #include "Utils/Utils.h"
+#include "Graphics/RenderPass/ShadowMap.h"
 
 
 LeftWindowController::LeftWindowController()
@@ -63,6 +65,8 @@ LeftWindowController::~LeftWindowController()
 				SAFE_DELETE(ptr);
 		}
 	}
+
+	SAFE_DELETE(_globalLightPosition);
 }
 
 void LeftWindowController::BeginPlay()
@@ -89,6 +93,7 @@ void LeftWindowController::CreateLeftWindow()
 	DrawPointLightWidget();
 	DrawActorControlWidget();
 	DrawCubeMap();
+	DrawShowDebugShadowMapSelector();
 
 	ImGui::End();
 }
@@ -96,12 +101,6 @@ void LeftWindowController::CreateLeftWindow()
 void LeftWindowController::OnLightManagerCreatedCallback()
 {
 	CreateLightControlWidget(ELightType::Directional, 0);
-}
-
-void LeftWindowController::OnGlobalLightOnOffChanged()
-{
-	SCENE->TurnGlobalLightOnOff(_bGlobalLightOn);
-	_bPreGlobalLightOn = _bGlobalLightOn;
 }
 
 shared_ptr<LightActor> LeftWindowController::CreateLightControlWidget(ELightType lightType, int32 index)
@@ -129,6 +128,11 @@ shared_ptr<LightActor> LeftWindowController::CreateLightControlWidget(ELightType
 			_globalLightSliders[i]->Construct(DEFAULT_VAR_NAMES[i], colorPtrs[i]);
 		}
 
+		//_globalLightActor->GetTransform()->GetWorldPosition();
+		//_globalLightPosition = new Widget_Slider3("GlobalLightPosition");
+		//_globalLightPosition->Construct("Position", (float*)&desc->position, false, -80.f, 80.f);
+
+
 		return _globalLightActor;
 	}
 	case ELightType::Spot:
@@ -154,7 +158,7 @@ shared_ptr<LightActor> LeftWindowController::CreateLightControlWidget(ELightType
 		}
 
 		_spotLightSliders2[index].push_back(new Widget_Slider3("Spot"));
-		_spotLightSliders2[index][0]->Construct("Position", (float*)&desc->position, false, -20.f, 20.f);
+		_spotLightSliders2[index][0]->Construct("Position", (float*)&desc->position, false, -80.f, 80.f);
 		_spotLightSliders2[index][0]->SetShowFloatDigit(0);
 		_spotLightSliders2[index].push_back(new Widget_Slider3("Spot"));
 		_spotLightSliders2[index][1]->Construct("Direction", (float*)&desc->direction, false, -1.f, 1.f);
@@ -256,6 +260,7 @@ void LeftWindowController::RemoveLightControlWidget(ELightType lightType, int32 
 
 void LeftWindowController::CacheVariables()
 {
+	_globalLightLabelSize = ImGui::CalcTextSize("Global Light ");
 	_spotLightLabelSize = ImGui::CalcTextSize(SPOT_BUTTON_LABELS[0]);
 	_pointLightLabelSize = ImGui::CalcTextSize(POINT_BUTTON_LABELS[0]);
 
@@ -290,13 +295,21 @@ void LeftWindowController::DrawGlobalLightWidget()
 
 	if (_globalLightActor)
 	{
-		ImGui::Text("Global Light");
-		ImGui::SameLine();
-		ImGui::Checkbox("OnOff", &_bGlobalLightOn);
-		if (_bPreGlobalLightOn != _bGlobalLightOn)
-			OnGlobalLightOnOffChanged();
+		if (ImGui::Selectable("Global Light", _bGlobalLightOn, 0, _globalLightLabelSize))
+		{
+			_bGlobalLightOn = !_bGlobalLightOn;
+			SCENE->TurnGlobalLightOnOff(_bGlobalLightOn);
+		}
+		if (_bGlobalLightOn && ImGui::CollapsingHeader("details"))
+		{
+			TickSliders(_globalLightSliders);
+			
+			_bGlobalLightOnMove = _orbitActor == _globalLightActor;
+			ImGui::Checkbox("Move Active(on Space Key) ", &_bGlobalLightOnMove);
+			if (_bGlobalLightOnMove)
+				HandleMoveLight(_globalLightActor);
+		}
 
-		TickSliders(_globalLightSliders);
 	}
 }
 
@@ -323,6 +336,11 @@ void LeftWindowController::DrawSpotLightWidget()
 		{
 			TickSliders(_spotLightSliders1[i]);
 			TickSliders(_spotLightSliders2[i]);
+
+			_bSpotLightOnMove[i] = _orbitActor == _spotLightActors[i];
+			ImGui::Checkbox(CHECK_MOVE_SPOT_LABELS[i], &_bSpotLightOnMove[i]);
+			if (_bSpotLightOnMove[i])
+				HandleMoveLight(_spotLightActors[i]);
 		}
 	}
 }
@@ -354,6 +372,11 @@ void LeftWindowController::DrawPointLightWidget()
 		{
 			TickSliders(_pointLightSliders1[i]);
 			TickSliders(_pointLightSliders2[i]);
+
+			_bPointLightOnMove[i] = _orbitActor == _pointLightActors[i];
+			ImGui::Checkbox(CHECK_MOVE_POINT_LABELS[i], &_bPointLightOnMove[i]);
+			if (_bPointLightOnMove[i])
+				HandleMoveLight(_pointLightActors[i]);
 		}
 	}
 }
@@ -451,10 +474,26 @@ void LeftWindowController::DrawCubeMap()
 	}
 }
 
+void LeftWindowController::DrawShowDebugShadowMapSelector()
+{
+	ImGui::Spacing();
+	ImGui::Separator();
+	
+	if (ImGui::Checkbox("Show Debug Shadow Map", &_bShowDebugShadowMap))
+	{
+		SCENE->SetDrawShadowMap(_bShowDebugShadowMap);
+	}
+}
+
 void LeftWindowController::OnActorRegistered(weak_ptr<Actor> actor)
 {
 	string actorName = actor.lock()->GetName();
 	if (Utils::IsStartWith(actorName, "CubeMap"))
+		return;
+
+	EActorType actorType = actor.lock()->GetActorType();
+
+	if (actorType == EActorType::DebugActor || actorType == EActorType::LightActor)
 		return;
 
 	_actors.push_back(actor);
@@ -493,6 +532,71 @@ void LeftWindowController::OnActorRegistered(weak_ptr<Actor> actor)
 	// Material type : Material이 여러개 있을 수 있지만 Material의 타입은 통일된다고 가정
 	_materialType.push_back(materials[0]->GetDesc()->MaterialType);
 }
+
+void LeftWindowController::HandleMoveLight(const shared_ptr<LightActor>& light)
+{
+	_orbitActor = light;
+
+	if (ImGui::IsKeyDown(ImGuiKey_Space))
+	{
+		SetLightOrbitMode(light, true);
+		MoveLightOrbitOnSpaceKeyDown(light);
+	}
+	else
+	{
+		SetLightOrbitMode(light, false);
+	}
+}
+
+void LeftWindowController::SetLightOrbitMode(shared_ptr<LightActor> light, bool bOnOff)
+{
+	_bIsOrbitOn = bOnOff;
+
+	if (bOnOff && !_bRadiusGet)
+	{
+		Vec3 position = light->GetOrAddTransform()->GetWorldPosition();
+		_radius = sqrt(position.x * position.x + position.z * position.z);
+		_bRadiusGet = true;
+		
+		if (position.z == 0.f && position.x == 0.f)
+		{
+			_orbitAngle = 0.f;
+			return;
+		}
+
+		_orbitAngle = atan2(position.z, position.x);
+	}
+	else if (!bOnOff)
+	{
+		_bRadiusGet = false;
+	}
+}
+
+void LeftWindowController::MoveLightOrbitOnSpaceKeyDown(shared_ptr<LightActor> light)
+{
+	float dt = TIME_MANAGER->GetDeltaTime();
+	_orbitAngle += dt * _orbitSpeed;
+
+	Vec3 currPosition = light->GetTransform()->GetWorldPosition();
+
+	Vec3 newPos;
+	newPos.x = _radius * cos(_orbitAngle);
+	newPos.z = _radius * sin(_orbitAngle);
+	newPos.y = currPosition.y;
+
+	light->GetTransform()->SetWorldPosition(newPos);
+
+	if (light->GetLightType() != ELightType::Point)
+	{
+		Vec3 lookTarget = -newPos;
+		lookTarget.Normalize();
+
+		light->GetTransform()->SetLocalRotationByTargetLook(lookTarget);
+	}
+}
+
+
+
 
 
 

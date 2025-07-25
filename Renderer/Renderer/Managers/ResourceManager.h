@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Resource/ResourceBase.h"
-#include "Resource/BasicMesh.h"
+#include "Resource/BasicMesh/BasicMesh.h"
 #include "Structs/ImportedMeshData.h"
 #include "Structs/ETextureType.h"
 
@@ -40,6 +40,7 @@ public:
 
 private:
 	void CreateDefaultMesh();
+	void CreateDefaultMaterials();
 
 	// Read Data From XML(Saved fbx Data) 
 	bool GetFullPathFromAssetFolderByFileName(const wstring& filename, wstring& OUT meshPath, wstring& OUT materialPath);

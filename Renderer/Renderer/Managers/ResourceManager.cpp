@@ -5,16 +5,19 @@
 #include "Utils/Utils.h"
 #include "Utils/FileUtils.h"
 #include "Resource/Texture.h"
-#include "Resource/BasicMesh.h"
-#include "Resource/DefaultBasicMesh.h"
-#include "Resource/CubeMapBasicMesh.h"
+#include "Resource/BasicMesh/BasicMesh.h"
+#include "Resource/BasicMesh/DefaultBasicMesh.h"
+#include "Resource/BasicMesh/CubeMapBasicMesh.h"
+#include "Resource/BasicMesh/VertexUVBasicMesh.h"
 #include "Resource/Material.h"
 #include "Resource/StaticMesh.h"
 #include "Graphics/Shader/Shader.h"
+#include "Graphics/Shader/ShaderInfo.h"
 
 void ResourceManager::BeginPlay()
 {
 	CreateDefaultMesh();
+	CreateDefaultMaterials();
 }
 
 void ResourceManager::CreateDefaultMesh()
@@ -298,3 +301,107 @@ Color ResourceManager::ReadColorInfo(tinyxml2::XMLElement* node)
 	return color;
 }
 
+void ResourceManager::CreateDefaultMaterials()
+{
+	Load<Texture>(L"WhiteTexture", L"..\\Resources\\Images\\White.jpg");
+
+	// Red
+	{
+		shared_ptr<Material> material = make_shared<Material>();
+		material->SetDiffuseMap(Get<Texture>(L"WhiteTexture"));
+		{
+			MaterialDesc& desc = material->GetMaterialDesc();
+			desc.ambient = Vec4(0.8f);
+			desc.diffuse = Vec4(1.f, 0.f, 0.f, 1.f);
+			desc.specular = Vec4(1.f);
+			desc.emissive = Vec4(0.f, 0.f, 0.0f, 1.f);
+			desc.bUnLit = 0;
+		}
+		shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"BasicMeshShader.hlsl");
+		material->SetShaderInfo(shaderInfo);
+		Add(L"BasicRed", material);
+	}
+
+	{
+		shared_ptr<Material> material = make_shared<Material>();
+		material->SetDiffuseMap(Get<Texture>(L"WhiteTexture"));
+		{
+			MaterialDesc& desc = material->GetMaterialDesc();
+			desc.ambient = Vec4(0.8f);
+			desc.diffuse = Vec4(1.f, 0.f, 0.f, 1.f);
+			desc.specular = Vec4(1.f);
+			desc.emissive = Vec4(0.f, 0.f, 0.0f, 1.f);
+			desc.bUnLit = 0;
+		}
+		shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"BasicMeshShader.hlsl");
+		material->SetShaderInfo(shaderInfo);
+		Add(L"BasicRed", material);
+	}
+	// Blue
+	{
+		shared_ptr<Material> material = make_shared<Material>();
+		material->SetDiffuseMap(Get<Texture>(L"WhiteTexture"));
+		{
+			MaterialDesc& desc = material->GetMaterialDesc();
+			desc.ambient = Vec4(0.8f);
+			desc.diffuse = Vec4(0.f, 0.f, 1.f, 1.f);
+			desc.specular = Vec4(1.f);
+			desc.emissive = Vec4(0.f, 0.f, 0.0f, 1.f);
+			desc.bUnLit = 0;
+		}
+		shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"BasicMeshShader.hlsl");
+		material->SetShaderInfo(shaderInfo);
+		Add(L"BasicBlue", material);
+	}
+
+	// Green
+	{
+		shared_ptr<Material> material = make_shared<Material>();
+		material->SetDiffuseMap(Get<Texture>(L"WhiteTexture"));
+		{
+			MaterialDesc& desc = material->GetMaterialDesc();
+			desc.ambient = Vec4(0.8f);
+			desc.diffuse = Vec4(0.f, 1.f, 0.f, 1.f);
+			desc.specular = Vec4(1.f);
+			desc.emissive = Vec4(0.f, 0.f, 0.0f, 1.f);
+			desc.bUnLit = 0;
+		}
+		shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"BasicMeshShader.hlsl");
+		material->SetShaderInfo(shaderInfo);
+		Add(L"BasicGreen", material);
+	}
+
+	// Yellow
+	{
+		shared_ptr<Material> material = make_shared<Material>();
+		material->SetDiffuseMap(Get<Texture>(L"WhiteTexture"));
+		{
+			MaterialDesc& desc = material->GetMaterialDesc();
+			desc.ambient = Vec4(0.8f);
+			desc.diffuse = Vec4(1.f, 1.f, 0.f, 1.f);
+			desc.specular = Vec4(1.f);
+			desc.emissive = Vec4(0.f, 0.f, 0.0f, 1.f);
+			desc.bUnLit = 0;
+		}
+		shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"BasicMeshShader.hlsl");
+		material->SetShaderInfo(shaderInfo);
+		Add(L"BasicYellow", material);
+	}
+
+	// White
+	{
+		shared_ptr<Material> material = make_shared<Material>();
+		material->SetDiffuseMap(Get<Texture>(L"WhiteTexture"));
+		{
+			MaterialDesc& desc = material->GetMaterialDesc();
+			desc.ambient = Vec4(0.9f);
+			desc.diffuse = Vec4(0.9f, 0.9f, 0.9f, 1.f);
+			desc.specular = Vec4(1.f);
+			desc.emissive = Vec4(0.f, 0.f, 0.0f, 1.f);
+			desc.bUnLit = 0;
+		}
+		shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"BasicMeshShader.hlsl");
+		material->SetShaderInfo(shaderInfo);
+		Add(L"BasicWhite", material);
+	}
+}

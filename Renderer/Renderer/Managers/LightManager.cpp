@@ -7,6 +7,7 @@
 #include "Components/LightComponent/PointLight.h"
 #include "Managers/ShaderParameterManager.h"
 #include "Resource/Texture.h"
+#include "Components/Transform.h"
 
 LightManager::LightManager()
 {
@@ -26,7 +27,21 @@ void LightManager::Construct()
 shared_ptr<LightActor> LightManager::AddDefaultDirectionalLight()
 {
 	_globalLightCache = make_shared<LightActor>(ELightType::Directional);
-	
+	_globalLightCache->Construct();
+
+	// TEST
+	{
+		Vec3 startPos = { 0.f, 80.f, 0.f };
+		_globalLightCache->GetOrAddTransform()->SetWorldPosition(startPos);
+		
+		LightDesc* desc = _globalLightCache->GetDesc();
+		DirectionalLightDesc* direcDesc = static_cast<DirectionalLightDesc*>(desc);
+		direcDesc->direction = -startPos;
+		direcDesc->direction.Normalize();
+
+		_globalLightCache->GetTransform()->SetLocalRotationByTargetLook(direcDesc->direction);
+	}
+
 	return _globalLightCache;
 }
 

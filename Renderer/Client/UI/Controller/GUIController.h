@@ -1,6 +1,7 @@
 #pragma once
 
 class LeftWindowController;
+class RightWindowController;
 class LogWindowController;
 
 class GUIController : public enable_shared_from_this<GUIController>
@@ -18,9 +19,8 @@ public:
 protected:
 
 	shared_ptr<LeftWindowController> _leftWindowController;
+	shared_ptr<RightWindowController> _rightWindowController;
 	shared_ptr<LogWindowController> _logWindowController;
-	// Right
-	void CreateRightWindow();
 
 	bool show_demo_window = true;
 	bool show_another_window = false;

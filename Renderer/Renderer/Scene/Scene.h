@@ -3,6 +3,7 @@
 #include "Utils/Delegate.h"
 #include "Managers/LightManager.h"
 #include "Engine/Core/CommandQueue.h"
+#include "Structs/ECameraType.h"
 
 class Actor;
 class CameraActor;
@@ -28,9 +29,12 @@ public:
 	vector<shared_ptr<Actor>> GetRenderedActors();
 
 	// Camera
-	shared_ptr<CameraActor> GetMainCamera() const { return _mainCamera; }
-	Vec3 GetMainCameraLook() const;
-	Matrix GetMainCameraVP();
+	shared_ptr<CameraActor> GetCurrCamera() const { return _currCamera; }
+	Vec3 GetCurrCameraLook() const;
+	Matrix GetCurrCameraV();
+	Matrix GetCurrCameraP();
+	Matrix GetCurrCameraVP();
+	shared_ptr<CameraActor> SwitchCameraAndGet(ECameraType type);
 
 	// Lights
 	shared_ptr<LightActor> GetGlobalLight();
@@ -41,6 +45,10 @@ public:
 	void CreateEnvironment(const wstring& textureName, bool bSetEnvLighting = true);
 	void SetEnvLightTexture(const wstring& textureName);
 	void TurnEnvLightOnOff(bool bOn);
+
+	// Shadow Map
+	bool ShouldDrawDebugShadowMap() { return _bDrawDebugShadowMap; }
+	void SetDrawShadowMap(bool bDraw) { _bDrawDebugShadowMap = bDraw; }
 
 	OnLightManagerCreatedDelegate _onLightManagerCreated;
 	OnRenderedActorRegistered _onRenderedActorRegistered;
@@ -55,12 +63,18 @@ private:
 	bool IsLightActor(const shared_ptr<Actor>& actor);
 	void CheckAndAddLightActor(const shared_ptr<Actor>& actor);
 	void AddLightActor(shared_ptr<Actor> actor);
+	void CreateShadowMapDebugActor();
 	
 	CommandQueue* _commands;
 	LightManager* _lightManager;
 	unordered_set<shared_ptr<Actor>> _actors;
+	vector<shared_ptr<Actor>> _renderedActors;
+	shared_ptr<CameraActor> _currCamera;
 	shared_ptr<CameraActor> _mainCamera;
+	shared_ptr<CameraActor> _topViewCamera;
 	
 	shared_ptr<Actor> _cubeMapCached = nullptr;
+	shared_ptr<Actor> _shadowMapDebugActor = nullptr;
+	bool _bDrawDebugShadowMap = false;
 };
 

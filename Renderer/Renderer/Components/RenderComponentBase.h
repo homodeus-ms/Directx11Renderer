@@ -22,7 +22,7 @@ public:
 	
 	virtual void BeginPlay() override;
 	virtual void Render();
-	void RenderDepthOnly();
+	virtual void RenderDepthOnly(bool bForPointLight);
 
 	virtual vector<shared_ptr<Material>> GetMaterials() abstract;
 	virtual void ChangeMaterialType(EMaterialType type) abstract;
@@ -49,10 +49,8 @@ protected:
 	// ShadowMap
 	ShadowMapResources _shadowMapResources;
 
-	shared_ptr<InputLayout> _shadowInputLayout = nullptr;
-	shared_ptr<VertexShader> _shadowVertexShader = nullptr;
-	shared_ptr<PixelShader> _shadowPixelShader = nullptr;
-	ComPtr<ID3D11RasterizerState> _shadowRS = nullptr;
-	ComPtr<ID3D11DepthStencilState> _shadowDSS = nullptr;
+	// TEMP
+	ComPtr<ID3D11RasterizerState> _tempRS;
+	ComPtr<ID3D11SamplerState> _tempSS;
 };
 

@@ -17,7 +17,7 @@ void ShaderParameterManager::BeginPlay()
 	RegisterBuffer<MaterialDesc>("Material", static_cast<uint8>(EConstBufferRegisterNumber::Material), EShaderStage::PsStage);
 	RegisterBuffer<BoneBuffer>("BoneBuffer", static_cast<uint8>(EConstBufferRegisterNumber::BoneBuffer), EShaderStage::VsStage);
 	RegisterBuffer<BoneIndex>("BoneIndex", static_cast<uint8>(EConstBufferRegisterNumber::BoneIndex), EShaderStage::VsStage);
-	
+	RegisterBuffer<ShadowDataDesc>("Shadow", static_cast<uint8>(EConstBufferRegisterNumber::ShadowData), EShaderStage::Both);
 }
 
 void ShaderParameterManager::Update()
@@ -119,7 +119,7 @@ void ShaderParameterManager::PushBoneIndex(const BoneIndex& desc)
 void ShaderParameterManager::PushMaterial(shared_ptr<Material> material)
 {
 	PushMaterialData(material->GetMaterialDesc());
-	PushSRV(material->GetSRVBindingInfos());
+	PushMaterialSRV(material->GetSRVBindingInfos());
 }
 
 void ShaderParameterManager::PushMaterialData(const MaterialDesc& desc)
@@ -127,7 +127,7 @@ void ShaderParameterManager::PushMaterialData(const MaterialDesc& desc)
 	UpdateData("Material", desc);
 }
 
-void ShaderParameterManager::PushSRV(const array<SRVBindingInfo, TEXTURE_TYPE_COUNT>& srvs)
+void ShaderParameterManager::PushMaterialSRV(const array<SRVBindingInfo, TEXTURE_TYPE_COUNT>& srvs)
 {
 	_srvBindings = srvs;
 }
@@ -144,10 +144,94 @@ void ShaderParameterManager::PushEnvLightOnOff(bool bOn)
 	_bEnvLigthOn = bOn;
 }
 
-void ShaderParameterManager::BindAllDirtyBuffers()
+void ShaderParameterManager::PushShadowData(shared_ptr<ShadowDataDesc> desc)
+{
+	UpdateData("Global", desc);
+}
+
+void ShaderParameterManager::AddShadowData(const Matrix& VP)
+{
+	uint32 index = _shadowDataDesc.currUsingCount++;
+	_shadowDataDesc.lightVP[index] = VP;
+}
+
+void ShaderParameterManager::AddShadowData(const Matrix& view, const Matrix& VP)
+{
+	uint32 index = _shadowDataDesc.currUsingCount++;
+	_shadowDataDesc.lightView[index] = view;
+	_shadowDataDesc.lightVP[index] = VP;
+}
+
+void ShaderParameterManager::UpdateShadowCubeMapVPs(const vector<Matrix>& VPs, uint32 currUsingIndex)
+{
+	for (int32 i = 0; i < VPs.size(); ++i)
+	{
+		_shadowDataDesc.lightVP[i] = VPs[i];
+	}
+	_shadowDataDesc.currUsingCount = currUsingIndex;
+	_shadowDataDesc.bShadowCubeDataLoaded = 1;
+
+	UpdateData("Shadow", _shadowDataDesc);
+}
+
+
+void ShaderParameterManager::SetUseShadowCubeTrue()
+{
+	_shadowDataDesc.bShadowCubeDataLoaded = 1;
+}
+
+void ShaderParameterManager::PushShadowMapSRV(shared_ptr<SRVBindingInfo> info)
+{
+	_shadowMapSrvs.push_back(info);
+}
+
+void ShaderParameterManager::PushShadowCubeMapSRV(shared_ptr<SRVBindingInfo> info)
+{
+	_shadowCubeMapSRV = info;
+}
+
+void ShaderParameterManager::UpdateShadowMapData()
+{
+	if (_shadowDataDesc.bShadowMapUsing == 1 && 
+		(_shadowDataDesc.currUsingCount > 0 || _shadowDataDesc.bShadowCubeDataLoaded == 1))
+	{
+		UpdateData("Shadow", _shadowDataDesc);
+	}
+}
+
+void ShaderParameterManager::CleanUpShadowMapBuffers()
+{
+	_shadowDataDesc.currUsingCount = 0;
+	_shadowDataDesc.bShadowCubeDataLoaded = 0;
+	_shadowMapSrvs.clear();
+}
+
+void ShaderParameterManager::BindCommonResources()
 {
 	UpdateAddedLights();
+	UpdateShadowMapData();
 
+	// Shadow Map
+	for (int32 i = 0; i < _shadowMapSrvs.size(); ++i)
+	{
+		CONTEXT->PSSetShaderResources(_shadowMapSrvs[i]->slot + i, 1,
+			_shadowMapSrvs[i]->srv.GetAddressOf());
+	}
+
+	// TEMP
+	if (_shadowCubeMapSRV && _shadowCubeMapSRV->srv)
+		CONTEXT->PSSetShaderResources(_shadowCubeMapSRV->slot, 1, _shadowCubeMapSRV->srv.GetAddressOf());
+
+	// other SRVs
+	if (_bEnvLightDirty)
+	{
+		CONTEXT->PSSetShaderResources(_envLightInfo->slot, 1, _envLightInfo->srv.GetAddressOf());
+		_bEnvLightDirty = false;
+	}
+}
+
+void ShaderParameterManager::BindAllDirtyBuffers()
+{
 	// Constant Buffers
 	for (auto& [name, info] : _constbuffers)
 	{
@@ -174,13 +258,10 @@ void ShaderParameterManager::BindAllDirtyBuffers()
 		if (IsStagePS(info.stage))
 			CONTEXT->PSSetShaderResources(info.slot, 1, info.srv.GetAddressOf());
 	}
+}
 
-	// other SRVs
-	if (_bEnvLightDirty)
-	{
-		CONTEXT->PSSetShaderResources(_envLightInfo->slot, 1, _envLightInfo->srv.GetAddressOf());
-		_bEnvLightDirty = false;
-	}
-
+void ShaderParameterManager::CleanUpDatasAfterRender()
+{
 	CleanUpAddedLightBuffers();
+	CleanUpShadowMapBuffers();
 }

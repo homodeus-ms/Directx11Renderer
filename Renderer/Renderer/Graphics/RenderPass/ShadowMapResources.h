@@ -1,11 +1,14 @@
 #pragma once
 
+enum { SHADOW_MAP_SIZE = 2048 };
+
 struct ShadowMapResources
 {
 	shared_ptr<class InputLayout> inputLayout{};
-	shared_ptr<class VertexShader> vertexShader{};
-	shared_ptr<class PixelShader> pixelShader{};
+	shared_ptr<class VertexShader> defaultVertexShader{};
+	shared_ptr<class VertexShader> pointLightVertexShader{};
+	shared_ptr<class PixelShader> pointLightPixelShader{};
 	ComPtr<ID3D11RasterizerState> rasterizerState{};
-	ComPtr<ID3D11DepthStencilState> DepthStencilState{};
+	ComPtr<ID3D11DepthStencilState> depthStencilState{};
 };
 

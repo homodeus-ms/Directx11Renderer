@@ -13,6 +13,7 @@
 #include "Managers/LightManager.h"
 #include "Resource/Material.h"
 #include "Resource/Texture.h"
+#include "Resource/BasicMesh/VertexUVBasicMesh.h"
 #include "Graphics/Shader/ShaderInfo.h"
 
 
@@ -20,6 +21,9 @@ Scene::Scene()
 {
 	_lightManager = new LightManager();
 	_commands = new CommandQueue();
+
+	_actors.reserve(100);
+	_renderedActors.reserve(100);
 }
 
 Scene::~Scene()
@@ -34,6 +38,10 @@ void Scene::Construct()
 	RegisterActor(_lightManager->AddDefaultDirectionalLight());
 	_onLightManagerCreated.Broadcast();
 
+	// ShadowMap
+	GET_SINGLE(RenderManager)->SetShadowMap(GRAPHICS->GetShadowMap());
+	CreateShadowMapDebugActor();
+
 	unordered_set<shared_ptr<Actor>> actors = _actors;
 	for (const shared_ptr<Actor>& actor : actors)
 	{
@@ -42,6 +50,15 @@ void Scene::Construct()
 
 	_mainCamera = make_shared<CameraActor>();
 	_mainCamera->Construct();
+	_currCamera = _mainCamera;
+	_topViewCamera = make_shared<CameraActor>();
+	_topViewCamera->Construct();
+	{
+		_topViewCamera->GetTransform()->SetWorldPosition(Vec3(0.f, 20.f, -30.f));
+		Vec3 targetLook = { 0.f, -1.f, 2.f };
+		_topViewCamera->GetTransform()->SetLocalRotationByTargetLook(targetLook);
+		Vec3 look = _topViewCamera->GetTransform()->GetLook();
+	}
 
 	//_mainCamera->_onCameraLookChanged.BindObject(shared_from_this(), &Scene::OnMainCameraLookChangedCallback);
 	//_lightManager->SetGlobalLightLook(_mainCamera->GetTransform()->GetLook());
@@ -57,7 +74,7 @@ void Scene::BeginPlay()
 
 	// Camera
 	_mainCamera->BeginPlay();
-
+	_topViewCamera->BeginPlay();
 }
 
 void Scene::Tick()
@@ -69,13 +86,8 @@ void Scene::Tick()
 		actor->Tick();
 	}
 
-	_mainCamera->Tick();
+	_currCamera->Tick();
 
-	// 여기서 actor들 Render
-	for (shared_ptr<Actor> actor : _actors)
-	{
-		actor->Render();
-	}
 }
 
 void Scene::LateTick()
@@ -88,9 +100,7 @@ void Scene::LateTick()
 
 void Scene::Render()
 {
-	vector<shared_ptr<Actor>> temp;
-	temp.insert(temp.end(), _actors.begin(), _actors.end());
-	GET_SINGLE(RenderManager)->Render(temp);
+	GET_SINGLE(RenderManager)->Render(_renderedActors);
 }
 
 void Scene::AddActor(shared_ptr<Actor> actor)
@@ -128,14 +138,7 @@ void Scene::RemoveActor(shared_ptr<Actor> actor)
 
 vector<shared_ptr<Actor>> Scene::GetRenderedActors()
 {
-	vector<shared_ptr<Actor>> actors;
-	for (const shared_ptr<Actor>& actor : _actors)
-	{
-		if (actor->IsRenderedActor())
-			actors.push_back(actor);
-	}
-
-	return actors;
+	return _renderedActors;
 }
 
 shared_ptr<LightActor> Scene::GetGlobalLight()
@@ -143,14 +146,34 @@ shared_ptr<LightActor> Scene::GetGlobalLight()
 	return _lightManager->GetGlobalLight();
 }
 
-Vec3 Scene::GetMainCameraLook() const
+Vec3 Scene::GetCurrCameraLook() const
 {
-	return _mainCamera->GetTransform()->GetLook();
+	return _currCamera->GetTransform()->GetLook();
 }
 
-Matrix Scene::GetMainCameraVP()
+Matrix Scene::GetCurrCameraV()
 {
-	return _mainCamera->GetCameraVP();
+	return _currCamera->GetV();
+}
+
+Matrix Scene::GetCurrCameraP()
+{
+	return _currCamera->GetP();
+}
+
+Matrix Scene::GetCurrCameraVP()
+{
+	return _currCamera->GetCameraVP();
+}
+
+shared_ptr<CameraActor> Scene::SwitchCameraAndGet(ECameraType type)
+{
+	if (type == ECameraType::MainCamera)
+		_currCamera = _mainCamera;
+	else
+		_currCamera = _topViewCamera;
+
+	return _currCamera;
 }
 
 void Scene::TurnGlobalLightOnOff(bool bTurnOn)
@@ -242,11 +265,20 @@ void Scene::RegisterActor(const shared_ptr<Actor>& actor)
 {
 	_actors.insert(actor);
 	if (actor->IsRenderedActor())
+	{
+		_renderedActors.push_back(actor);
 		_onRenderedActorRegistered.Broadcast(actor);
+	}
 }
 
 void Scene::DeregisterActor(const shared_ptr<Actor>& actor)
 {
+	if (actor->IsRenderedActor())
+	{
+		auto findIt = std::find(_renderedActors.begin(), _renderedActors.end(), actor);
+		if (findIt != _renderedActors.end())
+			_renderedActors.erase(findIt);
+	}
 	_actors.erase(actor);
 }
 
@@ -282,5 +314,30 @@ void Scene::AddLightActor(shared_ptr<Actor> actor)
 			actor->Construct();
 			actor->BeginPlay();
 		});
+}
+
+void Scene::CreateShadowMapDebugActor()
+{
+	_shadowMapDebugActor = make_shared<Actor>(EActorType::DebugActor, "ShadowDebug");
+	
+	_shadowMapDebugActor->Construct();
+	_shadowMapDebugActor->GetTransform()->SetLocalScale({ 15.f, 15.f, 1.f });
+	_shadowMapDebugActor->GetTransform()->SetWorldPosition({ 0.f, 0.f, -10.f });
+	
+
+	shared_ptr<VertexUVBasicMesh> mesh = make_shared<VertexUVBasicMesh>();
+	mesh->CreateQuad();
+
+	shared_ptr<Material> material = make_shared<Material>();
+
+	shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"DebugShader.hlsl");
+	material->SetShaderInfo(shaderInfo);
+	RESOURCE_MANAGER->Add(L"ShadowMapDebugMaterial", material);
+
+	_shadowMapDebugActor->SetBasicMesh(mesh);
+	_shadowMapDebugActor->SetBasicMaterial(material);
+	_shadowMapDebugActor->BeginPlay();
+
+	_renderedActors.push_back(_shadowMapDebugActor);
 }
 

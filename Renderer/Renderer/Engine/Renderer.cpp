@@ -63,7 +63,7 @@ void Renderer::Tick()
 	TIME_MANAGER->Tick();
 	INPUT_MANAGER->Tick();
 
-	GRAPHICS->RenderBegin();
+	//GRAPHICS->RenderBegin();
 	GUI->Tick();
 
 	SCENE_MANAGER->Tick();
@@ -75,6 +75,7 @@ void Renderer::Tick()
 	SCENE_MANAGER->Render();
 
 	GUI->Render();
+	
 	GRAPHICS->RenderEnd();
 }
 

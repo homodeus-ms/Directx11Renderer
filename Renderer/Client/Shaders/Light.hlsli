@@ -12,6 +12,8 @@ struct DirectionalLightDesc
     float4 diffuse;
     float4 specular;
     float4 emissive;
+    int shadowMapIndex;
+    float3 pad;
     
     float3 direction;
     uint isOn;
@@ -23,6 +25,8 @@ struct SpotLightDesc
     float4 diffuse;
     float4 specular;
     float4 emissive;
+    int shadowMapIndex;
+    float3 pad;
     
     float3 position;
     float range;
@@ -38,6 +42,8 @@ struct PointLightDesc
     float4 diffuse;
     float4 specular;
     float4 emissive;
+    int shadowMapIndex;
+    float3 pad;
     
     float3 position;
     float range;
@@ -45,19 +51,19 @@ struct PointLightDesc
     uint isOn;
 };
 
-cbuffer DirectionalLightBuffer : register(BUFFER_NUM_DIRECTIONAL_LIGHT)
+cbuffer DirectionalLightBuffer : register(CBUFFER_NUM_DIRECTIONAL_LIGHT)
 {
     DirectionalLightDesc GlobalLight;
 }
 
-cbuffer SpotLightBuffer : register(BUFFER_NUM_SPOT_LIGHT)
+cbuffer SpotLightBuffer : register(CBUFFER_NUM_SPOT_LIGHT)
 {
     SpotLightDesc SpotLights[MAX_SPOT_LIGHT_COUNT];
     uint SpotlightCount;
     float3 spotLight_padding;
 }
 
-cbuffer PointLightBuffer : register(BUFFER_NUM_POINT_LIGHT)
+cbuffer PointLightBuffer : register(CBUFFER_NUM_POINT_LIGHT)
 {
     PointLightDesc PointLights[MAX_POINT_LIGHT_COUNT];
     uint PointlightCount;
@@ -98,20 +104,64 @@ float4 ComputeRimLight(bool useLight, float4 matE, float3 toEye, float3 normal)
         return emissive;
     }
     
-    float E = matE * factor;
+    float4 E = matE * factor;
     
     emissive = GlobalLight.emissive * E;
     
-    for (int i = 0; i < SpotlightCount; ++i)
+    for (uint i = 0; i < SpotlightCount; ++i)
     {
         emissive += SpotLights[i].emissive * E;
     }
-    for (int j = 0; j < PointlightCount; ++j)
+    for (uint j = 0; j < PointlightCount; ++j)
     {
         emissive += PointLights[j].emissive * E;
     }
     
     return emissive;
+}
+
+float ComputeShadowFactor(float3 worldPosition, uint index, float bias)
+{
+    // Temp : Texture2D -> Texture2DArray
+    if (index > 3)
+        return 0.f;
+    
+    float4 clipPosition = mul(float4(worldPosition.xyz, 1.f), lightVP[index]);
+    float3 clipCoord = clipPosition.xyz / clipPosition.w;
+    float2 uv = clipCoord.xy;
+    uv.y = -uv.y;
+    uv = (uv * 0.5f) + 0.5f;
+    float currentDepth = clipCoord.z;
+    
+    float4 sampled;
+    if (index == 0)
+        sampled = ShadowMaps[0].Sample(LinearSampler, uv);
+    else if (index == 1)
+        sampled = ShadowMaps[1].Sample(LinearSampler, uv);
+    else if (index == 2)
+        sampled = ShadowMaps[2].Sample(LinearSampler, uv);
+    else if (index == 3)
+        sampled = ShadowMaps[3].Sample(LinearSampler, uv);
+    
+    float shadowDepth = sampled.r;
+    float shadowFactor = currentDepth > shadowDepth + bias ? 0.6f : 1.0f;
+    
+    return shadowFactor;
+}
+
+float ComputePointLightShadowFactor(float3 lightPos, float3 worldPosition, float bias)
+{
+    float3 lightToPixel = worldPosition - lightPos;
+    float currentDepth = length(lightToPixel) / 100.f;
+    
+    float shadowDepth = ShadowCubeMap.Sample(LinearSampler, normalize(lightToPixel)).r;
+    
+    float shadowFactor = 1.f;
+    
+    if (currentDepth > shadowDepth - bias)
+        shadowFactor = 0.5f;
+    
+    return shadowFactor;
 }
 
 float4 ComputeDirectionalLight(float3 normal, float2 uv, float3 worldPosition)
@@ -142,13 +192,22 @@ float4 ComputeDirectionalLight(float3 normal, float2 uv, float3 worldPosition)
         GetSpecular(GlobalLight.specular, Material.specular, toEye, GlobalLight.direction, normal, specular);
     }
     
-    return ambient + diffuse + specular;
+    int shadowMapIndex = GlobalLight.shadowMapIndex;
+    float shadowFactor = 1.f;
+    if (bShadowMapUsing == 1 && shadowMapIndex != -1)
+    {
+        shadowFactor = ComputeShadowFactor(worldPosition, (uint) shadowMapIndex, 0.001f);
+    }
+    
+    //shadowFactor *= 0.8;
+    
+    return (ambient + diffuse + specular) * shadowFactor;
 }
 
 float4 ComputeSpotLight(SpotLightDesc L, float3 normal, float2 uv, float3 worldPosition)
 {
     if (L.isOn == 0)
-        return float4(0.f, 0.f, 0.f, 0.f);
+        return RED;
     
     float3 toLightVec = L.position - worldPosition;
     
@@ -192,13 +251,21 @@ float4 ComputeSpotLight(SpotLightDesc L, float3 normal, float2 uv, float3 worldP
     diffuse *= att;
     specular *= att;
     
-    return ambient + diffuse + specular;
+    int shadowMapIndex = L.shadowMapIndex;
+    
+    float shadowFactor = 1.f;
+    if (bShadowMapUsing == 1 && shadowMapIndex != -1)
+    {
+        shadowFactor = ComputeShadowFactor(worldPosition, (uint) shadowMapIndex, 0.01);
+    }
+    
+    return (ambient + diffuse + specular) * shadowFactor;
 }
 
 float4 ComputePointLight(PointLightDesc L, float3 normal, float2 uv, float3 worldPosition)
 {
     if (L.isOn == 0)
-        return float4(0.f, 0.f, 0.f, 0.f);
+        return RED;
     
     float3 toLightVec = L.position - worldPosition;
     float d = length(toLightVec);
@@ -233,11 +300,19 @@ float4 ComputePointLight(PointLightDesc L, float3 normal, float2 uv, float3 worl
     
     // Attenuate
     float att = 1.0f / dot(L.attenuation, float3(1.0f, d, d * d));
+    
+    ambient *= (att * 5.f);
     diffuse *= att;
     specular *= att;
     emissive *= att;
     
-    return ambient + diffuse + specular;
+    float shadowFactor = 1.f;
+    if (bShadowMapUsing == 1 && bShadowCubeDataLoaded)
+    {
+        shadowFactor = ComputePointLightShadowFactor(L.position, worldPosition, 0.1);
+    }
+    
+    return (ambient + diffuse + specular) * shadowFactor;
 }
 
 void ComputeNormalMapping(inout float3 worldNormal, float3 worldTangent, float2 uv)
@@ -263,15 +338,13 @@ void ComputeNormalMapping(inout float3 worldNormal, float3 worldTangent, float2 
 
 float4 CalculateLitColor(in MeshOutput input)
 {
-    //ComputeNormalMapping(input.normal, input.tangent, input.uv);
-    //input.normal = normalize(input.normal);
-    
     float4 directionalColor = ComputeDirectionalLight(input.normal, input.uv, input.worldPosition);
     
     float4 spotColor = { 0.0f, 0.0f, 0.0f, 1.f };
     for (uint i = 0; i < SpotlightCount; ++i)
     {
         spotColor += ComputeSpotLight(SpotLights[i], input.normal, input.uv, input.worldPosition);
+        
     }
     
     float4 pointColor = { 0.f, 0.f, 0.f, 0.f };

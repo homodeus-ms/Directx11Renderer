@@ -32,6 +32,13 @@ void DefaultBasicMesh::CreateSphere()
 	CreateBuffers();
 }
 
+void DefaultBasicMesh::CreateSquareRoom(int32 size)
+{
+	_geometry = make_shared<Geometry<VertexUVNormalTangentData>>();
+	GeometryCreator::CreateSquareRoom(_geometry, size);
+	CreateBuffers();
+}
+
 void DefaultBasicMesh::CreateBuffers()
 {
 	_vertexBuffer = make_shared<VertexBuffer>();

@@ -12,7 +12,6 @@ MeshOutput VS(VertexTangentInput input)
     output.uv = input.uv;
     output.normal = mul(input.normal, (float3x3) W);
     output.tangent = mul(input.tangent, (float3x3) W);
-    
     return output;
 }
 
@@ -28,6 +27,8 @@ float4 PS(MeshOutput input) : SV_Target
     
     if (!bUnLit)
         litColor = CalculateLitColor(input);
+    else
+        return float4(Material.diffuse.xyz, 1.f);
     
     switch (Material.MaterialType)
     {

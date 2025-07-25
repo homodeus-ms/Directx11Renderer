@@ -40,7 +40,7 @@ float4 PS(MeshOutput input) : SV_Target
     }
     
     
-    ComputeSpotLight(SpotLights[0], input.normal, input.uv, input.worldPosition);
+    //ComputeSpotLight(SpotLights[0], input.normal, input.uv, input.worldPosition);
     
     return color + specular;
 }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Graphics/Buffer/Geometry.h"
-#include "ResourceBase.h"
+#include "Resource/ResourceBase.h"
 
 class VertexBuffer;
 class IndexBuffer;
@@ -19,6 +19,7 @@ public:
 	virtual void CreateGrid(int32 sizeX, int32 sizeZ) {}
 	virtual void CreateSphere() {}
 	virtual void CreateCubeMap() {}
+	virtual void CreateSquareRoom(int32 size = 80) {}
 
 	virtual void Load(const wstring& path) override {};
 

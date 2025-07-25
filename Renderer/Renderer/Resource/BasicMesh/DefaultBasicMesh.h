@@ -12,6 +12,7 @@ public:
 	virtual void CreateCube() override;
 	virtual void CreateGrid(int32 sizeX, int32 sizeZ) override;
 	virtual void CreateSphere() override;
+	virtual void CreateSquareRoom(int32 size = 80) override;
 
 	virtual const vector<D3D11_INPUT_ELEMENT_DESC>& GetInputLayoutDesc() const override { return _geometry->GetInputDesc(); }
 

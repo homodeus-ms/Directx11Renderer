@@ -10,6 +10,10 @@ LightComponent::~LightComponent()
 {
 }
 
+void LightComponent::BeginPlay()
+{
+}
+
 void LightComponent::Tick()
 {
 	Super::Tick();

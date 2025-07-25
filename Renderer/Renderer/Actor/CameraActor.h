@@ -20,6 +20,8 @@ public:
 	virtual void SetTransformChanged(bool bChanged) override;
 
 	shared_ptr<CameraComponent> GetCameraComponent() { return _cameraComponent; }
+	const Matrix& GetV();
+	const Matrix& GetP();
 	const Matrix& GetCameraVP();
 	OnCameraLookChanged _onCameraLookChanged;
 

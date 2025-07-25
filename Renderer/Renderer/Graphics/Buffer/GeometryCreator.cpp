@@ -797,3 +797,63 @@ void GeometryCreator::CreateSphere(shared_ptr<Geometry<VertexUVNormalTangentData
 
 	geometry->SetIndices(idx);
 }
+
+void GeometryCreator::CreateSquareRoom(shared_ptr<Geometry<VertexUVNormalTangentData>> geometry, int32 size)
+{
+	float x = size * 0.5f;
+	float y = static_cast<float>(size);
+	float z = x;
+
+	vector<VertexUVNormalTangentData> vtx(24);
+
+	// +Z 면 (방의 가장 안쪽 벽)
+	vtx[0] = VertexUVNormalTangentData(Vec3(-x, 0.f, +z), Vec2(0.0f, 1.0f), Vec3(0.0f, 0.0f, -1.0f), Vec3(1.0f, 0.0f, 0.0f));
+	vtx[1] = VertexUVNormalTangentData(Vec3(-x, y, +z), Vec2(0.0f, 0.0f), Vec3(0.0f, 0.0f, -1.0f), Vec3(1.0f, 0.0f, 0.0f));
+	vtx[2] = VertexUVNormalTangentData(Vec3(+x, y, +z), Vec2(1.0f, 0.0f), Vec3(0.0f, 0.0f, -1.0f), Vec3(1.0f, 0.0f, 0.0f));
+	vtx[3] = VertexUVNormalTangentData(Vec3(+x, 0.f, +z), Vec2(1.0f, 1.0f), Vec3(0.0f, 0.0f, -1.0f), Vec3(1.0f, 0.0f, 0.0f));
+
+	// -Z 면 (카메라와 맞닿은 앞면)
+	vtx[4] = VertexUVNormalTangentData(Vec3(+x, 0.f, -z), Vec2(0.0f, 1.0f), Vec3(0.0f, 0.0f, 1.0f), Vec3(-1.0f, 0.0f, 0.0f));
+	vtx[5] = VertexUVNormalTangentData(Vec3(+x, y, -z), Vec2(0.0f, 0.0f), Vec3(0.0f, 0.0f, 1.0f), Vec3(-1.0f, 0.0f, 0.0f));
+	vtx[6] = VertexUVNormalTangentData(Vec3(-x, y, -z), Vec2(1.0f, 0.0f), Vec3(0.0f, 0.0f, 1.0f), Vec3(-1.0f, 0.0f, 0.0f));
+	vtx[7] = VertexUVNormalTangentData(Vec3(-x, 0.f, -z), Vec2(1.0f, 1.0f), Vec3(0.0f, 0.0f, 1.0f), Vec3(-1.0f, 0.0f, 0.0f));
+
+	// 천장 (+Y)
+	vtx[8] = VertexUVNormalTangentData(Vec3(-x, y, +z), Vec2(0.0f, 1.0f), Vec3(0.0f, -1.0f, 0.0f), Vec3(1.0f, 0.0f, 0.0f));
+	vtx[9] = VertexUVNormalTangentData(Vec3(-x, y, -z), Vec2(0.0f, 0.0f), Vec3(0.0f, -1.0f, 0.0f), Vec3(1.0f, 0.0f, 0.0f));
+	vtx[10] = VertexUVNormalTangentData(Vec3(+x, y, -z), Vec2(1.0f, 0.0f), Vec3(0.0f, -1.0f, 0.0f), Vec3(1.0f, 0.0f, 0.0f));
+	vtx[11] = VertexUVNormalTangentData(Vec3(+x, y, +z), Vec2(1.0f, 1.0f), Vec3(0.0f, -1.0f, 0.0f), Vec3(1.0f, 0.0f, 0.0f));
+
+	// 바닥 (y = 0.f)
+	vtx[12] = VertexUVNormalTangentData(Vec3(-x, 0.f, -z), Vec2(0.0f, 1.0f), Vec3(0.0f, 1.0f, 0.0f), Vec3(1.0f, 0.0f, 0.0f));
+	vtx[13] = VertexUVNormalTangentData(Vec3(-x, 0.f, z), Vec2(0.0f, 0.0f), Vec3(0.0f, 1.0f, 0.0f), Vec3(1.0f, 0.0f, 0.0f));
+	vtx[14] = VertexUVNormalTangentData(Vec3(+x, 0.f, +z), Vec2(1.0f, 0.0f), Vec3(0.0f, 1.0f, 0.0f), Vec3(1.0f, 0.0f, 0.0f));
+	vtx[15] = VertexUVNormalTangentData(Vec3(+x, 0.f, -z), Vec2(1.0f, 1.0f), Vec3(0.0f, 1.0f, 0.0f), Vec3(1.0f, 0.0f, 0.0f));
+
+	// 왼쪽 면 (-X)
+	vtx[16] = VertexUVNormalTangentData(Vec3(-x, 0.f, -z), Vec2(0.0f, 1.0f), Vec3(1.0f, 0.0f, 0.0f), Vec3(0.0f, 0.0f, 1.0f));
+	vtx[17] = VertexUVNormalTangentData(Vec3(-x, y, -z), Vec2(0.0f, 0.0f), Vec3(1.0f, 0.0f, 0.0f), Vec3(0.0f, 0.0f, 1.0f));
+	vtx[18] = VertexUVNormalTangentData(Vec3(-x, y, +z), Vec2(1.0f, 0.0f), Vec3(1.0f, 0.0f, 0.0f), Vec3(0.0f, 0.0f, 1.0f));
+	vtx[19] = VertexUVNormalTangentData(Vec3(-x, 0.f, +z), Vec2(1.0f, 1.0f), Vec3(1.0f, 0.0f, 0.0f), Vec3(0.0f, 0.0f, 1.0f));
+
+	// 오른쪽 면 (+X)
+	vtx[20] = VertexUVNormalTangentData(Vec3(+x, 0.f, +z), Vec2(0.0f, 1.0f), Vec3(-1.0f, 0.0f, 0.0f), Vec3(0.0f, 0.0f, -1.0f));
+	vtx[21] = VertexUVNormalTangentData(Vec3(+x, y, +z), Vec2(0.0f, 0.0f), Vec3(-1.0f, 0.0f, 0.0f), Vec3(0.0f, 0.0f, -1.0f));
+	vtx[22] = VertexUVNormalTangentData(Vec3(+x, y, -z), Vec2(1.0f, 0.0f), Vec3(-1.0f, 0.0f, 0.0f), Vec3(0.0f, 0.0f, -1.0f));
+	vtx[23] = VertexUVNormalTangentData(Vec3(+x, 0.f, -z), Vec2(1.0f, 1.0f), Vec3(-1.0f, 0.0f, 0.0f), Vec3(0.0f, 0.0f, -1.0f));
+
+	geometry->SetVertices(vtx);
+
+	vector<uint32> idx(36);
+	for (int i = 0; i < 6; ++i)
+	{
+		idx[i * 6 + 0] = i * 4 + 0;
+		idx[i * 6 + 1] = i * 4 + 1;
+		idx[i * 6 + 2] = i * 4 + 2;
+		idx[i * 6 + 3] = i * 4 + 0;
+		idx[i * 6 + 4] = i * 4 + 2;
+		idx[i * 6 + 5] = i * 4 + 3;
+	}
+
+	geometry->SetIndices(idx);
+}

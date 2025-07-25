@@ -49,10 +49,8 @@ public:
 	
 	void PushSpotLightData(const SpotLightDesc& desc);
 	void PushPointLightData(const PointLightDesc& desc);
-	SpotLightBuffer _spotLightBuffer{};
-	PointLightBuffer _pointLightBuffer{};
+	
 	void UpdateAddedLights();
-	void CleanUpAddedLightBuffers();
 
 	void PushBoneBuffer(const BoneBuffer& desc);
 	void PushBoneIndex(const BoneIndex& desc);
@@ -60,15 +58,31 @@ public:
 	// Material
 	void PushMaterial(shared_ptr<Material> material);
 	void PushMaterialData(const MaterialDesc& desc);
-	void PushSRV(const array<SRVBindingInfo, TEXTURE_TYPE_COUNT>& srvs);
+	void PushMaterialSRV(const array<SRVBindingInfo, TEXTURE_TYPE_COUNT>& srvs);
 
 	// Other SRV
 	void PushEnvLight(shared_ptr<SRVBindingInfo> info);
 	void PushEnvLightOnOff(bool bOn);
 
-	void BindAllDirtyBuffers();
+	// ShadowMap
+	void PushShadowData(shared_ptr<ShadowDataDesc> desc);
+	void AddShadowData(const Matrix& VP);
+	void AddShadowData(const Matrix& view, const Matrix& VP);
+	void UpdateShadowCubeMapVPs(const vector<Matrix>& VPs, uint32 currUsingIndex);
+	
+	void SetUseShadowCubeTrue();
+	void PushShadowMapSRV(shared_ptr<SRVBindingInfo> info);
+	void PushShadowCubeMapSRV(shared_ptr<SRVBindingInfo> info);  // TEMP
+	void UpdateShadowMapData();
+	void CleanUpShadowMapBuffers();
 
+	void BindCommonResources();
+	void BindAllDirtyBuffers();
+	void CleanUpDatasAfterRender();
+	
 private:
+	void CleanUpAddedLightBuffers();
+	
 
 	template<typename T>
 	void UpdateData(const string& bufferName, const T& data)
@@ -84,8 +98,18 @@ private:
 
 	unordered_map<string, BufferBindingInfo> _constbuffers;
 	array<SRVBindingInfo, TEXTURE_TYPE_COUNT> _srvBindings;
+	SpotLightBuffer _spotLightBuffer{};
+	PointLightBuffer _pointLightBuffer{};
 	shared_ptr<SRVBindingInfo> _envLightInfo = nullptr;
+	
 	vector<SamplerBindingInfo> _samplerBindings;
+
+	vector<shared_ptr<SRVBindingInfo>> _shadowMapSrvs;
+	ShadowDataDesc _shadowDataDesc{};
+
+	// TEMP
+	shared_ptr<SRVBindingInfo> _shadowCubeMapSRV;
+
 
 	bool _bEnvLigthOn = false;
 	bool _bEnvLightDirty = false;

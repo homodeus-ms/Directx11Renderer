@@ -1,9 +1,5 @@
 #include "Global.hlsli"
-
-struct CubeMapInput
-{
-    float4 position : POSITION;
-};
+#include "Light.hlsli"
 
 struct CubeMapOutput
 {
@@ -11,7 +7,7 @@ struct CubeMapOutput
     float3 worldPosition : TEXCOORD;
 };
 
-CubeMapOutput VS(CubeMapInput input)
+CubeMapOutput VS(VertexPosOnlyInput input)
 {
     CubeMapOutput output;
     
@@ -29,5 +25,6 @@ CubeMapOutput VS(CubeMapInput input)
 float4 PS(CubeMapOutput input) : SV_Target
 {
     float4 color = textureCube.Sample(LinearSampler, input.worldPosition);
+    
     return color;
 }

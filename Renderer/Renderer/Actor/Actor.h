@@ -17,6 +17,7 @@ enum class EActorType : uint8
 	Pawn,
 	CameraActor,
 	LightActor,
+	DebugActor,
 };
 
 class Actor : public enable_shared_from_this<Actor>
@@ -32,7 +33,7 @@ public:
 	virtual void FixedTick();
 
 	void Render();
-	void RenderDepthOnly();
+	void RenderDepthOnly(bool bForPointLight);
 
 	EActorType GetActorType() const { return _actorType; }
 	const string& GetName() const { return _actorName; }
@@ -59,7 +60,8 @@ public:
 	virtual void SetTransformChanged(bool bChanged) { _bTransformChanged = bChanged; }
 
 	// ShadowMap
-	
+	bool IsCastShadowedActor() { return _bCastShadow; }
+	void SetIsCastShadowedActor(bool bShadowed) { _bCastShadow = bShadowed; }
 
 protected:
 
@@ -74,5 +76,6 @@ protected:
 private:
 	bool _bCastShadow = true;
 	bool _bTransformChanged = true;
+	bool _bIsRenderedActor = true;
 };
 

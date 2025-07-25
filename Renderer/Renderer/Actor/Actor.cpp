@@ -4,14 +4,24 @@
 #include "Components/StaticMeshRenderer.h"
 #include "Components/Transform.h"
 #include "Components/CameraComponent.h"
+#include "Components/LightComponent/LightComponent.h"
+#include "LightActor.h"
 
 Actor::Actor(EActorType actorType, const string& name)
 	: _actorType(actorType)
 {
 	_actorName = RENDERER->GetNameManager()->AddOrGetNewNameIfDuplicated(name);
 
-	if (_actorType == EActorType::LightActor || _actorType == EActorType::CameraActor)
+	if (_actorType == EActorType::CameraActor)
+	{
+		_bIsRenderedActor = false;
+	}
+
+	if (_actorType == EActorType::LightActor || _actorType == EActorType::CameraActor
+		|| _actorType == EActorType::DebugActor)
+	{
 		_bCastShadow = false;
+	}
 }
 
 Actor::~Actor()
@@ -45,6 +55,14 @@ void Actor::Tick()
 	{
 		if (component)
 		{
+			if (component->GetType() == EComponentType::Light)
+			{
+				shared_ptr<LightActor> lA = static_pointer_cast<LightActor>(component->GetOwner());
+				if (!lA || lA->GetLightType() != ELightType::Directional)
+				{
+					int a = 3;
+				}
+			}
 			component->Tick();
 		}
 	}
@@ -74,10 +92,10 @@ void Actor::Render()
 		_renderer->Render();
 }
 
-void Actor::RenderDepthOnly()
+void Actor::RenderDepthOnly(bool bForPointLight)
 {
 	if (_bCastShadow && _renderer)
-		_renderer->RenderDepthOnly();
+		_renderer->RenderDepthOnly(bForPointLight);
 }
 
 
@@ -126,7 +144,7 @@ void Actor::AddComponent(shared_ptr<Component> component)
 
 bool Actor::IsRenderedActor()
 {
-	return _renderer != nullptr;
+	return _bIsRenderedActor;
 }
 
 vector<shared_ptr<Material>> Actor::GetMaterials()

@@ -36,7 +36,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	desc.hWnd = NULL;
 	desc.width = GWinSizeX;
 	desc.height = GWinSizeY;
-	desc.clearColor = Color(0.f, 0.f, 0.f, 0.f);
+	desc.clearColor = Color(1.f, 1.f, 1.f, 1.f);
 	desc.app = make_shared<LoadMaterialDemo>();
 
 	RENDERER->Run(desc);

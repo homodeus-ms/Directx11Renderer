@@ -29,6 +29,8 @@ public:
 	void SetWorldRotation(const Vec3& worldRotation);
 	Vec3 GetWorldPosition();
 	void SetWorldPosition(const Vec3& worldPosition);
+	
+	void SetLocalRotationByTargetLook(const Vec3& lookDir);
 
 	Vec3 GetRight();
 	Vec3 GetUp();

@@ -2,7 +2,7 @@
 #include "BulbActor.h"
 #include "Components/Transform.h"
 #include "Resource/Texture.h"
-#include "Resource/BasicMesh.h"
+#include "Resource/BasicMesh/BasicMesh.h"
 #include "Resource/Material.h"
 #include "Graphics/Shader/ShaderInfo.h"
 #include "Managers/ShaderParameterManager.h"

@@ -196,6 +196,36 @@ void Transform::SetWorldPosition(const Vec3& worldPosition)
 	}
 }
 
+void Transform::SetLocalRotationByTargetLook(const Vec3& lookDir)
+{
+	// dir 이 들어올 때
+	Vec3 forward = lookDir;
+	forward.Normalize();
+
+	Vec3 up = GetUp();
+	up.Normalize();
+
+	// 오른쪽 벡터 계산
+	Vec3 right = up.Cross(forward);
+	right.Normalize();
+
+	// 다시 정교한 up 계산 (수직 보장)
+	up = forward.Cross(right);
+	up.Normalize();
+
+	// 회전 행렬 구성
+	Matrix lookTo;
+	lookTo._11 = right.x; lookTo._12 = right.y; lookTo._13 = right.z; lookTo._14 = 0.f;
+	lookTo._21 = up.x;    lookTo._22 = up.y;    lookTo._23 = up.z;    lookTo._24 = 0.f;
+	lookTo._31 = forward.x; lookTo._32 = forward.y; lookTo._33 = forward.z; lookTo._34 = 0.f;
+	lookTo._41 = 0.f;      lookTo._42 = 0.f;      lookTo._43 = 0.f;      lookTo._44 = 1.f;
+
+	// 쿼터니언 및 회전 적용
+	Quaternion rotQuat = Quaternion::CreateFromRotationMatrix(lookTo);
+	Vec3 euler = ToEulerAngles(rotQuat);
+	SetWorldRotation(euler);
+}
+
 Vec3 Transform::GetRight()
 {
 	if (_bDirty)

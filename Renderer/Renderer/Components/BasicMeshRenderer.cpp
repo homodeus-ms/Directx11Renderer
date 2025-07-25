@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "BasicMeshRenderer.h"
-#include "Resource/BasicMesh.h"
+#include "Resource/BasicMesh/BasicMesh.h"
 #include "Resource/Material.h"
 #include "Resource/Texture.h"
 #include "Actor/Actor.h"
@@ -54,6 +54,24 @@ void BasicMeshRenderer::Render()
 	uint32 offset = _basicMesh->GetVertexBuffer()->GetOffset();
 
 	CONTEXT->IASetVertexBuffers(0, 1, _basicMesh->GetVertexBuffer()->GetComPtr().GetAddressOf(), &stride, &offset);
+	CONTEXT->IASetIndexBuffer(_basicMesh->GetIndexBuffer()->GetComPtr().Get(), DXGI_FORMAT_R32_UINT, 0);
+
+	DrawIndexed(_basicMesh->GetIndexBuffer()->GetCount());
+}
+
+void BasicMeshRenderer::RenderDepthOnly(bool bForPointLight)
+{
+	Super::RenderDepthOnly(bForPointLight);
+
+	auto world = GetOwnerTransform()->GetWorldMatrix();
+	SHADER_PARAM_MANAGER->PushTransformData(TransformDesc{ world });
+
+	SHADER_PARAM_MANAGER->BindAllDirtyBuffers();
+
+	uint32 stride = sizeof(VertexData);
+	uint32 offset = _basicMesh->GetVertexBuffer()->GetOffset();
+
+	CONTEXT->IASetVertexBuffers(0, 1, _basicMesh->GetVertexBuffer()->GetPosOnlyBuffer().GetAddressOf(), &stride, &offset);
 	CONTEXT->IASetIndexBuffer(_basicMesh->GetIndexBuffer()->GetComPtr().Get(), DXGI_FORMAT_R32_UINT, 0);
 
 	DrawIndexed(_basicMesh->GetIndexBuffer()->GetCount());

@@ -7,11 +7,11 @@
 
 float4 GetToonShadingByGlobalLight(float4 litColor, float3 normal, float2 uv)
 {
-    float3 diffuse = BLACK;
+    float3 diffuse = BLACK.xyz;
     
     float lDotN = saturate(dot(-GlobalLight.direction, normal));
-    float albedo = DiffuseMap.Sample(LinearSampler, uv);
-    diffuse = albedo * GlobalLight.diffuse.xyz * Material.diffuse.xyz * lDotN;
+    float4 sampled = DiffuseMap.Sample(LinearSampler, uv);
+    diffuse = sampled.xyz * GlobalLight.diffuse.xyz * Material.diffuse.xyz * lDotN;
     
     diffuse = saturate(diffuse);
     diffuse = ceil(diffuse * 3) / 3.f;

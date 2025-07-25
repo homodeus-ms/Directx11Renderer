@@ -1,7 +1,7 @@
 ﻿#include "pch.h"
 #include "CameraDemo.h"
 #include "Main/ClientPawn.h"
-#include "Resource/BasicMesh.h"
+#include "Resource/BasicMesh/BasicMesh.h"
 #include "Resource/Texture.h"
 #include "Graphics/Shader/ShaderInfo.h"
 #include "Graphics/Buffer/ConstantBuffer.h"

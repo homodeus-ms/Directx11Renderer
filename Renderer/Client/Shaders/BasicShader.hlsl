@@ -9,6 +9,7 @@ MeshOutput VS(VertexTangentInput input)
     output.position = mul(input.position, BoneTransforms[BoneIndex]);
     output.position = mul(output.position, W);
     output.worldPosition = output.position.xyz;
+    
     output.position = mul(output.position, VP);
     output.uv = input.uv;
     output.normal = mul(input.normal, (float3x3) W);
@@ -28,6 +29,8 @@ float4 PS(MeshOutput input) : SV_Target
     
     if (!bUnLit)
         litColor = CalculateLitColor(input);
+    
+    return litColor;
     
     int matType = Material.MaterialType;
     switch (matType)

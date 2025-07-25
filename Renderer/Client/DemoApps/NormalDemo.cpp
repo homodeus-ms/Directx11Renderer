@@ -1,7 +1,7 @@
 ﻿#include "pch.h"
 #include "NormalDemo.h"
 #include "Main/ClientPawn.h"
-#include "Resource/BasicMesh.h"
+#include "Resource/BasicMesh/BasicMesh.h"
 #include "Resource/Texture.h"
 #include "Components/Transform.h"
 #include "Graphics/Shader/ShaderInfo.h"

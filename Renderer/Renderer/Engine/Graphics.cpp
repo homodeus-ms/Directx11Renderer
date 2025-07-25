@@ -127,10 +127,10 @@ void Graphics::SetViewport()
 	_viewport.MinDepth = 0.0f;
 	_viewport.MaxDepth = 1.0f;*/
 	
-	_viewport.TopLeftX = 200.0f;
+	_viewport.TopLeftX = static_cast<float>(GUI_MainWindowSizeX);
 	_viewport.TopLeftY = 0.0f;
-	_viewport.Width = static_cast<float>(RENDERER->GetGameDesc().width) - GUI_AreaX;
-	_viewport.Height = static_cast<float>(RENDERER->GetGameDesc().height) - GUI_AreaY;
+	_viewport.Width = static_cast<float>(GWinSizeX - GUI_AreaX);
+	_viewport.Height = static_cast<float>(GWinSizeY - GUI_AreaY);;
 	_viewport.MinDepth = 0.0f;
 	_viewport.MaxDepth = 1.0f;
 }

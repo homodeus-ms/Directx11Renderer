@@ -4,6 +4,8 @@ constexpr uint8 MAX_DIRECTIONAL_LIGHT_COUNT = 1;
 constexpr uint8 MAX_SPOT_LIGHT_COUNT = 3;
 constexpr uint8 MAX_POINT_LIGHT_COUNT = 3;
 constexpr uint8 MAX_LIGHTS_COUNT = MAX_DIRECTIONAL_LIGHT_COUNT + MAX_SPOT_LIGHT_COUNT + MAX_POINT_LIGHT_COUNT;
+constexpr uint8 MAX_SHADOW_MAP_COUNT = 4;
+constexpr uint8 MAX_CUBE_SHADOW_MAP_COUNT = 1;
 
 enum class ELightType : uint8
 {
@@ -18,6 +20,8 @@ struct LightDesc
 	Color diffuse = Vec4(1.f);
 	Color specular = Vec4(1.f);
 	Color emissive = { 0.f, 0.f, 0.f, 1.f };
+	int32 shadowMapIndex = -1;
+	float pad[3];
 };
 
 struct DirectionalLightDesc : public LightDesc
@@ -29,9 +33,9 @@ struct DirectionalLightDesc : public LightDesc
 struct SpotLightDesc : public LightDesc
 {
 	Vec3 position{ 0.f, 0.f, 0.f };
-	float range = 100;
+	float range = 80.f;
 	Vec3 direction{0.f, 0.f, 1.f};
-	float spotPower = 1;
+	float spotPower = 8.f;
 	Vec3 attenuation = { 1.f, 0.1f, 0.05f }; // constant, linear, quadratic
 	uint32 isOn = 1;
 };
@@ -39,7 +43,7 @@ struct SpotLightDesc : public LightDesc
 struct PointLightDesc : public LightDesc
 {
 	Vec3 position{ 0.f, 0.f, 0.f };
-	float range = 50.f;
+	float range = 80.f;
 	Vec3 attenuation = { 1.f, 0.1f, 0.05f }; // constant, linear, quadratic
 	uint32 isOn = 1;
 };

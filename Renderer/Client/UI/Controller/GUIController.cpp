@@ -1,11 +1,13 @@
 #include "pch.h"
 #include "GUIController.h"
 #include "LeftWindowController.h"
+#include "RightWindowController.h"
 #include "LogWindowController.h"
 
 GUIController::GUIController()
 {
 	_leftWindowController = make_shared<LeftWindowController>();
+	_rightWindowController = make_shared<RightWindowController>();
 	_logWindowController = make_shared<LogWindowController>();
 }
 
@@ -19,32 +21,22 @@ void GUIController::BeginPlay()
 	GUI->_onTick.BindObject(shared_from_this(), &GUIController::Tick);
 
 	assert(_leftWindowController != nullptr);
+	assert(_rightWindowController != nullptr);
 	assert(_logWindowController != nullptr);
+
 	_leftWindowController->BeginPlay();
+	_rightWindowController->BeginPlay();
 	_logWindowController->BeginPlay();
 }
 
 void GUIController::Tick()
 {
-	if (show_demo_window)
-		ImGui::ShowDemoWindow(&show_demo_window);
-
+	
 	_leftWindowController->CreateLeftWindow();
+	_rightWindowController->CreateRightWindow();
 	_logWindowController->CreateDebugWindow();
 	//CreateRightWindow();
 	
-}
-
-void GUIController::CreateRightWindow()
-{
-	ImGui::SetNextWindowPos({ GWinSizeX - GUI_MainWindowSizeX, 0 }, ImGuiCond_Always);
-	ImGui::SetNextWindowSize({ GUI_MainWindowSizeX, GUI_MainWindowSizeY }, ImGuiCond_Always);
-	ImGui::Begin("RightWindow", nullptr,
-		ImGuiWindowFlags_NoMove);
-
-	ImGui::Text("LightWindow");
-
-	ImGui::End();
 }
 
 

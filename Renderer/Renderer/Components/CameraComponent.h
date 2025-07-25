@@ -24,7 +24,9 @@ public:
 	void SetWidth(float value) { _width = value; }
 	void SetHeight(float value) { _height = value; }
 	
-	const Matrix GetVP() { return S_MatView * S_MatProjection; }
+	const Matrix GetV() { return _matView; }
+	const Matrix GetP() { return _matProjection; }
+	const Matrix GetVP() { return _matView * _matProjection; }
 
 private:
 	Matrix _matView = Matrix::Identity;
@@ -37,6 +39,6 @@ private:
 	float _height = 0.f;
 
 public:
-	static Matrix S_MatView;
-	static Matrix S_MatProjection;
+	//static Matrix S_MatView;
+	//static Matrix S_MatProjection;
 };
