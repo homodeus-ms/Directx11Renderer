@@ -3,7 +3,7 @@
 #include "Main/ClientPawn.h"
 #include "Resource/BasicMesh/BasicMesh.h"
 #include "Resource/BasicMesh/DefaultBasicMesh.h"
-#include "Resource/Texture.h"
+#include "Resource/Texture/LoadedTexture.h"
 #include "Graphics/Shader/ShaderInfo.h"
 #include "Graphics/Buffer/ConstantBuffer.h"
 #include "Actor/CameraActor.h"
@@ -35,21 +35,21 @@ void LoadMaterialDemo::Construct()
 	//RESOURCE_MANAGER->Load<Texture>(L"Guitarist", L"..\\Resources\\Images\\Guitarist2.png");
 	RESOURCE_MANAGER->LoadStaticMeshFromXML(L"Tank", L"Tank");
 	RESOURCE_MANAGER->LoadStaticMeshFromXML(L"Zelda", L"Zelda");
-	RESOURCE_MANAGER->Load<Texture>(L"Leather", L"..\\Resources\\Images\\Leather.jpg");
-	RESOURCE_MANAGER->Load<Texture>(L"Leather_Normal", L"..\\Resources\\Images\\Leather_Normal.jpg");
+	RESOURCE_MANAGER->Load<LoadedTexture>(L"Leather", L"..\\Resources\\Images\\Leather.jpg");
+	RESOURCE_MANAGER->Load<LoadedTexture>(L"Leather_Normal", L"..\\Resources\\Images\\Leather_Normal.jpg");
 	// C:\\Users\\seekc\\OneDrive\\Documents\\Renderer\\Renderer
-	RESOURCE_MANAGER->Load<Texture>(L"Snow", L"..\\Resources\\Images\\DDS\\Areskutan.dds");
-	RESOURCE_MANAGER->Load<Texture>(L"CubeMap1", L"..\\Resources\\Images\\DDS\\SanFrancisco2.dds");
-	RESOURCE_MANAGER->Load<Texture>(L"CubeMap2", L"..\\Resources\\Images\\DDS\\SanFrancisco4.dds");
-	RESOURCE_MANAGER->Load<Texture>(L"CubeMap3", L"..\\Resources\\Images\\DDS\\DropdownTriangle.dds");
-	RESOURCE_MANAGER->Load<Texture>(L"CubeMap4", L"..\\Resources\\Images\\DDS\\Lycksele3.dds");
-	RESOURCE_MANAGER->Load<Texture>(L"Night", L"..\\Resources\\Images\\DDS\\NightPath.dds");
-	RESOURCE_MANAGER->Load<Texture>(L"Skybox", L"..\\Resources\\Images\\DDS\\Skybox.dds");
+	RESOURCE_MANAGER->Load<LoadedTexture>(L"Snow", L"..\\Resources\\Images\\DDS\\Areskutan.dds");
+	RESOURCE_MANAGER->Load<LoadedTexture>(L"CubeMap1", L"..\\Resources\\Images\\DDS\\SanFrancisco2.dds");
+	RESOURCE_MANAGER->Load<LoadedTexture>(L"CubeMap2", L"..\\Resources\\Images\\DDS\\SanFrancisco4.dds");
+	RESOURCE_MANAGER->Load<LoadedTexture>(L"CubeMap3", L"..\\Resources\\Images\\DDS\\DropdownTriangle.dds");
+	RESOURCE_MANAGER->Load<LoadedTexture>(L"CubeMap4", L"..\\Resources\\Images\\DDS\\Lycksele3.dds");
+	RESOURCE_MANAGER->Load<LoadedTexture>(L"Night", L"..\\Resources\\Images\\DDS\\NightPath.dds");
+	RESOURCE_MANAGER->Load<LoadedTexture>(L"Skybox", L"..\\Resources\\Images\\DDS\\Skybox.dds");
 
 	// Material
 	shared_ptr<Material> material = make_shared<Material>();
-	material->SetDiffuseMap(RESOURCE_MANAGER->Get<Texture>(L"Leather"));
-	material->SetNormalMap(RESOURCE_MANAGER->Get<Texture>(L"Leather_Normal"));
+	material->SetDiffuseMap(RESOURCE_MANAGER->Get<LoadedTexture>(L"Leather"));
+	material->SetNormalMap(RESOURCE_MANAGER->Get<LoadedTexture>(L"Leather_Normal"));
 	{
 		MaterialDesc& desc = material->GetMaterialDesc();
 		desc.ambient = Vec4(0.5f);
@@ -97,7 +97,7 @@ void LoadMaterialDemo::Construct()
 	if (0)
 	{
 		shared_ptr<Material> cubeMapMat = make_shared<Material>();
-		shared_ptr<Texture> texture = RESOURCE_MANAGER->Get<Texture>(L"Skybox");
+		shared_ptr<LoadedTexture> texture = RESOURCE_MANAGER->Get<LoadedTexture>(L"Skybox");
 		cubeMapMat->SetDiffuseMap(texture);
 		{
 			MaterialDesc& desc = cubeMapMat->GetMaterialDesc();
@@ -126,7 +126,7 @@ void LoadMaterialDemo::Construct()
 
 	if (1)
 	{
-		if (0) // 바닥 평면
+		if (1) // 바닥 평면
 		{
 			shared_ptr<Actor> pawn = make_shared<ClientPawn>();
 			pawn->Construct();
@@ -146,7 +146,7 @@ void LoadMaterialDemo::Construct()
 			SCENE->AddActor(pawn);
 		}
 		
-		if (1) // Room
+		if (0) // Room
 		{
 			shared_ptr<Actor> pawn = make_shared<ClientPawn>();
 			pawn->Construct();

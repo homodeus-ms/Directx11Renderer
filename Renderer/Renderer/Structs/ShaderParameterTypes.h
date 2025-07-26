@@ -16,6 +16,7 @@ enum class EConstBufferRegisterNumber : uint8
 	BoneBuffer,
 	BoneIndex,
 	ShadowData,
+	PointShadowData,
 };
 
 enum class EMaterialType : uint32
@@ -121,10 +122,12 @@ struct BoneIndex
 
 struct ShadowDataDesc
 {
-	Matrix lightView[6];
-	Matrix lightVP[6];
-	uint32 currUsingCount = 0;
-	uint32 bShadowMapUsing = 1;
-	uint32 bShadowCubeDataLoaded = 0;
+	Matrix lightVP[MAX_SHADOW_MAP_COUNT];
+};
+
+struct PointShadowDataDesc
+{
+	Matrix lightVP[6]{};
+	Vec3 lightPosition{};
 	float pad;
 };

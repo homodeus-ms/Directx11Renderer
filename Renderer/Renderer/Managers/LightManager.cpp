@@ -6,7 +6,7 @@
 #include "Components/LightComponent/SpotLight.h"
 #include "Components/LightComponent/PointLight.h"
 #include "Managers/ShaderParameterManager.h"
-#include "Resource/Texture.h"
+#include "Resource/Texture/LoadedTexture.h"
 #include "Components/Transform.h"
 
 LightManager::LightManager()
@@ -28,10 +28,9 @@ shared_ptr<LightActor> LightManager::AddDefaultDirectionalLight()
 {
 	_globalLightCache = make_shared<LightActor>(ELightType::Directional);
 	_globalLightCache->Construct();
-
-	// TEST
+	
 	{
-		Vec3 startPos = { 0.f, 80.f, 0.f };
+		Vec3 startPos = { 10.f, 80.f, -10.f };
 		_globalLightCache->GetOrAddTransform()->SetWorldPosition(startPos);
 		
 		LightDesc* desc = _globalLightCache->GetDesc();
@@ -96,7 +95,7 @@ void LightManager::ReduceLight(shared_ptr<LightActor> actor)
 
 void LightManager::SetEnvLightTexture(const wstring& textureName)
 {
-	_envTexture = RESOURCE_MANAGER->Get<Texture>(textureName);
+	_envTexture = RESOURCE_MANAGER->Get<LoadedTexture>(textureName);
 	if (_envTexture == nullptr)
 	{
 		LOG(Log, "Can't find Texture");

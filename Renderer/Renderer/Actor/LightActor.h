@@ -27,7 +27,8 @@ public:
 	Matrix GetLightMatV() { return _matV; }
 	Matrix GetLightMatP() { return _matP; }
 	Matrix GetLightVP() { UpdateVP();  _VP = _matV * _matP; return _VP; }
-	vector<Matrix> GetLightVPForPointLight();
+	array<Matrix, 6> GetLightVPForPointLight();
+	bool IsThisPointLightUseShadowMap();
 	void GetLightVPForPointLight(OUT vector<Matrix>& views, OUT vector<Matrix>& VPs);
 	void UpdateVP();
 	shared_ptr<SRVBindingInfo> GetShadowSRVInfo() { return _shadowSRVInfo; }

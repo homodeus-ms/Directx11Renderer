@@ -92,10 +92,10 @@ void Actor::Render()
 		_renderer->Render();
 }
 
-void Actor::RenderDepthOnly(bool bForPointLight)
+void Actor::RenderShadowMap(bool bForPointLight, int32 instanceCount)
 {
 	if (_bCastShadow && _renderer)
-		_renderer->RenderDepthOnly(bForPointLight);
+		_renderer->RenderDepthOnly(bForPointLight, instanceCount);
 }
 
 

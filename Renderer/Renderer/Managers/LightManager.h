@@ -2,7 +2,7 @@
 #include "Structs/LightTypes.h"
 
 class LightActor;
-class Texture;
+class LoadedTexture;
 
 class LightManager
 {
@@ -35,7 +35,7 @@ private:
 
 	shared_ptr<LightActor> _globalLightCache;
 	
-	shared_ptr<Texture> _envTexture;
+	shared_ptr<LoadedTexture> _envTexture;
 	shared_ptr<struct SRVBindingInfo> _envBindingInfo;
 };
 

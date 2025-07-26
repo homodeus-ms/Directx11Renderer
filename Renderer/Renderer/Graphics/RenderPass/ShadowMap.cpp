@@ -7,8 +7,12 @@
 #include "Graphics/Buffer/InputLayout.h"
 #include "Graphics/Buffer/VertexData.h"
 #include "Graphics/Shader/VertexShader.h"
+#include "Graphics/Shader/GeometryShader.h"
 #include "Graphics/Shader/PixelShader.h"
-#include "Resource/Texture.h"
+#include "Resource/Texture/LoadedTexture.h"
+#include "Resource/Texture/ShadowTexture.h"
+#include "Resource/Texture/ShadowCubeTexture.h"
+#include "Components/Transform.h"
 
 ShadowMap::ShadowMap()
 {
@@ -16,201 +20,113 @@ ShadowMap::ShadowMap()
 
 ShadowMap::~ShadowMap()
 {
+	SAFE_DELETE(_shadowTexture);
+
+	SAFE_DELETE(_shadowCubeTexture);
 }
 
 void ShadowMap::Construct()
 {
 	CreateShadowTexture();
-	CreateShadowDSV();
-	CreateShadowSRV();
-	CreateShadowCubeRTV();
 	SetShadowViewport();
 	CreateShadowMapResources();
 }
 
 void ShadowMap::CreateShadowMap(vector<shared_ptr<Actor>>& actors, const vector<shared_ptr<LightActor>>& lights)
 {
-	// Shadow Map을 만드는 것이므로 조명 하나당 모든 물체를 돌면서 Depth값 기록
+	vector<shared_ptr<LightActor>> directSpotLights;
+	shared_ptr<LightActor> pointLight = nullptr;
+	vector<Matrix> VPs;
+	array<Matrix, 6> PointVPs;
+	bool bShadowUsePointLightSelected = false;
+
 	for (int32 i = 0; i < lights.size(); ++i)
 	{
 		shared_ptr<LightActor> light = lights[i];
 		ELightType lightType = light->GetLightType();
 
 		if (lightType == ELightType::Directional || lightType == ELightType::Spot)
-			DrawShadowMap(light, actors, i);
+		{
+			if (directSpotLights.size() < MAX_SHADOW_MAP_COUNT)
+			{
+				directSpotLights.push_back(light);
+				VPs.push_back(light->GetLightVP());
+				light->SetShadowMapIndex(i);
+				light->SetShadowSRVInfo(_shadowTexture->GetSRVBindingInfo());
+			}
+		}
 		else
-			DrawShadowCubeMap(light, actors);
+		{
+			if (light->IsThisPointLightUseShadowMap())
+			{
+				assert(!bShadowUsePointLightSelected);
+				pointLight = light;
+				PointVPs = light->GetLightVPForPointLight();
+				bShadowUsePointLightSelected = true;
+			}
+		}
+	}
+
+	assert(directSpotLights.size() == VPs.size() && VPs.size() <= MAX_SHADOW_MAP_COUNT);
+
+	// Directional Light, SpotLight
+	SHADER_PARAM_MANAGER->PushLightVPs(VPs);
+	int32 instanceCount = VPs.size();
+	if (instanceCount != 0)
+	{
+		SHADER_PARAM_MANAGER->PushShadowMapSRV(_shadowTexture->GetSRVBindingInfo());
+		DrawShadowMap(actors, instanceCount);
+	}
+
+	// Point Light
+	if (bShadowUsePointLightSelected)
+	{
+		SHADER_PARAM_MANAGER->PushPointLightShadowDesc(PointVPs, pointLight->GetTransform()->GetWorldPosition());
+		SHADER_PARAM_MANAGER->PushShadowCubeMapSRV(_shadowCubeTexture->GetSRVBindingInfo());
+		DrawShadowCubeMap(pointLight, actors);
 	}
 }
 
-void ShadowMap::DrawShadowMap(shared_ptr<LightActor> light, const vector<shared_ptr<Actor>>& actors, int32 index)
+void ShadowMap::DrawShadowMap(const vector<shared_ptr<Actor>>& actors, int32 drawShadowMapCount)
 {
-	CONTEXT->OMSetRenderTargets(0, nullptr, _shadowDSVs[index].Get());
-	CONTEXT->ClearDepthStencilView(_shadowDSVs[index].Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+	ComPtr<ID3D11DepthStencilView> dsv = _shadowTexture->GetDSV();
+
+	CONTEXT->OMSetRenderTargets(0, nullptr, dsv.Get());
+	CONTEXT->ClearDepthStencilView(dsv.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	CONTEXT->RSSetViewports(1, &_shadowViewport);
-	
-	SHADER_PARAM_MANAGER->AddShadowData(light->GetLightVP());
-	SHADER_PARAM_MANAGER->UpdateShadowMapData();
 
 	// 모든 물체의 depth 기록
 	for (shared_ptr<Actor> actor : actors)
 	{
 		if (actor->IsCastShadowedActor())
-			actor->RenderDepthOnly(false);
+			actor->RenderShadowMap(false, drawShadowMapCount);
 	}
-
-	SHADER_PARAM_MANAGER->CleanUpShadowMapBuffers();  // 조명 리셋
-
-	// 해당 라이트에 SRVBindingInfo를 넣어줌, 나중에 각 Light마다 자신이 사용하게 될 SRV를 꺼내줄 수 있게
-	light->SetShadowSRVInfo(_shadowSRVBindingInfos[index]);
 }
 
 void ShadowMap::DrawShadowCubeMap(shared_ptr<LightActor> light, const vector<shared_ptr<Actor>>& actors)
 {
-	//const vector<Matrix>& VPs = light->GetLightVPForPointLight();
-	vector<Matrix> views;
-	vector<Matrix> VPs;
-	light->GetLightVPForPointLight(views, VPs);
+	ComPtr<ID3D11RenderTargetView> RTV = _shadowCubeTexture->GetRTV();
 
-	float clearColor[4] = { 0.5f, 0.f, 0.f, 1.f };
+	CONTEXT->OMSetRenderTargets(1, RTV.GetAddressOf(), nullptr);
+	CONTEXT->ClearRenderTargetView(RTV.Get(), _cubeMapClearColor);
+	CONTEXT->RSSetViewports(1, &_shadowViewport);
 
-	// Point Light
-	for (int32 i = 0; i < 6; ++i)
+	for (shared_ptr<Actor> actor : actors)
 	{
-		CONTEXT->OMSetRenderTargets(1, _shadowCubeRTVs[i].GetAddressOf(), nullptr);
-		CONTEXT->ClearRenderTargetView(_shadowCubeRTVs[i].Get(), clearColor);
-		CONTEXT->RSSetViewports(1, &_shadowViewport);
-	
-		SHADER_PARAM_MANAGER->AddShadowData(views[i], VPs[i]);
-		SHADER_PARAM_MANAGER->UpdateShadowMapData();
-	
-		// 모든 물체의 depth 기록
-		for (shared_ptr<Actor> actor : actors)
-		{
-			if (actor->IsCastShadowedActor())
-				actor->RenderDepthOnly(true);
-		}
-		SHADER_PARAM_MANAGER->CleanUpShadowMapBuffers();
+		if (actor->IsCastShadowedActor())
+			actor->RenderShadowMap(true);
 	}
-	
-	light->SetShadowSRVInfo(_shadowCubeSRVBindingInfo);
+
+	light->SetShadowSRVInfo(_shadowCubeTexture->GetSRVBindingInfo());
 }
 
 void ShadowMap::CreateShadowTexture()
 {
-	for (int32 i = 0; i < MAX_SHADOW_MAP_COUNT; ++i)
-	{
-		D3D11_TEXTURE2D_DESC desc;
-		::ZeroMemory(&desc, sizeof(desc));
+	_shadowTexture = new ShadowTexture();
+	_shadowTexture->CreateTexture();
 
-		desc.Width = SHADOW_MAP_SIZE;
-		desc.Height = SHADOW_MAP_SIZE;
-		desc.MipLevels = 1;
-		desc.ArraySize = 1;
-		desc.Format = DXGI_FORMAT_R32_TYPELESS; // 깊이와 SRV 둘 다 사용하려면 TYPELESS
-		desc.SampleDesc.Count = 1;
-		desc.Usage = D3D11_USAGE_DEFAULT;
-		desc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
-
-		HRESULT hr = DEVICE->CreateTexture2D(&desc, nullptr, _shadowTextures[i].GetAddressOf());
-		check(hr);
-	}
-
-	// For Cube Texture
-	{
-		D3D11_TEXTURE2D_DESC desc;
-		::ZeroMemory(&desc, sizeof(desc));
-
-		desc.Width = SHADOW_MAP_SIZE;
-		desc.Height = SHADOW_MAP_SIZE;
-		desc.MipLevels = 1;
-		desc.ArraySize = 6;
-		desc.Format = DXGI_FORMAT_R32_TYPELESS;
-		desc.SampleDesc.Count = 1;
-		desc.Usage = D3D11_USAGE_DEFAULT;
-		desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-		desc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
-
-		HRESULT hr = DEVICE->CreateTexture2D(&desc, nullptr, _shadowCubeTexture.GetAddressOf());
-		check(hr);
-	}
-}
-
-void ShadowMap::CreateShadowDSV()
-{
-	for (int32 i = 0; i < MAX_SHADOW_MAP_COUNT; ++i)
-	{
-		D3D11_DEPTH_STENCIL_VIEW_DESC desc;
-		ZeroMemory(&desc, sizeof(desc));
-
-		desc.Format = DXGI_FORMAT_D32_FLOAT;
-		desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-		desc.Texture2D.MipSlice = 0;
-
-		HRESULT hr = DEVICE->CreateDepthStencilView(_shadowTextures[i].Get(), &desc, _shadowDSVs[i].GetAddressOf());
-		check(hr);
-	}
-}
-
-void ShadowMap::CreateShadowSRV()
-{
-	for (int32 i = 0; i < MAX_SHADOW_MAP_COUNT; ++i)
-	{
-		D3D11_SHADER_RESOURCE_VIEW_DESC desc;
-		::ZeroMemory(&desc, sizeof(desc));
-		desc.Format = DXGI_FORMAT_R32_FLOAT; // Shader에서 사용할 format
-		desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-		desc.Texture2D.MostDetailedMip = 0;
-		desc.Texture2D.MipLevels = 1;
-
-		HRESULT hr = DEVICE->CreateShaderResourceView(_shadowTextures[i].Get(), &desc, _shadowSRVs[i].GetAddressOf());
-		check(hr);
-
-		// SRV Binding Info
-		_shadowSRVBindingInfos[i] = make_shared<SRVBindingInfo>();
-		_shadowSRVBindingInfos[i]->slot = SHADOW_SLOT_NUM;
-		_shadowSRVBindingInfos[i]->stage = EShaderStage::PsStage;
-		_shadowSRVBindingInfos[i]->srv = _shadowSRVs[i];
-	}
-
-	{
-		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-		srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
-		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
-		srvDesc.TextureCube.MipLevels = 1;
-		srvDesc.TextureCube.MostDetailedMip = 0;
-		
-		HRESULT hr = DEVICE->CreateShaderResourceView(_shadowCubeTexture.Get(), &srvDesc, _shadowCubeSRV.GetAddressOf());
-		check(hr);
-
-		// SRV Binding Info
-		_shadowCubeSRVBindingInfo = make_shared<SRVBindingInfo>();
-		_shadowCubeSRVBindingInfo->slot = SHADOW_SLOT_NUM + MAX_SHADOW_MAP_COUNT;
-		_shadowCubeSRVBindingInfo->stage = EShaderStage::PsStage;
-		_shadowCubeSRVBindingInfo->srv = _shadowCubeSRV;
-	}
-}
-
-void ShadowMap::CreateShadowCubeRTV()
-{
-	// 렌더 타겟 뷰 6개 (큐브맵의 각 면)
-	D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
-	rtvDesc.Format = DXGI_FORMAT_R32_FLOAT;
-	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
-	rtvDesc.Texture2DArray.MipSlice = 0;
-	rtvDesc.Texture2DArray.ArraySize = 1;
-
-	for (int i = 0; i < 6; ++i)
-	{
-		rtvDesc.Texture2DArray.FirstArraySlice = i;
-
-		HRESULT hr = DEVICE->CreateRenderTargetView(
-			_shadowCubeTexture.Get(),
-			&rtvDesc,
-			_shadowCubeRTVs[i].GetAddressOf()
-		);
-		check(hr);
-	}
+	_shadowCubeTexture = new ShadowCubeTexture();
+	_shadowCubeTexture->CreateTexture();
 }
 
 void ShadowMap::SetShadowViewport()
@@ -225,17 +141,30 @@ void ShadowMap::SetShadowViewport()
 
 void ShadowMap::CreateShadowMapResources()
 {
-	_defualtShaderInfo = make_shared<ShaderInfo>(SHADER_NAME);
+	_defaultShaderInfo = make_shared<ShaderInfo>(SHADER_NAME);
+	_defaultShaderInfo->AddGSShaderInfo();
 	_pointLightShaderInfo = make_shared<ShaderInfo>(POINT_LIGHT_SHADER_NAME);
+	_pointLightShaderInfo->AddGSShaderInfo();
 
 	_resources.defaultVertexShader = make_shared<VertexShader>();
-	_resources.defaultVertexShader->Create(_defualtShaderInfo->_shaderPath, _defualtShaderInfo->_vsEntryName, _defualtShaderInfo->_vsVersion);
+	_resources.defaultVertexShader->Create(_defaultShaderInfo->_shaderPath, _defaultShaderInfo->_vsEntryName, _defaultShaderInfo->_vsVersion);
+
+	_resources.defaultGeometryShader = make_shared<GeometryShader>();
+	_resources.defaultGeometryShader->Create(_defaultShaderInfo->_shaderPath, _defaultShaderInfo->_gsEntryName, _defaultShaderInfo->_gsVersion);
+
+	_resources.defaultPixelShader = make_shared<PixelShader>();
+	_resources.defaultPixelShader->Create(_defaultShaderInfo->_shaderPath, _defaultShaderInfo->_psEntryName, _defaultShaderInfo->_psVersion);
 
 	_resources.pointLightVertexShader = make_shared<VertexShader>();
 	_resources.pointLightVertexShader->Create(_pointLightShaderInfo->_shaderPath, _pointLightShaderInfo->_vsEntryName, _pointLightShaderInfo->_vsVersion);
 
+	_resources.pointLightGeometryShader = make_shared<GeometryShader>();
+	_resources.pointLightGeometryShader->Create(_pointLightShaderInfo->_shaderPath, _pointLightShaderInfo->_gsEntryName, _pointLightShaderInfo->_gsVersion);
+
 	_resources.pointLightPixelShader = make_shared<PixelShader>();
 	_resources.pointLightPixelShader->Create(_pointLightShaderInfo->_shaderPath, _pointLightShaderInfo->_psEntryName, _pointLightShaderInfo->_psVersion);
+
+
 
 	const vector<D3D11_INPUT_ELEMENT_DESC>& desc = VertexData::descs;
 	_resources.inputLayout = make_shared<InputLayout>();

@@ -21,7 +21,7 @@ public:
 	virtual void Construct() override;
 	virtual void BeginPlay() override;
 	virtual void Render() override;
-	virtual void RenderDepthOnly(bool bForPointLight) override;
+	virtual void RenderDepthOnly(bool bForPointLight, int32 instanceCount) override;
 
 private:
 	shared_ptr<BasicMesh> _basicMesh;

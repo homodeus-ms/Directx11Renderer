@@ -2,7 +2,7 @@
 #include "NormalDemo.h"
 #include "Main/ClientPawn.h"
 #include "Resource/BasicMesh/BasicMesh.h"
-#include "Resource/Texture.h"
+#include "Resource/Texture/LoadedTexture.h"
 #include "Components/Transform.h"
 #include "Graphics/Shader/ShaderInfo.h"
 #include "Graphics/Buffer/ConstantBuffer.h"
@@ -22,13 +22,13 @@ void NormalDemo::Construct()
 	_guiController->BeginPlay();
 
 	// Resource Load
-	RESOURCE_MANAGER->Load<Texture>(L"Leather", L"..\\Resources\\Images\\Leather.jpg");
-	RESOURCE_MANAGER->Load<Texture>(L"Leather_Normal", L"..\\Resources\\Images\\Leather_Normal.jpg");
+	RESOURCE_MANAGER->Load<LoadedTexture>(L"Leather", L"..\\Resources\\Images\\Leather.jpg");
+	RESOURCE_MANAGER->Load<LoadedTexture>(L"Leather_Normal", L"..\\Resources\\Images\\Leather_Normal.jpg");
 
 	// Material
 	shared_ptr<Material> material = make_shared<Material>();
-	material->SetDiffuseMap(RESOURCE_MANAGER->Get<Texture>(L"Leather"));
-	material->SetNormalMap(RESOURCE_MANAGER->Get<Texture>(L"Leather_Normal"));
+	material->SetDiffuseMap(RESOURCE_MANAGER->Get<LoadedTexture>(L"Leather"));
+	material->SetNormalMap(RESOURCE_MANAGER->Get<LoadedTexture>(L"Leather_Normal"));
 	{
 		MaterialDesc& desc = material->GetMaterialDesc();
 		desc.ambient = Vec4(0.5f);

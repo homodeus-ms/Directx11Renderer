@@ -19,6 +19,7 @@ public:
 	virtual void SetSpecular(Color specular) override { _desc.specular = specular; }
 
 private:
+	static bool bDrawShadowPointLightSelected;
 	PointLightDesc _desc;
 };
 

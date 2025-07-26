@@ -2,7 +2,7 @@
 #include "CameraDemo.h"
 #include "Main/ClientPawn.h"
 #include "Resource/BasicMesh/BasicMesh.h"
-#include "Resource/Texture.h"
+#include "Resource/Texture/LoadedTexture.h"
 #include "Graphics/Shader/ShaderInfo.h"
 #include "Graphics/Buffer/ConstantBuffer.h"
 #include "Actor/CameraActor.h"
@@ -14,11 +14,11 @@ void CameraDemo::Construct()
 
 	// Resource Load
 	RESOURCE_MANAGER->BeginPlay();
-	RESOURCE_MANAGER->Load<Texture>(L"Guitarist", L"..\\Resources\\Images\\Guitarist2.png");
+	RESOURCE_MANAGER->Load<LoadedTexture>(L"Guitarist", L"..\\Resources\\Images\\Guitarist2.png");
 
 	// Material
 	shared_ptr<Material> material = make_shared<Material>();
-	material->SetDiffuseMap(RESOURCE_MANAGER->Get<Texture>(L"Guitarist"));
+	material->SetDiffuseMap(RESOURCE_MANAGER->Get<LoadedTexture>(L"Guitarist"));
 	MaterialDesc& desc = material->GetMaterialDesc();
 	desc.ambient = Vec4(1.f);
 	desc.diffuse = Vec4(1.f);

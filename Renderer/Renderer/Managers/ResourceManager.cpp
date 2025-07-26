@@ -4,7 +4,7 @@
 #include "Utils/tinyxml2.h"
 #include "Utils/Utils.h"
 #include "Utils/FileUtils.h"
-#include "Resource/Texture.h"
+#include "Resource/Texture/LoadedTexture.h"
 #include "Resource/BasicMesh/BasicMesh.h"
 #include "Resource/BasicMesh/DefaultBasicMesh.h"
 #include "Resource/BasicMesh/CubeMapBasicMesh.h"
@@ -256,17 +256,17 @@ void ResourceManager::ReadMeshesFromXML(const wstring& filepath, vector<shared_p
 	}
 }
 
-shared_ptr<Texture> ResourceManager::GetOrAddTexture(const wstring& key, const wstring& path)
+shared_ptr<LoadedTexture> ResourceManager::GetOrAddTexture(const wstring& key, const wstring& path)
 {
 	if (filesystem::exists(filesystem::path(path)) == false)
 		return nullptr;
 
-	shared_ptr<Texture> texture = Load<Texture>(key, path);
+	shared_ptr<LoadedTexture> texture = Load<LoadedTexture>(key, path);
 
 	if (texture == nullptr)
 	{
 		LOG(Warning, "Texture Load Incompleted");
-		texture = make_shared<Texture>();
+		texture = make_shared<LoadedTexture>();
 		texture->Load(path);
 		Add(key, texture);
 	}
@@ -285,7 +285,7 @@ void ResourceManager::SetTextureToMaterial(const char* keyname, const wstring& p
 
 	if (!key.empty())
 	{
-		shared_ptr<Texture> texture = GetOrAddTexture(key, fullpath);
+		shared_ptr<LoadedTexture> texture = GetOrAddTexture(key, fullpath);
 		material->SetTextureMap(textureType, texture);
 	}
 }
@@ -303,12 +303,12 @@ Color ResourceManager::ReadColorInfo(tinyxml2::XMLElement* node)
 
 void ResourceManager::CreateDefaultMaterials()
 {
-	Load<Texture>(L"WhiteTexture", L"..\\Resources\\Images\\White.jpg");
+	Load<LoadedTexture>(L"WhiteTexture", L"..\\Resources\\Images\\White.jpg");
 
 	// Red
 	{
 		shared_ptr<Material> material = make_shared<Material>();
-		material->SetDiffuseMap(Get<Texture>(L"WhiteTexture"));
+		material->SetDiffuseMap(Get<LoadedTexture>(L"WhiteTexture"));
 		{
 			MaterialDesc& desc = material->GetMaterialDesc();
 			desc.ambient = Vec4(0.8f);
@@ -324,7 +324,7 @@ void ResourceManager::CreateDefaultMaterials()
 
 	{
 		shared_ptr<Material> material = make_shared<Material>();
-		material->SetDiffuseMap(Get<Texture>(L"WhiteTexture"));
+		material->SetDiffuseMap(Get<LoadedTexture>(L"WhiteTexture"));
 		{
 			MaterialDesc& desc = material->GetMaterialDesc();
 			desc.ambient = Vec4(0.8f);
@@ -340,7 +340,7 @@ void ResourceManager::CreateDefaultMaterials()
 	// Blue
 	{
 		shared_ptr<Material> material = make_shared<Material>();
-		material->SetDiffuseMap(Get<Texture>(L"WhiteTexture"));
+		material->SetDiffuseMap(Get<LoadedTexture>(L"WhiteTexture"));
 		{
 			MaterialDesc& desc = material->GetMaterialDesc();
 			desc.ambient = Vec4(0.8f);
@@ -357,7 +357,7 @@ void ResourceManager::CreateDefaultMaterials()
 	// Green
 	{
 		shared_ptr<Material> material = make_shared<Material>();
-		material->SetDiffuseMap(Get<Texture>(L"WhiteTexture"));
+		material->SetDiffuseMap(Get<LoadedTexture>(L"WhiteTexture"));
 		{
 			MaterialDesc& desc = material->GetMaterialDesc();
 			desc.ambient = Vec4(0.8f);
@@ -374,7 +374,7 @@ void ResourceManager::CreateDefaultMaterials()
 	// Yellow
 	{
 		shared_ptr<Material> material = make_shared<Material>();
-		material->SetDiffuseMap(Get<Texture>(L"WhiteTexture"));
+		material->SetDiffuseMap(Get<LoadedTexture>(L"WhiteTexture"));
 		{
 			MaterialDesc& desc = material->GetMaterialDesc();
 			desc.ambient = Vec4(0.8f);
@@ -391,7 +391,7 @@ void ResourceManager::CreateDefaultMaterials()
 	// White
 	{
 		shared_ptr<Material> material = make_shared<Material>();
-		material->SetDiffuseMap(Get<Texture>(L"WhiteTexture"));
+		material->SetDiffuseMap(Get<LoadedTexture>(L"WhiteTexture"));
 		{
 			MaterialDesc& desc = material->GetMaterialDesc();
 			desc.ambient = Vec4(0.9f);

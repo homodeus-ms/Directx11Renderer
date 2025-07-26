@@ -12,7 +12,7 @@
 #include "Managers/RenderManager.h"
 #include "Managers/LightManager.h"
 #include "Resource/Material.h"
-#include "Resource/Texture.h"
+#include "Resource/Texture/LoadedTexture.h"
 #include "Resource/BasicMesh/VertexUVBasicMesh.h"
 #include "Graphics/Shader/ShaderInfo.h"
 
@@ -189,7 +189,7 @@ void Scene::CreateEnvironment(const wstring& textureName, bool bSetEnvLighting)
 	}
 
 	_cubeMapCached = make_shared<Actor>(EActorType::Actor, "CubeMap");
-	shared_ptr<Texture> tex = RESOURCE_MANAGER->Get<Texture>(textureName);
+	shared_ptr<LoadedTexture> tex = RESOURCE_MANAGER->Get<LoadedTexture>(textureName);
 	if (tex == nullptr)
 	{
 		LOG(Log, "Can't find Env Texture");

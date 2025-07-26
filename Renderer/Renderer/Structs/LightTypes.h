@@ -20,30 +20,34 @@ struct LightDesc
 	Color diffuse = Vec4(1.f);
 	Color specular = Vec4(1.f);
 	Color emissive = { 0.f, 0.f, 0.f, 1.f };
-	int32 shadowMapIndex = -1;
-	float pad[3];
 };
 
 struct DirectionalLightDesc : public LightDesc
 {
 	Vec3 direction{ 0.f, 0.f, 1.f };
+	int32 shadowMapIndex = -1;
 	uint32 isOn = 1;    // 1 : true, 0 : false
+	float pad[3]{};
 };
 
 struct SpotLightDesc : public LightDesc
 {
 	Vec3 position{ 0.f, 0.f, 0.f };
+	int32 shadowMapIndex = -1;
+	Vec3 direction{ 0.f, 0.f, 1.f };
 	float range = 80.f;
-	Vec3 direction{0.f, 0.f, 1.f};
-	float spotPower = 8.f;
 	Vec3 attenuation = { 1.f, 0.1f, 0.05f }; // constant, linear, quadratic
+	float spotPower = 8.f;
 	uint32 isOn = 1;
+	float pad[3];
 };
 
 struct PointLightDesc : public LightDesc
 {
 	Vec3 position{ 0.f, 0.f, 0.f };
-	float range = 80.f;
+	uint32 bShadowMapUsing = 0;
 	Vec3 attenuation = { 1.f, 0.1f, 0.05f }; // constant, linear, quadratic
+	float range = 80.f;
 	uint32 isOn = 1;
+	float pad[3];
 };

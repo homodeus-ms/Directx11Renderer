@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "BulbActor.h"
 #include "Components/Transform.h"
-#include "Resource/Texture.h"
+#include "Resource/Texture/LoadedTexture.h"
 #include "Resource/BasicMesh/BasicMesh.h"
 #include "Resource/Material.h"
 #include "Graphics/Shader/ShaderInfo.h"

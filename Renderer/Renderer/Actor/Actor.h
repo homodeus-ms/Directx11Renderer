@@ -33,7 +33,7 @@ public:
 	virtual void FixedTick();
 
 	void Render();
-	void RenderDepthOnly(bool bForPointLight);
+	void RenderShadowMap(bool bForPointLight, int32 instanceCount = 0);
 
 	EActorType GetActorType() const { return _actorType; }
 	const string& GetName() const { return _actorName; }

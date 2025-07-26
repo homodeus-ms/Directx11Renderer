@@ -3,16 +3,26 @@
 #include "Managers/ShaderParameterManager.h"
 #include "Components/Transform.h"
 
+bool PointLight::bDrawShadowPointLightSelected = false;
+
 PointLight::PointLight()
 {
 	_desc.ambient = Vec4(0.3f);
 	_desc.diffuse = { 1.f, 1.f, 0.2f, 1.f };
 	_desc.specular = { 0.7f, 0.7f, 0.3f, 1.f };
 	_desc.position = { 0.f, 2.f, 0.f };
+	
+	if (!bDrawShadowPointLightSelected)
+	{
+		bDrawShadowPointLightSelected = true;
+		_desc.bShadowMapUsing = 1;
+	}
 }
 
 PointLight::~PointLight()
 {
+	if (_desc.bShadowMapUsing == 1)
+		bDrawShadowPointLightSelected = false;
 }
 
 void PointLight::BeginPlay()

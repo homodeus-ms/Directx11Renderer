@@ -2,6 +2,7 @@
 #include "ShaderParameterManager.h"
 #include "Components/CameraComponent.h"
 #include "Resource/Material.h"
+#include "Graphics/RenderPass/ShadowMapResources.h"
 
 
 void ShaderParameterManager::BeginPlay()
@@ -18,6 +19,7 @@ void ShaderParameterManager::BeginPlay()
 	RegisterBuffer<BoneBuffer>("BoneBuffer", static_cast<uint8>(EConstBufferRegisterNumber::BoneBuffer), EShaderStage::VsStage);
 	RegisterBuffer<BoneIndex>("BoneIndex", static_cast<uint8>(EConstBufferRegisterNumber::BoneIndex), EShaderStage::VsStage);
 	RegisterBuffer<ShadowDataDesc>("Shadow", static_cast<uint8>(EConstBufferRegisterNumber::ShadowData), EShaderStage::Both);
+	RegisterBuffer<PointShadowDataDesc>("PointShadow", static_cast<uint8>(EConstBufferRegisterNumber::PointShadowData), EShaderStage::PsStage | EShaderStage::GsStage);
 }
 
 void ShaderParameterManager::Update()
@@ -46,36 +48,6 @@ void ShaderParameterManager::PushTransformData(const TransformDesc& desc)
 void ShaderParameterManager::PushDirectionalLightData(const DirectionalLightDesc& desc)
 {
 	UpdateData("DirectionalLight", desc);
-}
-
-void ShaderParameterManager::PushSpotLightData(const vector<SpotLightDesc>& descs)
-{
-	SpotLightBuffer buffer;
-	uint32 descSize = static_cast<uint32>(descs.size());
-	assert(descSize <= MAX_SPOT_LIGHT_COUNT);
-
-	for (uint32 i = 0; i < descSize; ++i)
-	{
-		buffer.spotLightDescs[i] = descs.at(i);
-		buffer.spotLightCount++;
-	}
-	
-	UpdateData("SpotLight", buffer);
-}
-
-void ShaderParameterManager::PushPointLightData(const vector<PointLightDesc>& descs)
-{
-	PointLightBuffer buffer;
-	uint32 descSize = static_cast<uint32>(descs.size());
-	assert(descSize <= MAX_POINT_LIGHT_COUNT);
-
-	for (uint32 i = 0; i < descSize; ++i)
-	{
-		buffer.pointLightDescs[i] = descs.at(i);
-		buffer.pointLightCount++;
-	}
-
-	UpdateData("PointLight", buffer);
 }
 
 void ShaderParameterManager::PushSpotLightData(const SpotLightDesc& desc)
@@ -119,17 +91,12 @@ void ShaderParameterManager::PushBoneIndex(const BoneIndex& desc)
 void ShaderParameterManager::PushMaterial(shared_ptr<Material> material)
 {
 	PushMaterialData(material->GetMaterialDesc());
-	PushMaterialSRV(material->GetSRVBindingInfos());
+	_srvBindings = material->GetSRVBindingInfos();
 }
 
 void ShaderParameterManager::PushMaterialData(const MaterialDesc& desc)
 {
 	UpdateData("Material", desc);
-}
-
-void ShaderParameterManager::PushMaterialSRV(const array<SRVBindingInfo, TEXTURE_TYPE_COUNT>& srvs)
-{
-	_srvBindings = srvs;
 }
 
 void ShaderParameterManager::PushEnvLight(shared_ptr<SRVBindingInfo> info)
@@ -144,41 +111,50 @@ void ShaderParameterManager::PushEnvLightOnOff(bool bOn)
 	_bEnvLigthOn = bOn;
 }
 
-void ShaderParameterManager::PushShadowData(shared_ptr<ShadowDataDesc> desc)
+void ShaderParameterManager::PushLightVP(const Matrix& VP)
 {
-	UpdateData("Global", desc);
+	_shadowDataDesc.lightVP[0] = VP;
+	UpdateData("Shadow", _shadowDataDesc);
 }
 
-void ShaderParameterManager::AddShadowData(const Matrix& VP)
-{
-	uint32 index = _shadowDataDesc.currUsingCount++;
-	_shadowDataDesc.lightVP[index] = VP;
-}
-
-void ShaderParameterManager::AddShadowData(const Matrix& view, const Matrix& VP)
-{
-	uint32 index = _shadowDataDesc.currUsingCount++;
-	_shadowDataDesc.lightView[index] = view;
-	_shadowDataDesc.lightVP[index] = VP;
-}
-
-void ShaderParameterManager::UpdateShadowCubeMapVPs(const vector<Matrix>& VPs, uint32 currUsingIndex)
+void ShaderParameterManager::PushLightVPs(const vector<Matrix>& VPs)
 {
 	for (int32 i = 0; i < VPs.size(); ++i)
 	{
 		_shadowDataDesc.lightVP[i] = VPs[i];
 	}
-	_shadowDataDesc.currUsingCount = currUsingIndex;
-	_shadowDataDesc.bShadowCubeDataLoaded = 1;
 
 	UpdateData("Shadow", _shadowDataDesc);
 }
 
-
-void ShaderParameterManager::SetUseShadowCubeTrue()
+void ShaderParameterManager::PushPointLightShadowDesc(const array<Matrix, 6>& VPs, Vec3 lightPosition)
 {
-	_shadowDataDesc.bShadowCubeDataLoaded = 1;
+	for (int32 i = 0; i < 6; ++i)
+	{
+		_pointShadowDataDesc.lightVP[i] = VPs[i];
+	}
+	_pointShadowDataDesc.lightPosition = lightPosition;
+
+	UpdateData("PointShadow", _pointShadowDataDesc);
 }
+
+//void ShaderParameterManager::UpdateShadowCubeMapVPs(const vector<Matrix>& VPs, uint32 currUsingIndex)
+//{
+//	for (int32 i = 0; i < VPs.size(); ++i)
+//	{
+//		_shadowDataDesc.lightVP[i] = VPs[i];
+//	}
+//	_shadowDataDesc.currUsingCount = currUsingIndex;
+//	_shadowDataDesc.bShadowCubeDataLoaded = 1;
+//
+//	UpdateData("Shadow", _shadowDataDesc);
+//}
+
+
+//void ShaderParameterManager::SetUseShadowCubeTrue()
+//{
+//	_shadowDataDesc.bShadowCubeDataLoaded = 1;
+//}
 
 void ShaderParameterManager::PushShadowMapSRV(shared_ptr<SRVBindingInfo> info)
 {
@@ -190,26 +166,17 @@ void ShaderParameterManager::PushShadowCubeMapSRV(shared_ptr<SRVBindingInfo> inf
 	_shadowCubeMapSRV = info;
 }
 
-void ShaderParameterManager::UpdateShadowMapData()
-{
-	if (_shadowDataDesc.bShadowMapUsing == 1 && 
-		(_shadowDataDesc.currUsingCount > 0 || _shadowDataDesc.bShadowCubeDataLoaded == 1))
-	{
-		UpdateData("Shadow", _shadowDataDesc);
-	}
-}
 
 void ShaderParameterManager::CleanUpShadowMapBuffers()
 {
-	_shadowDataDesc.currUsingCount = 0;
-	_shadowDataDesc.bShadowCubeDataLoaded = 0;
+	//_shadowDataDesc.currUsingCount = 0;
+	//_shadowDataDesc.bShadowCubeDataLoaded = 0;
 	_shadowMapSrvs.clear();
 }
 
 void ShaderParameterManager::BindCommonResources()
 {
 	UpdateAddedLights();
-	UpdateShadowMapData();
 
 	// Shadow Map
 	for (int32 i = 0; i < _shadowMapSrvs.size(); ++i)
@@ -245,6 +212,9 @@ void ShaderParameterManager::BindAllDirtyBuffers()
 
 		if (IsStagePS(info.stage))
 			CONTEXT->PSSetConstantBuffers(info.slot, 1, comBuffer.GetAddressOf());
+
+		if (IsStageGS(info.stage))
+			CONTEXT->GSSetConstantBuffers(info.slot, 1, comBuffer.GetAddressOf());
 
 		info.dirty = false;
 	}

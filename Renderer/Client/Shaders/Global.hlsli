@@ -39,7 +39,6 @@ struct VertexTangentInput
 // Output
 struct VertexClipPosOnlyOutput
 {
-    float4 worldPosition : POSITION;
     float4 clipPosition : SV_POSITION;
 };
 
@@ -122,13 +121,16 @@ cbuffer BoneIndex : register(CBUFFER_NUM_BONEINDEX)
 
 cbuffer ShadowData : register(CBUFFER_NUM_SHADOW)
 {
-    ROW_MAT lightViews[6];
-    ROW_MAT lightVP[6];
-    uint currUseCount;
-    uint bShadowMapUsing;
-    uint bShadowCubeDataLoaded;
-    float shadowPad;
+    ROW_MAT g_LightVP[MAX_ACTIVE_SHADOW_LIGHT];
 }
+
+cbuffer PointShadowData : register(CBUFFER_NUM_POINT_SHADOW)
+{
+    ROW_MAT g_PointLightVPs[6];
+    float3 g_ShadowedPointLightPosition;
+    float pointShadowDataPad;
+}
+
 
 
 // SRV
@@ -136,17 +138,10 @@ Texture2D DiffuseMap : register(t0);
 Texture2D NormalMap : register(t1);
 Texture2D SpecularMap : register(t2);
 TextureCube textureCube : register(t3);
-Texture2D ShadowMaps[MAX_ACTIVE_SHADOW_LIGHT] : register(SHADOW_MAP_REG_NUM);
+//Texture2D ShadowMaps[MAX_ACTIVE_SHADOW_LIGHT] : register(SHADOW_MAP_REG_NUM);
+Texture2DArray ShadowMap : register(SHADOW_MAP_REG_NUM);
 TextureCube ShadowCubeMap : register(SHADOW_CUBE_MAP_REG_NUM);
 
-
-// SamplerState
-//SamplerState LinearSampler
-//{
-//    Filter = MIN_MAG_MIP_LINEAR;
-//    AddressU = Wrap;
-//    AddressV = Wrap;
-//};
 SamplerState LinearSampler : register(s0);
 
 SamplerState PointSampler

@@ -1,19 +1,18 @@
 #include "pch.h"
-#include "Texture.h"
+#include "Resource/Texture/LoadedTexture.h"
 #include <filesystem>
 #include <directxtk/DDSTextureLoader.h>
 
 
-Texture::Texture()
-	: Super(EResourceType::Texture)
+LoadedTexture::LoadedTexture()
 {
 }
 
-Texture::~Texture()
+LoadedTexture::~LoadedTexture()
 {
 }
 
-void Texture::Load(const wstring& path)
+void LoadedTexture::Load(const wstring& path)
 {
 	std::filesystem::path filepath(path);
 	wstring ext = filepath.extension().wstring();
@@ -39,7 +38,7 @@ void Texture::Load(const wstring& path)
 			D3D11_RESOURCE_MISC_TEXTURECUBE,    // miscFlags ← 큐브맵 핵심!
 			DDS_LOADER_FLAGS(false),                 // loadFlags
 			cubeTexture.GetAddressOf(),         // 텍스처 출력
-			_shaderResourceView.GetAddressOf(),             // SRV 출력
+			_SRV.GetAddressOf(),             // SRV 출력
 			nullptr                             // alphaMode (옵션)
 		);
 
@@ -51,7 +50,7 @@ void Texture::Load(const wstring& path)
 		check(hr);
 	}
 
-	HRESULT hr = ::CreateShaderResourceView(DEVICE.Get(), _img.GetImages(), _img.GetImageCount(), md, _shaderResourceView.GetAddressOf());
+	HRESULT hr = ::CreateShaderResourceView(DEVICE.Get(), _img.GetImages(), _img.GetImageCount(), md, _SRV.GetAddressOf());
 	check(hr);
 
 	_size.x = static_cast<float>(md.width);

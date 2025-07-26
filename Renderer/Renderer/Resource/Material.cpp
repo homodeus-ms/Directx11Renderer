@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "Material.h"
-#include "Resource/Texture.h"
+#include "Resource/Texture/LoadedTexture.h"
 
 Material::Material()
     : Super(EResourceType::Material)
@@ -11,7 +11,7 @@ Material::~Material()
 {
 }
 
-void Material::SetTextureMap(ETextureType textureType, shared_ptr<Texture> texture)
+void Material::SetTextureMap(ETextureType textureType, shared_ptr<LoadedTexture> texture)
 {
     switch (textureType)
     {
@@ -30,7 +30,7 @@ void Material::SetTextureMap(ETextureType textureType, shared_ptr<Texture> textu
     }
 }
 
-void Material::SetDiffuseMap(shared_ptr<Texture> diffuseMap)
+void Material::SetDiffuseMap(shared_ptr<LoadedTexture> diffuseMap)
 {
     _diffuseMap = diffuseMap;
     uint8 slot = static_cast<uint8>(ETextureType::Diffuse);
@@ -43,7 +43,7 @@ void Material::SetDiffuseMap(shared_ptr<Texture> diffuseMap)
     };
 }
 
-void Material::SetNormalMap(shared_ptr<Texture> normalMap)
+void Material::SetNormalMap(shared_ptr<LoadedTexture> normalMap)
 {
     _normalMap = normalMap;
     uint8 slot = static_cast<uint8>(ETextureType::Normal);
@@ -56,7 +56,7 @@ void Material::SetNormalMap(shared_ptr<Texture> normalMap)
     };
 }
 
-void Material::SetSpecularMap(shared_ptr<Texture> specularMap)
+void Material::SetSpecularMap(shared_ptr<LoadedTexture> specularMap)
 {
     _specularMap = specularMap;
     uint8 slot = static_cast<uint8>(ETextureType::Specular);

@@ -5,11 +5,12 @@
 #include "Components/Transform.h"
 #include "Components/CameraComponent.h"
 #include "Resource/BasicMesh/BasicMesh.h"
-#include "Resource/Texture.h"
+#include "Resource/Texture/LoadedTexture.h"
 #include "Graphics/Buffer/InputLayout.h"
 #include "Graphics/Buffer/VertexBuffer.h"
 #include "Graphics/Buffer/IndexBuffer.h"
 #include "Graphics/Shader/VertexShader.h"
+#include "Graphics/Shader/GeometryShader.h"
 #include "Graphics/Shader/PixelShader.h"
 #include "Graphics/Shader/ShaderInfo.h"
 #include "Graphics/PipelineState/PipelineState.h"
@@ -82,7 +83,7 @@ void RenderComponentBase::Render()
 	}
 }
 
-void RenderComponentBase::RenderDepthOnly(bool bForPointLight)
+void RenderComponentBase::RenderDepthOnly(bool bForPointLight, int32 instanceCount)
 {
 	CONTEXT->IASetInputLayout(_shadowMapResources.inputLayout->GetComPtr().Get());
 	CONTEXT->IASetPrimitiveTopology(_pipelineState->GetTopology());
@@ -90,11 +91,14 @@ void RenderComponentBase::RenderDepthOnly(bool bForPointLight)
 	if (bForPointLight)
 	{
 		CONTEXT->VSSetShader(_shadowMapResources.pointLightVertexShader->GetComPtr().Get(), nullptr, 0);
+		CONTEXT->GSSetShader(_shadowMapResources.pointLightGeometryShader->GetComPtr().Get(), nullptr, 0);
 		CONTEXT->PSSetShader(_shadowMapResources.pointLightPixelShader->GetComPtr().Get(), nullptr, 0);
 	}
 	else
 	{
 		CONTEXT->VSSetShader(_shadowMapResources.defaultVertexShader->GetComPtr().Get(), nullptr, 0);
+		CONTEXT->GSSetShader(_shadowMapResources.defaultGeometryShader->GetComPtr().Get(), nullptr, 0);
+		CONTEXT->PSSetShader(_shadowMapResources.defaultPixelShader->GetComPtr().Get(), nullptr, 0);
 	}
 
 
@@ -153,9 +157,16 @@ void RenderComponentBase::DrawIndexed(UINT indexCount, UINT startIndexLocation, 
 
 void RenderComponentBase::DrawInstanced(UINT vertexCountPerInstance, UINT instanceCount, UINT startVertexLocation, UINT startInstanceLocation)
 {
+	
 }
 
 void RenderComponentBase::DrawIndexedInstanced(UINT indexCountPerInstance, UINT instanceCount, UINT startIndexLocation, INT baseVertexLocation, UINT startInstanceLocation)
 {
+	CONTEXT->DrawIndexedInstanced(indexCountPerInstance, indexCountPerInstance, startIndexLocation, baseVertexLocation, startInstanceLocation);
+}
+
+void RenderComponentBase::ClearGeometryShader()
+{
+	CONTEXT->GSSetShader(nullptr, 0, 0);
 }
 

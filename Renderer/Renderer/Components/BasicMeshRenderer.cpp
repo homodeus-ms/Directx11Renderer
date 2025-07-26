@@ -2,7 +2,7 @@
 #include "BasicMeshRenderer.h"
 #include "Resource/BasicMesh/BasicMesh.h"
 #include "Resource/Material.h"
-#include "Resource/Texture.h"
+#include "Resource/Texture/LoadedTexture.h"
 #include "Actor/Actor.h"
 #include "Components/Transform.h"
 #include "Components/CameraComponent.h"
@@ -59,22 +59,30 @@ void BasicMeshRenderer::Render()
 	DrawIndexed(_basicMesh->GetIndexBuffer()->GetCount());
 }
 
-void BasicMeshRenderer::RenderDepthOnly(bool bForPointLight)
+void BasicMeshRenderer::RenderDepthOnly(bool bForPointLight, int32 instanceCount)
 {
-	Super::RenderDepthOnly(bForPointLight);
+	Super::RenderDepthOnly(bForPointLight, instanceCount);
 
 	auto world = GetOwnerTransform()->GetWorldMatrix();
 	SHADER_PARAM_MANAGER->PushTransformData(TransformDesc{ world });
-
 	SHADER_PARAM_MANAGER->BindAllDirtyBuffers();
 
 	uint32 stride = sizeof(VertexData);
 	uint32 offset = _basicMesh->GetVertexBuffer()->GetOffset();
-
 	CONTEXT->IASetVertexBuffers(0, 1, _basicMesh->GetVertexBuffer()->GetPosOnlyBuffer().GetAddressOf(), &stride, &offset);
 	CONTEXT->IASetIndexBuffer(_basicMesh->GetIndexBuffer()->GetComPtr().Get(), DXGI_FORMAT_R32_UINT, 0);
 
-	DrawIndexed(_basicMesh->GetIndexBuffer()->GetCount());
+	if (instanceCount == 0)
+	{
+		DrawIndexed(_basicMesh->GetIndexBuffer()->GetCount());
+	}
+	else
+	{
+		assert(instanceCount <= MAX_SHADOW_MAP_COUNT);
+		DrawIndexedInstanced(_basicMesh->GetIndexBuffer()->GetCount(), instanceCount);
+	}
+
+	ClearGeometryShader();
 }
 
 void BasicMeshRenderer::SetInputLayout()

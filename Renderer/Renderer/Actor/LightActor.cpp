@@ -7,7 +7,7 @@
 #include "Components/Transform.h"
 #include "Graphics/RenderPass/ShadowMapResources.h"
 #include "Resource/Material.h"
-#include "Resource/Texture.h"
+#include "Resource/Texture/LoadedTexture.h"
 
 
 LightActor::LightActor(ELightType lightType, const string& name)
@@ -89,29 +89,41 @@ void LightActor::SetOnOff(bool bIsOn)
 
 }
 
-vector<Matrix> LightActor::GetLightVPForPointLight()
+array<Matrix, 6> LightActor::GetLightVPForPointLight()
 {
-	vector<Matrix> vpVector(6);
+	array<Matrix, 6> VPs;
 
 	Vec3 pos = GetTransform()->GetWorldPosition();
 	// +x, -x, +y, -y, +z, -z
-	Matrix v1 = XMMatrixLookAtLH(pos, pos + Vec3(1, 0, 0), Vec3(0, -1, 0));
-	Matrix v2 = XMMatrixLookAtLH(pos, pos + Vec3(-1, 0, 0), Vec3(0, -1, 0));
-	Matrix v3 = XMMatrixLookAtLH(pos, pos + Vec3(0, 1, 0), Vec3(0, 0, 1));
-	Matrix v4 = XMMatrixLookAtLH(pos, pos + Vec3(0, -1, 0), Vec3(0, 0, -1));
-	Matrix v5 = XMMatrixLookAtLH(pos, pos + Vec3(0, 0, 1), Vec3(0, -1, 0));
-	Matrix v6 = XMMatrixLookAtLH(pos, pos + Vec3(0, 0, -1), Vec3(0, -1, 0));
+	Matrix v1 = XMMatrixLookAtLH(pos, pos + Vec3(1, 0, 0), Vec3(0, 1, 0));
+	Matrix v2 = XMMatrixLookAtLH(pos, pos + Vec3(-1, 0, 0), Vec3(0, 1, 0));
+	Matrix v3 = XMMatrixLookAtLH(pos, pos + Vec3(0, 1, 0), Vec3(0, 0, -1));
+	Matrix v4 = XMMatrixLookAtLH(pos, pos + Vec3(0, -1, 0), Vec3(0, 0, 1));
+	Matrix v5 = XMMatrixLookAtLH(pos, pos + Vec3(0, 0, 1), Vec3(0, 1, 0));
+	Matrix v6 = XMMatrixLookAtLH(pos, pos + Vec3(0, 0, -1), Vec3(0, 1, 0));
 	
 	Matrix P = XMMatrixPerspectiveFovLH(XM_PIDIV2, 1.f, 1.f, 100.f);
 	
-	vpVector[0] = v1 * P;
-	vpVector[1] = v2 * P;
-	vpVector[2] = v3 * P;
-	vpVector[3] = v4 * P;
-	vpVector[4] = v5 * P;
-	vpVector[5] = v6 * P;
+	VPs[0] = v1 * P;
+	VPs[1] = v2 * P;
+	VPs[2] = v3 * P;
+	VPs[3] = v4 * P;
+	VPs[4] = v5 * P;
+	VPs[5] = v6 * P;
 
-	return vpVector;
+	return VPs;
+}
+
+bool LightActor::IsThisPointLightUseShadowMap()
+{
+	if (_lightType != ELightType::Point)
+		return false;
+
+	PointLightDesc* desc = static_cast<PointLightDesc*>(GetDesc());
+	if (desc->bShadowMapUsing == 1)
+		return true;
+
+	return false;
 }
 
 void LightActor::GetLightVPForPointLight(OUT vector<Matrix>& views, OUT vector<Matrix>& VPs)
@@ -164,5 +176,16 @@ void LightActor::UpdateVP()
 
 void LightActor::SetShadowMapIndex(int32 index)
 {
-	_lightComponent->GetDesc()->shadowMapIndex = index;
+	LightDesc* lightDesc = GetDesc();
+
+	if (_lightType == ELightType::Directional)
+	{
+		DirectionalLightDesc* desc = static_cast<DirectionalLightDesc*>(lightDesc);
+		desc->shadowMapIndex = index;
+	}
+	else if (_lightType == ELightType::Spot)
+	{
+		SpotLightDesc* desc = static_cast<SpotLightDesc*>(lightDesc);
+		desc->shadowMapIndex = index;
+	}
 }

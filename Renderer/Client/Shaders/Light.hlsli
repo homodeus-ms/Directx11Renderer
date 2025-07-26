@@ -12,11 +12,10 @@ struct DirectionalLightDesc
     float4 diffuse;
     float4 specular;
     float4 emissive;
-    int shadowMapIndex;
-    float3 pad;
-    
     float3 direction;
+    int shadowMapIndex;
     uint isOn;
+    float3 pad;
 };
 
 struct SpotLightDesc
@@ -25,15 +24,15 @@ struct SpotLightDesc
     float4 diffuse;
     float4 specular;
     float4 emissive;
-    int shadowMapIndex;
-    float3 pad;
     
     float3 position;
-    float range;
+    int shadowMapIndex;
     float3 direction;
-    float spotPower;
+    float range;
     float3 attenuation; // constant, linear, quadratic
+    float spotPower;
     uint isOn;
+    float3 pad;
 };
 
 struct PointLightDesc
@@ -42,13 +41,13 @@ struct PointLightDesc
     float4 diffuse;
     float4 specular;
     float4 emissive;
-    int shadowMapIndex;
-    float3 pad;
     
     float3 position;
-    float range;
+    uint bShadowMapUsing;
     float3 attenuation; // constant, linear, quadratic
+    float range;
     uint isOn;
+    float3 pad;
 };
 
 cbuffer DirectionalLightBuffer : register(CBUFFER_NUM_DIRECTIONAL_LIGHT)
@@ -122,27 +121,17 @@ float4 ComputeRimLight(bool useLight, float4 matE, float3 toEye, float3 normal)
 
 float ComputeShadowFactor(float3 worldPosition, uint index, float bias)
 {
-    // Temp : Texture2D -> Texture2DArray
-    if (index > 3)
+    if (index >= MAX_ACTIVE_SHADOW_LIGHT)
         return 0.f;
     
-    float4 clipPosition = mul(float4(worldPosition.xyz, 1.f), lightVP[index]);
+    float4 clipPosition = mul(float4(worldPosition.xyz, 1.f), g_LightVP[index]);
     float3 clipCoord = clipPosition.xyz / clipPosition.w;
     float2 uv = clipCoord.xy;
     uv.y = -uv.y;
     uv = (uv * 0.5f) + 0.5f;
     float currentDepth = clipCoord.z;
     
-    float4 sampled;
-    if (index == 0)
-        sampled = ShadowMaps[0].Sample(LinearSampler, uv);
-    else if (index == 1)
-        sampled = ShadowMaps[1].Sample(LinearSampler, uv);
-    else if (index == 2)
-        sampled = ShadowMaps[2].Sample(LinearSampler, uv);
-    else if (index == 3)
-        sampled = ShadowMaps[3].Sample(LinearSampler, uv);
-    
+    float4 sampled = ShadowMap.Sample(LinearSampler, float3(uv, index));
     float shadowDepth = sampled.r;
     float shadowFactor = currentDepth > shadowDepth + bias ? 0.6f : 1.0f;
     
@@ -194,14 +183,14 @@ float4 ComputeDirectionalLight(float3 normal, float2 uv, float3 worldPosition)
     
     int shadowMapIndex = GlobalLight.shadowMapIndex;
     float shadowFactor = 1.f;
-    if (bShadowMapUsing == 1 && shadowMapIndex != -1)
+    if (shadowMapIndex != -1)
     {
         shadowFactor = ComputeShadowFactor(worldPosition, (uint) shadowMapIndex, 0.001f);
     }
     
     //shadowFactor *= 0.8;
     
-    return (ambient + diffuse + specular) * shadowFactor;
+    return ambient + (diffuse + specular) * shadowFactor;
 }
 
 float4 ComputeSpotLight(SpotLightDesc L, float3 normal, float2 uv, float3 worldPosition)
@@ -252,9 +241,8 @@ float4 ComputeSpotLight(SpotLightDesc L, float3 normal, float2 uv, float3 worldP
     specular *= att;
     
     int shadowMapIndex = L.shadowMapIndex;
-    
     float shadowFactor = 1.f;
-    if (bShadowMapUsing == 1 && shadowMapIndex != -1)
+    if (shadowMapIndex != -1)
     {
         shadowFactor = ComputeShadowFactor(worldPosition, (uint) shadowMapIndex, 0.01);
     }
@@ -301,13 +289,13 @@ float4 ComputePointLight(PointLightDesc L, float3 normal, float2 uv, float3 worl
     // Attenuate
     float att = 1.0f / dot(L.attenuation, float3(1.0f, d, d * d));
     
-    ambient *= (att * 5.f);
+    ambient *= (att * 2.f);
     diffuse *= att;
     specular *= att;
     emissive *= att;
     
     float shadowFactor = 1.f;
-    if (bShadowMapUsing == 1 && bShadowCubeDataLoaded)
+    if (L.bShadowMapUsing == 1)
     {
         shadowFactor = ComputePointLightShadowFactor(L.position, worldPosition, 0.1);
     }

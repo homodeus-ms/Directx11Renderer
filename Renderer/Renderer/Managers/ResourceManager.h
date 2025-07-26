@@ -6,7 +6,7 @@
 #include "Structs/ETextureType.h"
 
 class Shader;
-class Texture;
+class LoadedTexture;
 class Material;
 class StaticMesh;
 
@@ -46,7 +46,7 @@ private:
 	bool GetFullPathFromAssetFolderByFileName(const wstring& filename, wstring& OUT meshPath, wstring& OUT materialPath);
 	void ReadMaterialsFromXML(const wstring& filepath, vector<shared_ptr<Material>>& OUT materials);
 	void ReadMeshesFromXML(const wstring& filepath, vector<shared_ptr<ImportedStaticBone>>& OUT bones, vector<shared_ptr<ImportedStaticMesh>>& OUT meshes);
-	shared_ptr<Texture> GetOrAddTexture(const wstring& key, const wstring& path);
+	shared_ptr<LoadedTexture> GetOrAddTexture(const wstring& key, const wstring& path);
 	void SetTextureToMaterial(const char* keyname, const wstring& parentPath, shared_ptr<Material> material, ETextureType textureType);
 	Color ReadColorInfo(tinyxml2::XMLElement* node);
 
@@ -61,7 +61,7 @@ private:
 template<typename T>
 EResourceType ResourceManager::GetResourceType()
 {
-	if (std::is_same_v<T, Texture>)
+	if (std::is_same_v<T, LoadedTexture>)
 		return EResourceType::Texture;
 	if (std::is_base_of_v<BasicMesh, T>)
 		return EResourceType::Mesh;

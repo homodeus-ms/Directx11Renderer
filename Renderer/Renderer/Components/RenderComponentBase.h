@@ -22,7 +22,7 @@ public:
 	
 	virtual void BeginPlay() override;
 	virtual void Render();
-	virtual void RenderDepthOnly(bool bForPointLight);
+	virtual void RenderDepthOnly(bool bForPointLight, int32 instanceCount);
 
 	virtual vector<shared_ptr<Material>> GetMaterials() abstract;
 	virtual void ChangeMaterialType(EMaterialType type) abstract;
@@ -37,6 +37,8 @@ protected:
 	void DrawIndexed(UINT indexCount, UINT startIndexLocation = 0, INT baseVertexLocation = 0);
 	void DrawInstanced(UINT vertexCountPerInstance, UINT instanceCount, UINT startVertexLocation = 0, UINT startInstanceLocation = 0);
 	void DrawIndexedInstanced(UINT indexCountPerInstance, UINT instanceCount, UINT startIndexLocation = 0, INT baseVertexLocation = 0, UINT startInstanceLocation = 0);
+
+	void ClearGeometryShader();
 
 	shared_ptr<InputLayout> _inputLayout = nullptr;
 	shared_ptr<VertexShader> _vertexShader;

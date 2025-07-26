@@ -39,41 +39,37 @@ public:
 	
 	void Update();
 
-	// Constant Buffer
+	// Constant Buffer, Lights
 	void PushGlobalData(const Matrix& view, const Matrix& projection);
 	void PushTransformData(const TransformDesc& desc);
 	void PushDirectionalLightData(const DirectionalLightDesc& desc);
-	
-	void PushSpotLightData(const vector<SpotLightDesc>& descs);
-	void PushPointLightData(const vector<PointLightDesc>& descs);
-	
 	void PushSpotLightData(const SpotLightDesc& desc);
 	void PushPointLightData(const PointLightDesc& desc);
 	
 	void UpdateAddedLights();
 
+	// Bone
 	void PushBoneBuffer(const BoneBuffer& desc);
 	void PushBoneIndex(const BoneIndex& desc);
 
 	// Material
 	void PushMaterial(shared_ptr<Material> material);
 	void PushMaterialData(const MaterialDesc& desc);
-	void PushMaterialSRV(const array<SRVBindingInfo, TEXTURE_TYPE_COUNT>& srvs);
 
 	// Other SRV
 	void PushEnvLight(shared_ptr<SRVBindingInfo> info);
 	void PushEnvLightOnOff(bool bOn);
 
 	// ShadowMap
-	void PushShadowData(shared_ptr<ShadowDataDesc> desc);
-	void AddShadowData(const Matrix& VP);
-	void AddShadowData(const Matrix& view, const Matrix& VP);
-	void UpdateShadowCubeMapVPs(const vector<Matrix>& VPs, uint32 currUsingIndex);
+	void PushLightVP(const Matrix& VP);
+	void PushLightVPs(const vector<Matrix>& VPs);
+	void PushPointLightShadowDesc(const array<Matrix, 6>& VPs, Vec3 lightPosition);
+	//void UpdateShadowCubeMapVPs(const vector<Matrix>& VPs, uint32 currUsingIndex);
 	
-	void SetUseShadowCubeTrue();
+	//void SetUseShadowCubeTrue();
 	void PushShadowMapSRV(shared_ptr<SRVBindingInfo> info);
 	void PushShadowCubeMapSRV(shared_ptr<SRVBindingInfo> info);  // TEMP
-	void UpdateShadowMapData();
+	
 	void CleanUpShadowMapBuffers();
 
 	void BindCommonResources();
@@ -82,7 +78,6 @@ public:
 	
 private:
 	void CleanUpAddedLightBuffers();
-	
 
 	template<typename T>
 	void UpdateData(const string& bufferName, const T& data)
@@ -106,6 +101,7 @@ private:
 
 	vector<shared_ptr<SRVBindingInfo>> _shadowMapSrvs;
 	ShadowDataDesc _shadowDataDesc{};
+	PointShadowDataDesc _pointShadowDataDesc{};
 
 	// TEMP
 	shared_ptr<SRVBindingInfo> _shadowCubeMapSRV;

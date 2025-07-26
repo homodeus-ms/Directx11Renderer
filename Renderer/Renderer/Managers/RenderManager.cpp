@@ -59,23 +59,23 @@ void RenderManager::UpdateCommonDatas(const vector<shared_ptr<LightActor>>& ligh
 	SHADER_PARAM_MANAGER->PushGlobalData(SCENE->GetCurrCameraV(), SCENE->GetCurrCameraP());
 
 	// ShadowMap 관련 데이터들
-	for (int32 i = 0; i < lightActors.size(); ++i)
-	{
-		shared_ptr<LightActor> light = lightActors[i];
-		ELightType type = light->GetLightType();
+	//for (int32 i = 0; i < lightActors.size(); ++i)
+	//{
+	//	shared_ptr<LightActor> light = lightActors[i];
+	//	ELightType type = light->GetLightType();
+	//
+	//	if (type == ELightType::Directional || type == ELightType::Spot)
+	//	{
+	//		SHADER_PARAM_MANAGER->PushShadowMapSRV(light->GetShadowSRVInfo());
+	//	}
+	//	else
+	//	{
+	//		SHADER_PARAM_MANAGER->PushShadowCubeMapSRV(light->GetShadowSRVInfo());
+	//	}
+	//}
 
-		if (type == ELightType::Directional || type == ELightType::Spot)
-		{
-			lightActors[i]->SetShadowMapIndex(i);
-			SHADER_PARAM_MANAGER->AddShadowData(light->GetLightVP());
-			SHADER_PARAM_MANAGER->PushShadowMapSRV(light->GetShadowSRVInfo());
-		}
-		else
-		{
-			SHADER_PARAM_MANAGER->SetUseShadowCubeTrue();
-			SHADER_PARAM_MANAGER->PushShadowCubeMapSRV(light->GetShadowSRVInfo());
-		}
-	}
+	//SHADER_PARAM_MANAGER->PushShadowMapSRV(_shadowMap->GetShadowMapSRVBindingInfo());
+	//SHADER_PARAM_MANAGER->PushShadowCubeMapSRV(_shadowMap->GetPointLightShadowMapSRVBindingInfo());
 
 	// Light, EnvLight source, ShadowMap SRV등
 	SHADER_PARAM_MANAGER->BindCommonResources();

@@ -5,7 +5,7 @@
 #include "Components/Transform.h"
 #include "Components/CameraComponent.h"
 #include "Resource/BasicMesh/BasicMesh.h"
-#include "Resource/Texture.h"
+#include "Resource/Texture/LoadedTexture.h"
 #include "Resource/Material.h"
 #include "Resource/StaticMesh.h"
 #include "Graphics/Buffer/InputLayout.h"
@@ -107,9 +107,9 @@ void StaticMeshRenderer::Render()
 	}
 }
 
-void StaticMeshRenderer::RenderDepthOnly(bool bForPointLight)
+void StaticMeshRenderer::RenderDepthOnly(bool bForPointLight, int32 instanceCount)
 {
-	Super::RenderDepthOnly(bForPointLight);
+	Super::RenderDepthOnly(bForPointLight, instanceCount);
 
 	// Bone Matrixes
 	BoneBuffer boneBuffer;
@@ -144,4 +144,6 @@ void StaticMeshRenderer::RenderDepthOnly(bool bForPointLight)
 
 		DrawIndexed(mesh->indexBuffer->GetCount());
 	}
+
+	ClearGeometryShader();
 }
