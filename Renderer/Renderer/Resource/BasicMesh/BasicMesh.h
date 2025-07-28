@@ -11,7 +11,7 @@ class BasicMesh : public ResourceBase
 	using Super = ResourceBase;
 
 public:
-	BasicMesh() : Super(EResourceType::Mesh) {}
+	BasicMesh() : Super(EResourceType::BasicMesh) {}
 	virtual ~BasicMesh() {};
 
 	virtual void CreateQuad() {}

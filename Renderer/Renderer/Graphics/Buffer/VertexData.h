@@ -5,6 +5,7 @@ struct VertexData
 	Vec3 position = { 0, 0, 0 };
 
 	static vector<D3D11_INPUT_ELEMENT_DESC> descs;
+	static vector<D3D11_INPUT_ELEMENT_DESC> descs_Instanced;
 };
 
 struct VertexUVData
@@ -54,5 +55,5 @@ struct VertexUVNormalTangentBlendData
 	static vector<D3D11_INPUT_ELEMENT_DESC> descs;
 };
 
-using StaticMeshVertexType = VertexUVNormalTangentBlendData;
+using StaticMeshVertexType = VertexUVNormalTangentData;
 using SkeletalMeshVertexType = VertexUVNormalTangentBlendData;

@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "ShaderParameterManager.h"
 #include "Components/CameraComponent.h"
 #include "Resource/Material.h"
@@ -20,6 +20,9 @@ void ShaderParameterManager::BeginPlay()
 	RegisterBuffer<BoneIndex>("BoneIndex", static_cast<uint8>(EConstBufferRegisterNumber::BoneIndex), EShaderStage::VsStage);
 	RegisterBuffer<ShadowDataDesc>("Shadow", static_cast<uint8>(EConstBufferRegisterNumber::ShadowData), EShaderStage::Both);
 	RegisterBuffer<PointShadowDataDesc>("PointShadow", static_cast<uint8>(EConstBufferRegisterNumber::PointShadowData), EShaderStage::PsStage | EShaderStage::GsStage);
+	
+	// register 0번(현재 GlobalBuffer 역시 0번 사용)을 사용하지만 섀도우맵 pass에서만 사용함
+	RegisterBuffer<PointShadowDataDesc>("LightIndex", 0, EShaderStage::VsStage);
 }
 
 void ShaderParameterManager::Update()
@@ -66,10 +69,10 @@ void ShaderParameterManager::PushPointLightData(const PointLightDesc& desc)
 
 void ShaderParameterManager::UpdateAddedLights()
 {
-	if (_spotLightBuffer.spotLightCount > 0)
-		UpdateData("SpotLight", _spotLightBuffer);
-	if (_pointLightBuffer.pointLightCount > 0)
-		UpdateData("PointLight", _pointLightBuffer);
+	// TODO: 조명에 변화가 없을 경우에는 매번 정보를 올릴 필요가 없음 (constBuffer값 -> 유지)
+	// 이 부분을 최적화하려면 각 조명이 static인지 movable 인지 종류를 나눌 필요가 있어보임 
+	UpdateData("SpotLight", _spotLightBuffer);
+	UpdateData("PointLight", _pointLightBuffer);
 }
 
 void ShaderParameterManager::CleanUpAddedLightBuffers()
@@ -127,6 +130,12 @@ void ShaderParameterManager::PushLightVPs(const vector<Matrix>& VPs)
 	UpdateData("Shadow", _shadowDataDesc);
 }
 
+void ShaderParameterManager::PushCurrentLightVPIndex(uint32 index)
+{
+	_currentLightVPIndex.index = index;
+	UpdateData("LightIndex", _currentLightVPIndex);
+}
+
 void ShaderParameterManager::PushPointLightShadowDesc(const array<Matrix, 6>& VPs, Vec3 lightPosition)
 {
 	for (int32 i = 0; i < 6; ++i)
@@ -169,8 +178,6 @@ void ShaderParameterManager::PushShadowCubeMapSRV(shared_ptr<SRVBindingInfo> inf
 
 void ShaderParameterManager::CleanUpShadowMapBuffers()
 {
-	//_shadowDataDesc.currUsingCount = 0;
-	//_shadowDataDesc.bShadowCubeDataLoaded = 0;
 	_shadowMapSrvs.clear();
 }
 
@@ -185,7 +192,7 @@ void ShaderParameterManager::BindCommonResources()
 			_shadowMapSrvs[i]->srv.GetAddressOf());
 	}
 
-	// TEMP
+	// Shadow Cube Map
 	if (_shadowCubeMapSRV && _shadowCubeMapSRV->srv)
 		CONTEXT->PSSetShaderResources(_shadowCubeMapSRV->slot, 1, _shadowCubeMapSRV->srv.GetAddressOf());
 

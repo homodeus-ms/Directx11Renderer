@@ -97,8 +97,6 @@ void RenderComponentBase::RenderDepthOnly(bool bForPointLight, int32 instanceCou
 	else
 	{
 		CONTEXT->VSSetShader(_shadowMapResources.defaultVertexShader->GetComPtr().Get(), nullptr, 0);
-		CONTEXT->GSSetShader(_shadowMapResources.defaultGeometryShader->GetComPtr().Get(), nullptr, 0);
-		CONTEXT->PSSetShader(_shadowMapResources.defaultPixelShader->GetComPtr().Get(), nullptr, 0);
 	}
 
 

@@ -41,10 +41,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	converter.ExportModelData(L"Zelda/Zelda");
 	converter.Cleanup();
 
-	/*converter.LoadRawAssetFile(L"Tank/Tank.fbx");
-	converter.ExportModelData(L"Tank/Tank");
-	converter.ExportMaterialData(L"Tank/Tank");
-	converter.Cleanup();*/
+	//converter.LoadRawAssetFile(L"Tank/Tank.fbx");
+	//converter.ExportModelData(L"Tank/Tank");
+	//converter.ExportMaterialData(L"Tank/Tank");
+	//converter.Cleanup();
 
 	/*converter.LoadRawAssetFile(L"Tower/Tower.fbx");
 	converter.ExportMaterialData(L"Tower/Tower");

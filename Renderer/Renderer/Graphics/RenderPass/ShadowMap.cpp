@@ -20,7 +20,10 @@ ShadowMap::ShadowMap()
 
 ShadowMap::~ShadowMap()
 {
-	SAFE_DELETE(_shadowTexture);
+	for (int32 i = 0; i < MAX_SHADOW_MAP_COUNT; ++i)
+	{
+		SAFE_DELETE(_shadowTextures[i])
+	}
 
 	SAFE_DELETE(_shadowCubeTexture);
 }
@@ -51,8 +54,8 @@ void ShadowMap::CreateShadowMap(vector<shared_ptr<Actor>>& actors, const vector<
 			{
 				directSpotLights.push_back(light);
 				VPs.push_back(light->GetLightVP());
-				light->SetShadowMapIndex(i);
-				light->SetShadowSRVInfo(_shadowTexture->GetSRVBindingInfo());
+				light->SetShadowMapIndex(VPs.size() - 1);
+				light->SetShadowSRVInfo(_shadowTextures[i]->GetSRVBindingInfo());
 			}
 		}
 		else
@@ -71,11 +74,9 @@ void ShadowMap::CreateShadowMap(vector<shared_ptr<Actor>>& actors, const vector<
 
 	// Directional Light, SpotLight
 	SHADER_PARAM_MANAGER->PushLightVPs(VPs);
-	int32 instanceCount = VPs.size();
-	if (instanceCount != 0)
+	for (int32 i = 0; i < VPs.size(); ++i)
 	{
-		SHADER_PARAM_MANAGER->PushShadowMapSRV(_shadowTexture->GetSRVBindingInfo());
-		DrawShadowMap(actors, instanceCount);
+		DrawShadowMap(actors, i);
 	}
 
 	// Point Light
@@ -87,10 +88,12 @@ void ShadowMap::CreateShadowMap(vector<shared_ptr<Actor>>& actors, const vector<
 	}
 }
 
-void ShadowMap::DrawShadowMap(const vector<shared_ptr<Actor>>& actors, int32 drawShadowMapCount)
+void ShadowMap::DrawShadowMap(const vector<shared_ptr<Actor>>& actors, int32 index)
 {
-	ComPtr<ID3D11DepthStencilView> dsv = _shadowTexture->GetDSV();
+	SHADER_PARAM_MANAGER->PushShadowMapSRV(_shadowTextures[index]->GetSRVBindingInfo());
+	SHADER_PARAM_MANAGER->PushCurrentLightVPIndex(index);
 
+	ComPtr<ID3D11DepthStencilView> dsv = _shadowTextures[index]->GetDSV();
 	CONTEXT->OMSetRenderTargets(0, nullptr, dsv.Get());
 	CONTEXT->ClearDepthStencilView(dsv.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	CONTEXT->RSSetViewports(1, &_shadowViewport);
@@ -99,7 +102,7 @@ void ShadowMap::DrawShadowMap(const vector<shared_ptr<Actor>>& actors, int32 dra
 	for (shared_ptr<Actor> actor : actors)
 	{
 		if (actor->IsCastShadowedActor())
-			actor->RenderShadowMap(false, drawShadowMapCount);
+			actor->RenderShadowMap(false);
 	}
 }
 
@@ -122,8 +125,12 @@ void ShadowMap::DrawShadowCubeMap(shared_ptr<LightActor> light, const vector<sha
 
 void ShadowMap::CreateShadowTexture()
 {
-	_shadowTexture = new ShadowTexture();
-	_shadowTexture->CreateTexture();
+	for (int32 i = 0; i < MAX_SHADOW_MAP_COUNT; ++i)
+	{
+		ShadowTexture* t = new ShadowTexture();
+		t->CreateTexture();
+		_shadowTextures[i] = t;
+	}
 
 	_shadowCubeTexture = new ShadowCubeTexture();
 	_shadowCubeTexture->CreateTexture();
@@ -149,12 +156,6 @@ void ShadowMap::CreateShadowMapResources()
 	_resources.defaultVertexShader = make_shared<VertexShader>();
 	_resources.defaultVertexShader->Create(_defaultShaderInfo->_shaderPath, _defaultShaderInfo->_vsEntryName, _defaultShaderInfo->_vsVersion);
 
-	_resources.defaultGeometryShader = make_shared<GeometryShader>();
-	_resources.defaultGeometryShader->Create(_defaultShaderInfo->_shaderPath, _defaultShaderInfo->_gsEntryName, _defaultShaderInfo->_gsVersion);
-
-	_resources.defaultPixelShader = make_shared<PixelShader>();
-	_resources.defaultPixelShader->Create(_defaultShaderInfo->_shaderPath, _defaultShaderInfo->_psEntryName, _defaultShaderInfo->_psVersion);
-
 	_resources.pointLightVertexShader = make_shared<VertexShader>();
 	_resources.pointLightVertexShader->Create(_pointLightShaderInfo->_shaderPath, _pointLightShaderInfo->_vsEntryName, _pointLightShaderInfo->_vsVersion);
 
@@ -165,11 +166,12 @@ void ShadowMap::CreateShadowMapResources()
 	_resources.pointLightPixelShader->Create(_pointLightShaderInfo->_shaderPath, _pointLightShaderInfo->_psEntryName, _pointLightShaderInfo->_psVersion);
 
 
-
-	const vector<D3D11_INPUT_ELEMENT_DESC>& desc = VertexData::descs;
-	_resources.inputLayout = make_shared<InputLayout>();
-	ComPtr<ID3DBlob> blob = _resources.defaultVertexShader->GetBlob();
-	_resources.inputLayout->Create(desc, blob);
+	{
+		const vector<D3D11_INPUT_ELEMENT_DESC>& desc = VertexData::descs;
+		_resources.inputLayout = make_shared<InputLayout>();
+		ComPtr<ID3DBlob> blob = _resources.defaultVertexShader->GetBlob();
+		_resources.inputLayout->Create(desc, blob);
+	}
 
 	// Rasterizer State
 	{

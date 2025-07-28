@@ -30,7 +30,7 @@ shared_ptr<LightActor> LightManager::AddDefaultDirectionalLight()
 	_globalLightCache->Construct();
 	
 	{
-		Vec3 startPos = { 10.f, 80.f, -10.f };
+		Vec3 startPos = { 10.f, 10.f, -10.f };
 		_globalLightCache->GetOrAddTransform()->SetWorldPosition(startPos);
 		
 		LightDesc* desc = _globalLightCache->GetDesc();

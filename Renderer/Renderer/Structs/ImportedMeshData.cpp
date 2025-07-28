@@ -3,7 +3,7 @@
 #include "Graphics/Buffer/VertexBuffer.h"
 #include "Graphics/Buffer/IndexBuffer.h"
 
-void ImportedStaticMesh::CreateBuffers()
+void ImportedMesh::CreateBuffers()
 {
 	vertexBuffer = make_shared<VertexBuffer>();
 	vertexBuffer->Create(geometry->GetVertices());

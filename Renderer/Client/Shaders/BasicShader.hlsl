@@ -6,8 +6,9 @@ MeshOutput VS(VertexTangentInput input)
 {
     MeshOutput output;
     
-    output.position = mul(input.position, BoneTransforms[BoneIndex]);
-    output.position = mul(output.position, W);
+    //output.position = mul(input.position, BoneTransforms[BoneIndex]);
+    //output.position = mul(output.position, W);
+    output.position = mul(input.position, W);
     output.worldPosition = output.position.xyz;
     
     output.position = mul(output.position, VP);

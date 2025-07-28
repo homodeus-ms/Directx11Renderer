@@ -22,11 +22,11 @@ private:
 	void CreateShadowTexture();
 	void SetShadowViewport();
 	void CreateShadowMapResources();
-	void DrawShadowMap(const vector<shared_ptr<Actor>>& actors, int32 drawShadowMapCount);
+	void DrawShadowMap(const vector<shared_ptr<Actor>>& actors, int32 index);
 	void DrawShadowCubeMap(shared_ptr<LightActor> light, const vector<shared_ptr<Actor>>& actors);
 
-	//array<ShadowTexture*, MAX_SHADOW_MAP_COUNT> _shadowTextures{};
-	ShadowTexture* _shadowTexture{};
+	array<ShadowTexture*, MAX_SHADOW_MAP_COUNT> _shadowTextures{};
+	//ShadowTexture* _shadowTexture{};
 	ShadowCubeTexture* _shadowCubeTexture{};
 	D3D11_VIEWPORT _shadowViewport{};
 

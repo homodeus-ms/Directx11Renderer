@@ -6,8 +6,8 @@
 #include "Utils/tinyxml2.h"
 #include "Material.h"
 
-StaticMesh::StaticMesh()
-	: Super(EResourceType::StaticMesh)
+StaticMesh::StaticMesh(EResourceType type)
+    : Super(type)
 {
 }
 
@@ -32,7 +32,7 @@ void StaticMesh::ChangeMaterialType(EMaterialType type)
 		mat->GetDesc()->MaterialType = type;
 }
 
-shared_ptr<ImportedStaticMesh> StaticMesh::GetMeshByName(const wstring& name)
+shared_ptr<ImportedMesh> StaticMesh::GetMeshByName(const wstring& name)
 {
 	for (auto& mesh : _meshes)
 	{
@@ -43,7 +43,7 @@ shared_ptr<ImportedStaticMesh> StaticMesh::GetMeshByName(const wstring& name)
 	return nullptr;
 }
 
-shared_ptr<ImportedStaticBone> StaticMesh::GetBoneByName(const wstring& name)
+shared_ptr<ImportedBone> StaticMesh::GetBoneByName(const wstring& name)
 {
 	for (auto& bone : _bones)
 	{
@@ -54,7 +54,7 @@ shared_ptr<ImportedStaticBone> StaticMesh::GetBoneByName(const wstring& name)
 	return nullptr;
 }
 
-void StaticMesh::BindStaticMeshElement()
+void StaticMesh::BindMeshElements()
 {
 	// Mesh¿¡ Material Ä³½Ì
 	for (const auto& mesh : _meshes)
@@ -65,34 +65,24 @@ void StaticMesh::BindStaticMeshElement()
 
 		mesh->material = GetMaterialByName(mesh->materialName);
 	}
-
-	// Mesh¿¡ Bone Ä³½Ì
-	for (const auto& mesh : _meshes)
-	{
-		// ÀÌ¹Ì Ã£¾ÒÀ¸¸é ½ºÅµ
-		if (mesh->bone != nullptr)
-			continue;
-
-		mesh->bone = GetBoneByIndex(mesh->boneIndex);
-	}
-
-	// Bone °èÃþ Á¤º¸ Ã¤¿ì±â
-	if (_root == nullptr && _bones.size() > 0)
-	{
-		_root = _bones[0];
-
-		for (const auto& bone : _bones)
-		{
-			if (bone->parentIndex >= 0)
-			{
-				bone->parent = _bones[bone->parentIndex];
-				bone->parent->children.push_back(bone);
-			}
-			else
-			{
-				bone->parent = nullptr;
-			}
-		}
-	}
 }
 
+void StaticMesh::SetMeshes(const vector<shared_ptr<ImportedMesh>>& meshes)
+{
+	_meshes = meshes;
+}
+
+void StaticMesh::SetBones(const vector<shared_ptr<ImportedBone>>& bones)
+{
+	_bones = bones;
+}
+
+void StaticMesh::SetRoot(const shared_ptr<ImportedBone>& root)
+{
+	_root = root;
+}
+
+void StaticMesh::SetMaterials(const vector<shared_ptr<Material>>& materials)
+{
+	_materials = materials;
+}

@@ -63,7 +63,9 @@ public:
 	// ShadowMap
 	void PushLightVP(const Matrix& VP);
 	void PushLightVPs(const vector<Matrix>& VPs);
+	void PushCurrentLightVPIndex(uint32 index);
 	void PushPointLightShadowDesc(const array<Matrix, 6>& VPs, Vec3 lightPosition);
+	
 	//void UpdateShadowCubeMapVPs(const vector<Matrix>& VPs, uint32 currUsingIndex);
 	
 	//void SetUseShadowCubeTrue();
@@ -84,10 +86,10 @@ private:
 	{
 		BufferBindingInfo& info = _constbuffers.at(bufferName);
 		uint32 size = sizeof(T);
-		shared_ptr<IConstantBuffer> temp = info.buffer;
-		shared_ptr<ConstantBuffer<T>> temp2 = static_pointer_cast<ConstantBuffer<T>>(temp);
-		temp2->CopyData(data);
-		//static_pointer_cast<ConstantBuffer<T>>(info.buffer)->CopyData(data);
+		//shared_ptr<IConstantBuffer> temp = info.buffer;
+		shared_ptr<ConstantBuffer<T>> temp = static_pointer_cast<ConstantBuffer<T>>(info.buffer);
+		temp->CopyData(data);
+		
 		info.dirty = true;
 	}
 
@@ -102,7 +104,7 @@ private:
 	vector<shared_ptr<SRVBindingInfo>> _shadowMapSrvs;
 	ShadowDataDesc _shadowDataDesc{};
 	PointShadowDataDesc _pointShadowDataDesc{};
-
+	CurrentLightVPIndex _currentLightVPIndex{};
 	// TEMP
 	shared_ptr<SRVBindingInfo> _shadowCubeMapSRV;
 

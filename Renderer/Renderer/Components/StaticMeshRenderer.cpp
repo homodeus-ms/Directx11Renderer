@@ -67,33 +67,34 @@ void StaticMeshRenderer::Render()
 	Super::Render();
 
 	// Bone Matrixes
-	BoneBuffer boneBuffer;
-	const uint32 boneCount = _staticMesh->GetBoneCount();
-	for (uint32 i = 0; i < boneCount; i++)
-	{
-		shared_ptr<ImportedStaticBone> bone = _staticMesh->GetBoneByIndex (i);
-		boneBuffer.transforms[i] = bone->transform;
-	}
-	SHADER_PARAM_MANAGER->PushBoneBuffer(boneBuffer);
+	//BoneBuffer boneBuffer;
+	//const uint32 boneCount = _staticMesh->GetBoneCount();
+	//for (uint32 i = 0; i < boneCount; i++)
+	//{
+	//	shared_ptr<ImportedBone> bone = _staticMesh->GetBoneByIndex (i);
+	//	boneBuffer.transforms[i] = bone->transform;
+	//}
+	//SHADER_PARAM_MANAGER->PushBoneBuffer(boneBuffer);
 
 	// Transform
 	auto world = GetOwnerTransform()->GetWorldMatrix();
 	SHADER_PARAM_MANAGER->PushTransformData(TransformDesc{ world });
 
-
 	// Mesh, Materials
 	const auto& meshes = _staticMesh->GetMeshes();
-	for (auto& mesh : meshes)
+	for (int32 i = 0; i < meshes.size(); ++i)
 	{
+		auto mesh = meshes[i];
+
 		if (mesh->material)
 		{
 			SHADER_PARAM_MANAGER->PushMaterial(mesh->material);
 		}
 
 		// BoneIndex
-		BoneIndex boneIndex;
-		boneIndex.boneIndex = mesh->boneIndex;
-		SHADER_PARAM_MANAGER->PushBoneIndex(boneIndex);
+		//BoneIndex boneIndex;
+		//boneIndex.boneIndex = mesh->boneIndex;
+		//SHADER_PARAM_MANAGER->PushBoneIndex(boneIndex);
 
 		SHADER_PARAM_MANAGER->BindAllDirtyBuffers();
 
@@ -112,28 +113,30 @@ void StaticMeshRenderer::RenderDepthOnly(bool bForPointLight, int32 instanceCoun
 	Super::RenderDepthOnly(bForPointLight, instanceCount);
 
 	// Bone Matrixes
-	BoneBuffer boneBuffer;
-	const uint32 boneCount = _staticMesh->GetBoneCount();
-	for (uint32 i = 0; i < boneCount; i++)
-	{
-		shared_ptr<ImportedStaticBone> bone = _staticMesh->GetBoneByIndex(i);
-		boneBuffer.transforms[i] = bone->transform;
-	}
-	SHADER_PARAM_MANAGER->PushBoneBuffer(boneBuffer);
+	//BoneBuffer boneBuffer;
+	//const uint32 boneCount = _staticMesh->GetBoneCount();
+	//for (uint32 i = 0; i < boneCount; i++)
+	//{
+	//	shared_ptr<ImportedBone> bone = _staticMesh->GetBoneByIndex(i);
+	//	boneBuffer.transforms[i] = bone->transform;
+	//}
+	//SHADER_PARAM_MANAGER->PushBoneBuffer(boneBuffer);
 
 	// Transform
 	auto world = GetOwnerTransform()->GetWorldMatrix();
 	SHADER_PARAM_MANAGER->PushTransformData(TransformDesc{ world });
+	SHADER_PARAM_MANAGER->BindAllDirtyBuffers();
 
 	// Mesh, Materials
 	const auto& meshes = _staticMesh->GetMeshes();
-	for (auto& mesh : meshes)
+	int32 meshsize = meshes.size();
+	for (int32 i = 0; i < meshsize; ++i)
 	{
+		auto mesh = meshes[i];
 		// BoneIndex
-		BoneIndex boneIndex;
-		boneIndex.boneIndex = mesh->boneIndex;
-		SHADER_PARAM_MANAGER->PushBoneIndex(boneIndex);
-		SHADER_PARAM_MANAGER->BindAllDirtyBuffers();
+		//BoneIndex boneIndex;
+		//boneIndex.boneIndex = mesh->boneIndex;
+		//SHADER_PARAM_MANAGER->PushBoneIndex(boneIndex);
 
 		uint32 stride = sizeof(VertexData);
 		uint32 offset = 0;
@@ -141,9 +144,9 @@ void StaticMeshRenderer::RenderDepthOnly(bool bForPointLight, int32 instanceCoun
 		// Position만 가진 VectexBuffer를 Set
 		CONTEXT->IASetVertexBuffers(0, 1, mesh->vertexBuffer->GetPosOnlyBuffer().GetAddressOf(), &stride, &offset);
 		CONTEXT->IASetIndexBuffer(mesh->indexBuffer->GetComPtr().Get(), DXGI_FORMAT_R32_UINT, 0);
-
+		
 		DrawIndexed(mesh->indexBuffer->GetCount());
-	}
 
-	ClearGeometryShader();
+		ClearGeometryShader();
+	}
 }

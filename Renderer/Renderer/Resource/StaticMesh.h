@@ -8,7 +8,7 @@ class StaticMesh : public ResourceBase
 	using Super = ResourceBase;
 
 public:
-	StaticMesh();
+	StaticMesh(EResourceType type = EResourceType::StaticMesh);
 	virtual ~StaticMesh();
 
 	uint32 GetMaterialCount() { return static_cast<uint32>(_materials.size()); }
@@ -18,23 +18,28 @@ public:
 	void ChangeMaterialType(EMaterialType type);
 
 	uint32 GetMeshCount() { return static_cast<uint32>(_meshes.size()); }
-	vector<shared_ptr<ImportedStaticMesh>>& GetMeshes() { return _meshes; }
-	shared_ptr<ImportedStaticMesh> GetMeshByIndex(uint32 index) { return _meshes[index]; }
-	shared_ptr<ImportedStaticMesh> GetMeshByName(const wstring& name);
+	vector<shared_ptr<ImportedMesh>>& GetMeshes() { return _meshes; }
+	shared_ptr<ImportedMesh> GetMeshByIndex(uint32 index) { return _meshes[index]; }
+	shared_ptr<ImportedMesh> GetMeshByName(const wstring& name);
 
 	uint32 GetBoneCount() { return static_cast<uint32>(_bones.size()); }
-	vector<shared_ptr<ImportedStaticBone>>& GetBones() { return _bones; }
-	shared_ptr<ImportedStaticBone> GetBoneByIndex(uint32 index) { return (index < 0 || index >= _bones.size() ? nullptr : _bones[index]); }
-	shared_ptr<ImportedStaticBone> GetBoneByName(const wstring& name);
+	vector<shared_ptr<ImportedBone>>& GetBones() { return _bones; }
+	shared_ptr<ImportedBone> GetBoneByIndex(uint32 index) { return (index < 0 || index >= _bones.size() ? nullptr : _bones[index]); }
+	shared_ptr<ImportedBone> GetBoneByName(const wstring& name);
+	shared_ptr<ImportedBone>& GetBoneRoot() { return _root; }
 
-	shared_ptr<ImportedStaticBone>& GetBoneRoot() { return _root; }
+	virtual void BindMeshElements();
 
-	void BindStaticMeshElement();
 
-private:
-	shared_ptr<ImportedStaticBone> _root;
-	vector<shared_ptr<Material>> _materials;
-	vector<shared_ptr<ImportedStaticBone>> _bones;
-	vector<shared_ptr<ImportedStaticMesh>> _meshes;
+	void SetMeshes(const vector<shared_ptr<ImportedMesh>>& meshes);
+	void SetBones(const vector<shared_ptr<ImportedBone>>& bones);
+	void SetRoot(const shared_ptr<ImportedBone>& root);
+	void SetMaterials(const vector<shared_ptr<Material>>& materials);
+
+protected:
+	vector<shared_ptr<Material>> _materials{};
+	vector<shared_ptr<ImportedMesh>> _meshes{};
+	shared_ptr<ImportedBone> _root{};
+	vector<shared_ptr<ImportedBone>> _bones{};
 };
 

@@ -1,4 +1,4 @@
-#include "pch.h"
+ï»¿#include "pch.h"
 #include "RenderManager.h"
 #include "Actor/Actor.h"
 #include "Actor/LightActor.h"
@@ -10,9 +10,9 @@
 void RenderManager::Render(vector<shared_ptr<Actor>>& actors)
 {
 	vector<shared_ptr<LightActor>> lightActors;
-	vector<shared_ptr<Actor>> shadowedActors;
-	shared_ptr<Actor> shadowMapDebugActor;
-	vector<shared_ptr<Actor>> drawTargets;
+	vector<shared_ptr<Actor>> shadowedActors;  // ê·¸ë¦¼ìê°€ ë°˜ì˜ë  actors
+	shared_ptr<Actor> shadowMapDebugActor;  // ë””ë²„ê·¸ìš© actor
+	vector<shared_ptr<Actor>> drawTargets;  // ì‹¤ì œ ë Œë”í•  ëª¨ë“  actors
 
 	for (shared_ptr<Actor> actor : actors)
 	{
@@ -33,18 +33,18 @@ void RenderManager::Render(vector<shared_ptr<Actor>>& actors)
 		drawTargets.push_back(actor);
 	}
 	
-	_shadowMap->CreateShadowMap(shadowedActors, lightActors); // ¼¨µµ¿ì ¸Ê »ı¼º
+	_shadowMap->CreateShadowMap(shadowedActors, lightActors); // ì„€ë„ìš° ë§µ ìƒì„±
 	
-	GRAPHICS->RenderBegin();  // ½ÇÁ¦ ¹°Ã¼¸¦ ±×¸®´Â RenderTarget, viewportµî ¼ÂÆÃ
+	GRAPHICS->RenderBegin();  // ì‹¤ì œ ë¬¼ì²´ë¥¼ ê·¸ë¦¬ëŠ” RenderTarget, viewportë“± ì…‹íŒ…
 
-	UpdateCommonDatas(lightActors);  // Globalµ¥ÀÌÅÍ: Ä«¸Ş¶óVP, »ç¿ëµÇ´Â ¸ğµç Á¶¸íÀÇ VP, ¼¨µµ¿ì¸Ê SRVµî 
+	UpdateCommonDatas(lightActors);  // Globalë°ì´í„°: ì¹´ë©”ë¼VP, ì‚¬ìš©ë˜ëŠ” ëª¨ë“  ì¡°ëª…ì˜ VP, ì„€ë„ìš°ë§µ SRVë“± 
 
 	// Draw ShadowMap Debug
 	if (SCENE->ShouldDrawDebugShadowMap())
 	{
-		shadowMapDebugActor->Render();    // ¼¨µµ¿ì ¸Ê µğ¹ö±×¿ë
+		shadowMapDebugActor->Render();    // ì„€ë„ìš° ë§µ ë””ë²„ê·¸ìš©
 	}
-
+	
 	// Render
 	for (const shared_ptr<Actor>& actor : drawTargets)
 		actor->Render();
@@ -54,29 +54,10 @@ void RenderManager::Render(vector<shared_ptr<Actor>>& actors)
 
 void RenderManager::UpdateCommonDatas(const vector<shared_ptr<LightActor>>& lightActors)
 {
-	// °øÅëÀ¸·Î »ç¿ëÇÏ´Â cbufferµé ¼ÂÆÃ : cbuffer¿¡ ¿Ã¶ó°£ °ªÀº °ª À¯Áö°¡ µÊ
-	// µû¶ó¼­ ¸ğµç ¾×ÅÍ°¡ °øÅëÀ¸·Î »ç¿ëÇÒ °ªµéÀº ÇÑ ÇÁ·¹ÀÓ¿¡ ÇÑ ¹ø¸¸ GPU·Î ¾÷·ÎµåÇÏ¸é µÊ
+	// ê³µí†µìœ¼ë¡œ ì‚¬ìš©í•˜ëŠ” cbufferë“¤ ì…‹íŒ… : cbufferì— ì˜¬ë¼ê°„ ê°’ì€ ê°’ ìœ ì§€ê°€ ë¨
+	// ë”°ë¼ì„œ ëª¨ë“  ì•¡í„°ê°€ ê³µí†µìœ¼ë¡œ ì‚¬ìš©í•  ê°’ë“¤ì€ í•œ í”„ë ˆì„ì— í•œ ë²ˆë§Œ GPUë¡œ ì—…ë¡œë“œí•˜ë©´ ë¨
 	SHADER_PARAM_MANAGER->PushGlobalData(SCENE->GetCurrCameraV(), SCENE->GetCurrCameraP());
 
-	// ShadowMap °ü·Ã µ¥ÀÌÅÍµé
-	//for (int32 i = 0; i < lightActors.size(); ++i)
-	//{
-	//	shared_ptr<LightActor> light = lightActors[i];
-	//	ELightType type = light->GetLightType();
-	//
-	//	if (type == ELightType::Directional || type == ELightType::Spot)
-	//	{
-	//		SHADER_PARAM_MANAGER->PushShadowMapSRV(light->GetShadowSRVInfo());
-	//	}
-	//	else
-	//	{
-	//		SHADER_PARAM_MANAGER->PushShadowCubeMapSRV(light->GetShadowSRVInfo());
-	//	}
-	//}
-
-	//SHADER_PARAM_MANAGER->PushShadowMapSRV(_shadowMap->GetShadowMapSRVBindingInfo());
-	//SHADER_PARAM_MANAGER->PushShadowCubeMapSRV(_shadowMap->GetPointLightShadowMapSRVBindingInfo());
-
-	// Light, EnvLight source, ShadowMap SRVµî
+	// Light, EnvLight source, ShadowMap SRVë“±
 	SHADER_PARAM_MANAGER->BindCommonResources();
 }

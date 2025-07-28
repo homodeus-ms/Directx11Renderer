@@ -13,7 +13,7 @@ public:
 
 	uint32 GetVertexCount() const { return static_cast<uint32>(_vertices.size()); }
 	void* GetVertexData() const { return _vertices.data(); }
-	const vector<T>& GetVertices() const { return _vertices; }
+	vector<T>& GetVertices() { return _vertices; }
 
 	uint32 GetIndexCount() const { return static_cast<uint32>(_indices.size()); }
 	void* GetIndexData() const { return _indices.data(); }

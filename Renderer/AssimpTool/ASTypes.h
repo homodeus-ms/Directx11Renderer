@@ -13,11 +13,10 @@ struct ASMesh
 {
 	string name;
 	aiMesh* mesh;
-	vector<StaticMeshVertexType> vertices;
+	vector<SkeletalMeshVertexType> vertices;
 	vector<uint32> indices;
-
-	int32 boneIndex;
 	string materialName;
+	int32 boneIndex;
 };
 
 struct ASMaterial

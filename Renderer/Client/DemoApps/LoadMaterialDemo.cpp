@@ -33,8 +33,8 @@ void LoadMaterialDemo::Construct()
 
 	// Resource Load
 	//RESOURCE_MANAGER->Load<Texture>(L"Guitarist", L"..\\Resources\\Images\\Guitarist2.png");
-	RESOURCE_MANAGER->LoadStaticMeshFromXML(L"Tank", L"Tank");
-	RESOURCE_MANAGER->LoadStaticMeshFromXML(L"Zelda", L"Zelda");
+	RESOURCE_MANAGER->LoadMeshFromAssetFolder(L"Tank", L"Tank");
+	RESOURCE_MANAGER->LoadMeshFromAssetFolder(L"Zelda", L"Zelda");
 	RESOURCE_MANAGER->Load<LoadedTexture>(L"Leather", L"..\\Resources\\Images\\Leather.jpg");
 	RESOURCE_MANAGER->Load<LoadedTexture>(L"Leather_Normal", L"..\\Resources\\Images\\Leather_Normal.jpg");
 	// C:\\Users\\seekc\\OneDrive\\Documents\\Renderer\\Renderer
@@ -63,22 +63,24 @@ void LoadMaterialDemo::Construct()
 	material->SetShaderInfo(shaderInfo);
 	RESOURCE_MANAGER->Add(L"Leather", material);
 	
-	// Client
-	if (0)
+	// Tank
+	if (1)
 	{
 		shared_ptr<ClientPawn> clientPawn = make_shared<ClientPawn>("Tank");
 		shared_ptr<StaticMesh> staticMesh = RESOURCE_MANAGER->Get<StaticMesh>(L"Tank");
 
 		clientPawn->SetStaticMesh(staticMesh);
 		//_clientPawn->GetOrAddTransform()->SetLocalScale(Vec3(0.03f));
-		clientPawn->GetOrAddTransform()->SetWorldPosition({ 0.f, 0.f, 0.f });
-		clientPawn->GetOrAddTransform()->SetWorldRotation({ -0.1f, 0.0f, 0.0f });
+		clientPawn->GetOrAddTransform()->SetLocalScale(Vec3(15.f, 15.f, 15.f));
+		clientPawn->GetOrAddTransform()->SetWorldPosition({ 0.f, 4.f, 0.f });
+		//clientPawn->GetOrAddTransform()->SetWorldRotation({ -0.1f, 0.0f, 0.0f });
 
 		shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"BasicShader.hlsl");
 		clientPawn->GetOrAddStaticMeshRenderer()->SetShaderInfo(shaderInfo);
 		SCENE->AddActor(clientPawn);
 	}
 
+	// Zelda
 	if (0)
 	{
 		shared_ptr<ClientPawn> clientPawn = make_shared<ClientPawn>("Zelda");
@@ -86,8 +88,8 @@ void LoadMaterialDemo::Construct()
 		shared_ptr<StaticMesh> staticMesh = RESOURCE_MANAGER->Get<StaticMesh>(L"Zelda");
 		
 		clientPawn->SetStaticMesh(staticMesh);
-		clientPawn->GetOrAddTransform()->SetLocalScale(Vec3(0.03f));
-		clientPawn->GetOrAddTransform()->SetWorldPosition({ 0.f, 0.f, 0.f });
+		clientPawn->GetOrAddTransform()->SetLocalScale(Vec3(6.f, 6.f, 6.f));
+		clientPawn->GetOrAddTransform()->SetWorldPosition({ 0.f, 3.f, 0.f });
 		shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"BasicShader.hlsl");
 		clientPawn->GetOrAddStaticMeshRenderer()->SetShaderInfo(shaderInfo);
 		SCENE->AddActor(clientPawn);
@@ -126,7 +128,7 @@ void LoadMaterialDemo::Construct()
 
 	if (1)
 	{
-		if (1) // 바닥 평면
+		if (0) // 바닥 평면
 		{
 			shared_ptr<Actor> pawn = make_shared<ClientPawn>();
 			pawn->Construct();
@@ -146,7 +148,7 @@ void LoadMaterialDemo::Construct()
 			SCENE->AddActor(pawn);
 		}
 		
-		if (0) // Room
+		if (1) // Room
 		{
 			shared_ptr<Actor> pawn = make_shared<ClientPawn>();
 			pawn->Construct();
@@ -164,54 +166,57 @@ void LoadMaterialDemo::Construct()
 			SCENE->AddActor(pawn);
 		}
 
-		// 큐브
-		if (1)
+		// 기본 물체
+		if (0)
 		{
-			shared_ptr<Actor> pawn = make_shared<ClientPawn>();
-			pawn->Construct();
+			// 큐브
+			{
+				shared_ptr<Actor> pawn = make_shared<ClientPawn>();
+				pawn->Construct();
 
-			pawn->GetOrAddTransform()->SetLocalScale({ 2.f, 2.f, 2.f });
-			pawn->GetTransform()->SetLocalRotation({ 0.f, 3.14f / 4, 0.f });
-			pawn->GetOrAddTransform()->SetWorldPosition({ 0.f, 2.f, -5.f });
+				pawn->GetOrAddTransform()->SetLocalScale({ 2.f, 2.f, 2.f });
+				pawn->GetTransform()->SetLocalRotation({ 0.f, 3.14f / 4, 0.f });
+				pawn->GetOrAddTransform()->SetWorldPosition({ 0.f, 2.f, -5.f });
 
-			shared_ptr<BasicMesh> mesh;
-			mesh = RESOURCE_MANAGER->Get<BasicMesh>(L"Cube");
-			shared_ptr<Material> mat = RESOURCE_MANAGER->Get<Material>(L"BasicRed");
-			pawn->SetBasicMesh(mesh);
-			pawn->SetBasicMaterial(mat);
+				shared_ptr<BasicMesh> mesh;
+				mesh = RESOURCE_MANAGER->Get<BasicMesh>(L"Cube");
+				shared_ptr<Material> mat = RESOURCE_MANAGER->Get<Material>(L"BasicRed");
+				pawn->SetBasicMesh(mesh);
+				pawn->SetBasicMaterial(mat);
 
-			SCENE->AddActor(pawn);
-		}
+				SCENE->AddActor(pawn);
+			}
 
-		// 큰 구
-		if (1)
-		{
-			shared_ptr<Actor> pawn2 = make_shared<ClientPawn>();
-			pawn2->GetOrAddTransform()->SetLocalScale({ 5.f, 5.f, 5.f });
-			pawn2->GetOrAddTransform()->SetWorldPosition({ 0.f, 3.5f, 10.f });
+			// 큰 구
+			if (1)
+			{
+				shared_ptr<Actor> pawn2 = make_shared<ClientPawn>();
+				pawn2->GetOrAddTransform()->SetLocalScale({ 5.f, 5.f, 5.f });
+				pawn2->GetOrAddTransform()->SetWorldPosition({ 0.f, 3.5f, 10.f });
 
-			shared_ptr<BasicMesh> mesh;
-			mesh = RESOURCE_MANAGER->Get<BasicMesh>(L"Sphere");
-			shared_ptr<Material> mat = RESOURCE_MANAGER->Get<Material>(L"BasicYellow");
-			pawn2->SetBasicMesh(mesh);
-			pawn2->SetBasicMaterial(mat);
+				shared_ptr<BasicMesh> mesh;
+				mesh = RESOURCE_MANAGER->Get<BasicMesh>(L"Sphere");
+				shared_ptr<Material> mat = RESOURCE_MANAGER->Get<Material>(L"BasicYellow");
+				pawn2->SetBasicMesh(mesh);
+				pawn2->SetBasicMaterial(mat);
 
-			SCENE->AddActor(pawn2);
-		}
+				SCENE->AddActor(pawn2);
+			}
 
-		if (1)
-		{
-			shared_ptr<Actor> pawn2 = make_shared<ClientPawn>();
-			pawn2->GetOrAddTransform()->SetLocalScale({ 3.f, 3.f, 3.f });
-			pawn2->GetOrAddTransform()->SetWorldPosition({ 2.f, 2.5f, 0.f });
+			if (1)
+			{
+				shared_ptr<Actor> pawn2 = make_shared<ClientPawn>();
+				pawn2->GetOrAddTransform()->SetLocalScale({ 3.f, 3.f, 3.f });
+				pawn2->GetOrAddTransform()->SetWorldPosition({ 2.f, 2.5f, 0.f });
 
-			shared_ptr<BasicMesh> mesh;
-			mesh = RESOURCE_MANAGER->Get<BasicMesh>(L"Sphere");
-			shared_ptr<Material> mat = RESOURCE_MANAGER->Get<Material>(L"BasicGreen");
-			pawn2->SetBasicMesh(mesh);
-			pawn2->SetBasicMaterial(mat);
+				shared_ptr<BasicMesh> mesh;
+				mesh = RESOURCE_MANAGER->Get<BasicMesh>(L"Sphere");
+				shared_ptr<Material> mat = RESOURCE_MANAGER->Get<Material>(L"BasicGreen");
+				pawn2->SetBasicMesh(mesh);
+				pawn2->SetBasicMaterial(mat);
 
-			SCENE->AddActor(pawn2);
+				SCENE->AddActor(pawn2);
+			}
 		}
 	}
 

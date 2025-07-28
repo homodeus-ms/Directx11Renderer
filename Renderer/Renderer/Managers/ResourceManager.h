@@ -2,8 +2,7 @@
 
 #include "Resource/ResourceBase.h"
 #include "Resource/BasicMesh/BasicMesh.h"
-#include "Structs/ImportedMeshData.h"
-#include "Structs/ETextureType.h"
+#include "Utils/FileLoader.h"
 
 class Shader;
 class LoadedTexture;
@@ -25,9 +24,7 @@ public:
 	template<typename T>
 	shared_ptr<T> Load(const wstring& key, const wstring& path);
 
-	// Can load file in a default path only
-	// default path : ../Resource/Assets/
-	shared_ptr<StaticMesh> LoadStaticMeshFromXML(const wstring& key, const wstring& filenameInAssetFolderOnly);
+	shared_ptr<StaticMesh> LoadMeshFromAssetFolder(const wstring& key, const wstring& filename, bool bIsStaticMesh = true);
 
 	template<typename T>
 	bool Add(const wstring& key, shared_ptr<T> object);
@@ -38,24 +35,20 @@ public:
 	template<typename T>
 	EResourceType GetResourceType();
 
+	shared_ptr<LoadedTexture> GetOrAddTexture(const wstring& key, const wstring& path);
+
 private:
 	void CreateDefaultMesh();
 	void CreateDefaultMaterials();
-
-	// Read Data From XML(Saved fbx Data) 
-	bool GetFullPathFromAssetFolderByFileName(const wstring& filename, wstring& OUT meshPath, wstring& OUT materialPath);
-	void ReadMaterialsFromXML(const wstring& filepath, vector<shared_ptr<Material>>& OUT materials);
-	void ReadMeshesFromXML(const wstring& filepath, vector<shared_ptr<ImportedStaticBone>>& OUT bones, vector<shared_ptr<ImportedStaticMesh>>& OUT meshes);
-	shared_ptr<LoadedTexture> GetOrAddTexture(const wstring& key, const wstring& path);
-	void SetTextureToMaterial(const char* keyname, const wstring& parentPath, shared_ptr<Material> material, ETextureType textureType);
-	Color ReadColorInfo(tinyxml2::XMLElement* node);
-
+	
 	
 	wstring _resourcePath;
 	wstring _assetPath = L"../Resources/Assets/";
 
 	using KeyObjMap = map<wstring /*key*/, shared_ptr<ResourceBase>>;
 	array<KeyObjMap, RESOURCE_TYPE_COUNT> _resources;
+
+	std::unique_ptr<FileLoader> _fileLoader;
 };
 
 template<typename T>
@@ -64,7 +57,7 @@ EResourceType ResourceManager::GetResourceType()
 	if (std::is_same_v<T, LoadedTexture>)
 		return EResourceType::Texture;
 	if (std::is_base_of_v<BasicMesh, T>)
-		return EResourceType::Mesh;
+		return EResourceType::BasicMesh;
 	if (std::is_same_v<T, Material>)
 		return EResourceType::Material;
 	if (std::is_same_v<T, Shader>)

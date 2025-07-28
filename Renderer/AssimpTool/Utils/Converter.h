@@ -18,20 +18,22 @@ public:
 	void LoadRawAssetFile(wstring file);
 	void ExportModelData(wstring savePath);
 	void ExportMaterialData(wstring savePath);
-	void Cleanup();
+	
+	void ReadModelData(aiNode* node, int32 index, int32 parent);
+	void ReadMeshData(aiNode* node, int32 bone);
+	void ReadMaterialData(const wstring& pathForMissing);
 
-public:
-	void ReadModelDataFromAssimp(aiNode* node, int32 index, int32 parent);
-	void ReadMeshDataFromAssimp(aiNode* node, int32 bone);
-	void WriteCustomMeshFile(wstring finalPath);
-
-	void ReadMaterialDataFromAssimp(const wstring& pathForMissing);
+	void WriteCustomMeshFile(wstring finalPath, bool bIsSkeletalMesh);
 	void WriteCustomMaterialFile(wstring finalPath);
 	string WriteTexture(string saveFolder, string file);
 
+	void Cleanup();
+
+public:
 	void SetFoundTexturePath(string& setTarget, const string& path, const wstring& pathForMissing, MissingTextureFindKeyword keyword);
 	string FindMissingTextureInFBXFolder(const wstring& findTargetPath, MissingTextureFindKeyword keyword);
 	
+
 	// obj, mtl
 	void ReadObjFile(const wstring& path);
 	void PrintMaterialInfo(const aiScene* scene);

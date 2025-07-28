@@ -3,7 +3,7 @@
 enum class EResourceType : int8
 {
 	None = -1,
-	Mesh = 0,
+	BasicMesh = 0,
 	StaticMesh,
 	SkeletalMesh,
 	Shader,

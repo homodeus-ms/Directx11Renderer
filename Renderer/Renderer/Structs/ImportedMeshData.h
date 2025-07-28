@@ -5,25 +5,25 @@ class VertexBuffer;
 class IndexBuffer;
 class Material;
 
-struct ImportedStaticBone
+struct ImportedBone
 {
 	wstring name;
 	int32 index;
 	int32 parentIndex;
-	shared_ptr<ImportedStaticBone> parent;
+	shared_ptr<ImportedBone> parent;
 
 	Matrix transform;
-	vector<shared_ptr<ImportedStaticBone>> children;
+	vector<shared_ptr<ImportedBone>> children;
 };
 
-struct ImportedStaticMesh
+struct ImportedMesh
 {
 	void CreateBuffers();
 
 	wstring name{};
 
 	// Mesh
-	shared_ptr<Geometry<StaticMeshVertexType>> geometry = make_shared<Geometry<StaticMeshVertexType>>();
+	shared_ptr<Geometry<SkeletalMeshVertexType>> geometry = make_shared<Geometry<SkeletalMeshVertexType>>();
 	shared_ptr<VertexBuffer> vertexBuffer;
 	shared_ptr<IndexBuffer> indexBuffer;
 
@@ -33,5 +33,5 @@ struct ImportedStaticMesh
 
 	// Bones
 	int32 boneIndex;
-	shared_ptr<ImportedStaticBone> bone; // Cache;
+	shared_ptr<ImportedBone> bone; // Cache;
 };

@@ -13,8 +13,6 @@ ShadowTexture::~ShadowTexture()
 
 void ShadowTexture::CreateTexture()
 {
-	// Texture2DArray 사용, DrawIndexedInstanced를 사용해서 한 번에 여러장의 섀도우맵을 생성
-
 	// Texture
 	{
 		D3D11_TEXTURE2D_DESC desc;
@@ -22,7 +20,7 @@ void ShadowTexture::CreateTexture()
 		desc.Width = SHADOW_MAP_SIZE;
 		desc.Height = SHADOW_MAP_SIZE;
 		desc.MipLevels = 1;
-		desc.ArraySize = MAX_SHADOW_MAP_COUNT;
+		desc.ArraySize = 1;
 		desc.Format = DXGI_FORMAT_R32_TYPELESS; // 깊이와 SRV 둘 다 사용하려면 TYPELESS
 		desc.SampleDesc.Count = 1;
 		desc.Usage = D3D11_USAGE_DEFAULT;
@@ -38,10 +36,8 @@ void ShadowTexture::CreateTexture()
 		ZeroMemory(&desc, sizeof(desc));
 
 		desc.Format = DXGI_FORMAT_D32_FLOAT;
-		desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DARRAY;
+		desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 		desc.Texture2D.MipSlice = 0;
-		desc.Texture2DArray.FirstArraySlice = 0;
-		desc.Texture2DArray.ArraySize = MAX_SHADOW_MAP_COUNT;
 
 		HRESULT hr = DEVICE->CreateDepthStencilView(_texture.Get(), &desc, _DSV.GetAddressOf());
 		check(hr);
@@ -52,11 +48,9 @@ void ShadowTexture::CreateTexture()
 		D3D11_SHADER_RESOURCE_VIEW_DESC desc;
 		::ZeroMemory(&desc, sizeof(desc));
 		desc.Format = DXGI_FORMAT_R32_FLOAT;    // Shader에서 사용할 format
-		desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
+		desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 		desc.Texture2D.MostDetailedMip = 0;
 		desc.Texture2D.MipLevels = 1;
-		desc.Texture2DArray.FirstArraySlice = 0;
-		desc.Texture2DArray.ArraySize = MAX_SHADOW_MAP_COUNT;
 
 		HRESULT hr = DEVICE->CreateShaderResourceView(_texture.Get(), &desc, _SRV.GetAddressOf());
 		check(hr);

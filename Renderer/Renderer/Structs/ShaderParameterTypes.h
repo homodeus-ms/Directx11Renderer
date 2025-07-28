@@ -131,3 +131,9 @@ struct PointShadowDataDesc
 	Vec3 lightPosition{};
 	float pad;
 };
+
+struct CurrentLightVPIndex
+{
+	uint32 index = 0;
+	float pad[3];
+};

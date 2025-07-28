@@ -138,8 +138,7 @@ Texture2D DiffuseMap : register(t0);
 Texture2D NormalMap : register(t1);
 Texture2D SpecularMap : register(t2);
 TextureCube textureCube : register(t3);
-//Texture2D ShadowMaps[MAX_ACTIVE_SHADOW_LIGHT] : register(SHADOW_MAP_REG_NUM);
-Texture2DArray ShadowMap : register(SHADOW_MAP_REG_NUM);
+Texture2D ShadowMaps[MAX_ACTIVE_SHADOW_LIGHT] : register(SHADOW_MAP_REG_NUM);
 TextureCube ShadowCubeMap : register(SHADOW_CUBE_MAP_REG_NUM);
 
 SamplerState LinearSampler : register(s0);

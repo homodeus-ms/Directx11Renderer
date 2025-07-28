@@ -41,15 +41,16 @@ void Converter::LoadRawAssetFile(wstring file)
 	}
 }
 
+
 void Converter::ExportModelData(wstring savePath)
 {
 	wstring finalPath = _modelSaveRoot + savePath + L".mesh";
 	
-	ReadModelDataFromAssimp(_scene->mRootNode, -1, -1);
-	WriteCustomMeshFile(finalPath);
+	ReadModelData(_scene->mRootNode, -1, -1);
+	WriteCustomMeshFile(finalPath, true);
 }
 
-void Converter::ReadModelDataFromAssimp(aiNode* node, int32 index, int32 parent)
+void Converter::ReadModelData(aiNode* node, int32 index, int32 parent)
 {
 	shared_ptr<ASBone> bone = make_shared<ASBone>();
 	bone->index = index;
@@ -65,21 +66,21 @@ void Converter::ReadModelDataFromAssimp(aiNode* node, int32 index, int32 parent)
 	if (parent >= 0)
 		matParent = _bones[parent]->transform;
 
-	// Transform To Parent
+	// Transform To Root
 	bone->transform = bone->transform * matParent;
 
 	_bones.push_back(bone);
 
-	// Mesh
-	ReadMeshDataFromAssimp(node, index);
+	// Mesh Content Data
+	ReadMeshData(node, index);
 
 	for (uint32 i = 0; i < node->mNumChildren; i++)
-		ReadModelDataFromAssimp(node->mChildren[i], _bones.size(), index);
+		ReadModelData(node->mChildren[i], _bones.size(), index);
 }
 
-void Converter::ReadMeshDataFromAssimp(aiNode* node, int32 bone)
+void Converter::ReadMeshData(aiNode* node, int32 bone)
 {
-	if (node->mNumMeshes < 1)
+	if (node->mNumMeshes == 0)
 		return;
 
 	shared_ptr<ASMesh> mesh = make_shared<ASMesh>();
@@ -100,7 +101,7 @@ void Converter::ReadMeshDataFromAssimp(aiNode* node, int32 bone)
 		for (uint32 v = 0; v < srcMesh->mNumVertices; v++)
 		{
 			// Vertex
-			StaticMeshVertexType vertex;
+			SkeletalMeshVertexType vertex;
 			::memcpy(&vertex.position, &srcMesh->mVertices[v], sizeof(Vec3));
 
 			// UV
@@ -127,7 +128,7 @@ void Converter::ReadMeshDataFromAssimp(aiNode* node, int32 bone)
 	_meshes.push_back(mesh);
 }
 
-void Converter::WriteCustomMeshFile(wstring finalPath)
+void Converter::WriteCustomMeshFile(wstring finalPath, bool bIsSkeletalMesh)
 {
 	auto path = filesystem::path(finalPath);
 
@@ -146,8 +147,7 @@ void Converter::WriteCustomMeshFile(wstring finalPath)
 		file->Write<int32>(bone->parent);
 		file->Write<Matrix>(bone->transform);
 	}
-
-	// Mesh Data
+	
 	file->Write<uint32>(_meshes.size());
 	for (shared_ptr<ASMesh>& meshData : _meshes)
 	{
@@ -157,11 +157,12 @@ void Converter::WriteCustomMeshFile(wstring finalPath)
 
 		// Vertex Data
 		file->Write<uint32>(meshData->vertices.size());
-		file->Write(&meshData->vertices[0], sizeof(StaticMeshVertexType) * meshData->vertices.size());
+		file->Write(&meshData->vertices[0], sizeof(SkeletalMeshVertexType) * meshData->vertices.size());
 
 		// Index Data
 		file->Write<uint32>(meshData->indices.size());
 		file->Write(&meshData->indices[0], sizeof(uint32) * meshData->indices.size());
+
 	}
 }
 
@@ -173,11 +174,13 @@ void Converter::ExportMaterialData(wstring savePath)
 	wstring parentFolderName = Path.parent_path().wstring();
 	wstring rawFbxFilePath = _rawAssetPath + parentFolderName;
 
-	ReadMaterialDataFromAssimp(rawFbxFilePath);
+	ReadMaterialData(rawFbxFilePath);
 	WriteCustomMaterialFile(finalPath);
 }
 
-void Converter::ReadMaterialDataFromAssimp(const wstring& pathForMissing)
+
+
+void Converter::ReadMaterialData(const wstring& pathForMissing)
 {
 	for (uint32 i = 0; i < _scene->mNumMaterials; i++)
 	{
@@ -445,6 +448,8 @@ string Converter::FindMissingTextureInFBXFolder(const wstring& findTargetPath, M
 
 	return "";
 }
+
+
 
 void Converter::ReadObjFile(const wstring& path)
 {

@@ -72,15 +72,15 @@ void BasicMeshRenderer::RenderDepthOnly(bool bForPointLight, int32 instanceCount
 	CONTEXT->IASetVertexBuffers(0, 1, _basicMesh->GetVertexBuffer()->GetPosOnlyBuffer().GetAddressOf(), &stride, &offset);
 	CONTEXT->IASetIndexBuffer(_basicMesh->GetIndexBuffer()->GetComPtr().Get(), DXGI_FORMAT_R32_UINT, 0);
 
-	if (instanceCount == 0)
+	//if (!bForPointLight)
 	{
 		DrawIndexed(_basicMesh->GetIndexBuffer()->GetCount());
 	}
-	else
-	{
-		assert(instanceCount <= MAX_SHADOW_MAP_COUNT);
-		DrawIndexedInstanced(_basicMesh->GetIndexBuffer()->GetCount(), instanceCount);
-	}
+	//else
+	//{
+	//	assert(instanceCount <= MAX_SHADOW_MAP_COUNT);
+	//	DrawIndexedInstanced(_basicMesh->GetIndexBuffer()->GetCount(), instanceCount);
+	//}
 
 	ClearGeometryShader();
 }

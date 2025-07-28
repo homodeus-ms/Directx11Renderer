@@ -1,4 +1,5 @@
 #include "Global.hlsli"
+#include "Light.hlsli"
 
 VertexUVOutput VS(VertexUVInput input)
 {
@@ -12,7 +13,7 @@ VertexUVOutput VS(VertexUVInput input)
 
 float4 PS(VertexUVOutput input) : SV_Target
 {
-    //float sampled = ShadowMaps[0].Sample(LinearSampler, input.uv).r;
-    //return float4(sampled.rrr, 1.f);
-    return BLACK;
+    float sampled = ShadowMaps[0].Sample(LinearSampler, input.uv).r;
+    return float4(sampled.rrr, 1.f);
+    
 }

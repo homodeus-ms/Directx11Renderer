@@ -58,7 +58,7 @@ cbuffer DirectionalLightBuffer : register(CBUFFER_NUM_DIRECTIONAL_LIGHT)
 cbuffer SpotLightBuffer : register(CBUFFER_NUM_SPOT_LIGHT)
 {
     SpotLightDesc SpotLights[MAX_SPOT_LIGHT_COUNT];
-    uint SpotlightCount;
+    uint SpotlightCount; 
     float3 spotLight_padding;
 }
 
@@ -131,7 +131,17 @@ float ComputeShadowFactor(float3 worldPosition, uint index, float bias)
     uv = (uv * 0.5f) + 0.5f;
     float currentDepth = clipCoord.z;
     
-    float4 sampled = ShadowMap.Sample(LinearSampler, float3(uv, index));
+    float4 sampled = BLACK;
+    
+    if (index == 0)
+        sampled = ShadowMaps[0].Sample(LinearSampler, uv);
+    else if (index == 1)
+        sampled = ShadowMaps[1].Sample(LinearSampler, uv);
+    else if (index == 1)
+        sampled = ShadowMaps[2].Sample(LinearSampler, uv);
+    else
+        sampled = ShadowMaps[3].Sample(LinearSampler, uv);
+    
     float shadowDepth = sampled.r;
     float shadowFactor = currentDepth > shadowDepth + bias ? 0.6f : 1.0f;
     
@@ -195,8 +205,8 @@ float4 ComputeDirectionalLight(float3 normal, float2 uv, float3 worldPosition)
 
 float4 ComputeSpotLight(SpotLightDesc L, float3 normal, float2 uv, float3 worldPosition)
 {
-    if (L.isOn == 0)
-        return RED;
+    if (L.isOn = 0)
+        return float4(0.f, 0.f, 0.f, 0.f);
     
     float3 toLightVec = L.position - worldPosition;
     
@@ -252,8 +262,8 @@ float4 ComputeSpotLight(SpotLightDesc L, float3 normal, float2 uv, float3 worldP
 
 float4 ComputePointLight(PointLightDesc L, float3 normal, float2 uv, float3 worldPosition)
 {
-    if (L.isOn == 0)
-        return RED;
+    if (L.isOn = 0)
+        return float4(0.f, 0.f, 0.f, 0.f);
     
     float3 toLightVec = L.position - worldPosition;
     float d = length(toLightVec);
