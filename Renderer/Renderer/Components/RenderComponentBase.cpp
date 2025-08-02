@@ -46,47 +46,23 @@ void RenderComponentBase::BeginPlay()
 
 void RenderComponentBase::Render()
 {
-	{
-		CONTEXT->IASetInputLayout(_inputLayout->GetComPtr().Get());
-		CONTEXT->IASetPrimitiveTopology(_pipelineState->GetTopology());
+	CONTEXT->IASetInputLayout(_inputLayout->GetComPtr().Get());
+	CONTEXT->IASetPrimitiveTopology(_defaultStates->_topology);
 
-		if (_vertexShader)
-			CONTEXT->VSSetShader(_vertexShader->GetComPtr().Get(), nullptr, 0);
-		if (_pixelShader)
-			CONTEXT->PSSetShader(_pixelShader->GetComPtr().Get(), nullptr, 0);
+	if (_vertexShader)
+		CONTEXT->VSSetShader(_vertexShader->GetComPtr().Get(), nullptr, 0);
+	if (_pixelShader)
+		CONTEXT->PSSetShader(_pixelShader->GetComPtr().Get(), nullptr, 0);
 
-		// Test
-		{
-			D3D11_SAMPLER_DESC desc = {};
-			desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-			desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-			desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-			desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-			desc.BorderColor[0] = 100.f;
-			desc.MinLOD = 0.0f;
-			desc.MaxLOD = D3D11_FLOAT32_MAX;
-			desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
-
-			// »ùÇÃ·¯ °´Ã¼ »ý¼º
-			HRESULT hr = DEVICE->CreateSamplerState(&desc, _samplerState.GetAddressOf());
-			check(hr);
-
-			// ½½·Ô 0¿¡ ¹ÙÀÎµù
-			CONTEXT->PSSetSamplers(0, 1, _samplerState.GetAddressOf());
-		}
-
-		auto rsState = _pipelineState->GetRsState();
-		CONTEXT->RSSetState(rsState.Get());
-
-		auto blendState = _pipelineState->GetBlendState();
-		CONTEXT->OMSetBlendState(blendState.Get(), _pipelineState->GetBlendFactor(), _pipelineState->GetSampleMask());
-	}
+	CONTEXT->PSSetSamplers(0, 1, _defaultStates->_samplerState.GetAddressOf());
+	CONTEXT->RSSetState(_defaultStates->_rsState.Get());
+	CONTEXT->OMSetBlendState(_defaultStates->_blendState.Get(), &_defaultStates->_blendFactor, _defaultStates->_sampleMask);
 }
 
 void RenderComponentBase::RenderDepthOnly(bool bForPointLight, int32 instanceCount)
 {
 	CONTEXT->IASetInputLayout(_shadowMapResources.inputLayout->GetComPtr().Get());
-	CONTEXT->IASetPrimitiveTopology(_pipelineState->GetTopology());
+	CONTEXT->IASetPrimitiveTopology(_shadowStates->_topology);
 
 	if (bForPointLight)
 	{
@@ -98,32 +74,9 @@ void RenderComponentBase::RenderDepthOnly(bool bForPointLight, int32 instanceCou
 	{
 		CONTEXT->VSSetShader(_shadowMapResources.defaultVertexShader->GetComPtr().Get(), nullptr, 0);
 	}
-
-
-	CONTEXT->RSSetState(_shadowMapResources.rasterizerState.Get());
-	CONTEXT->OMSetDepthStencilState(_shadowMapResources.depthStencilState.Get(), 0);
-
-	//{
-	//	D3D11_RASTERIZER_DESC desc = {};
-	//	desc.FillMode = D3D11_FILL_SOLID;
-	//	desc.CullMode = D3D11_CULL_NONE;  // ¶Ç´Â D3D11_CULL_FRONT
-	//	desc.DepthClipEnable = TRUE;
-	//
-	//	DEVICE->CreateRasterizerState(&desc, _tempRS.GetAddressOf());
-	//	CONTEXT->RSSetState(_tempRS.Get());
-	//}
-	//
-	//{
-	//	D3D11_SAMPLER_DESC desc = {};
-	//	desc.Filter = D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
-	//	desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-	//	desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-	//	desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-	//	desc.ComparisonFunc = D3D11_COMPARISON_LESS_EQUAL;
-	//
-	//	DEVICE->CreateSamplerState(&desc, _tempSS.GetAddressOf());
-	//	CONTEXT->PSSetSamplers(0, 1, _tempSS.GetAddressOf());
-	//}
+	
+	CONTEXT->RSSetState(_shadowStates->_rsState.Get());
+	CONTEXT->OMSetDepthStencilState(_shadowStates->_dsState.Get(), 0);
 }
 
 void RenderComponentBase::SetVertexShader(shared_ptr<ShaderInfo> shaderInfo)
@@ -140,7 +93,8 @@ void RenderComponentBase::SetPixelShader(shared_ptr<ShaderInfo> shaderInfo)
 
 void RenderComponentBase::GetDefaultStates()
 {
-	_pipelineState = PipelineState::GetDefaultState();
+	_defaultStates = PipelineState::GetDefaultStates();
+	_shadowStates = PipelineState::GetShadowStates();
 }
 
 void RenderComponentBase::Draw(UINT vertexCount, UINT startVertexLocation)

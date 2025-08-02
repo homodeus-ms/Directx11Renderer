@@ -12,6 +12,7 @@ public:
 	void CreateDebugWindow();
 
 private:
+	bool _bWindowCollapsed = true;
 	vector<string> _logs;
 };
 

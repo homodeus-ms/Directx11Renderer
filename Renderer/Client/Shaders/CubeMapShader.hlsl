@@ -24,7 +24,8 @@ CubeMapOutput VS(VertexPosOnlyInput input)
 
 float4 PS(CubeMapOutput input) : SV_Target
 {
-    float4 color = textureCube.Sample(LinearSampler, input.worldPosition);
+    //return RED;
+    float4 color = TextureCubeSpec.Sample(LinearSampler, input.worldPosition);
     
     return color;
 }

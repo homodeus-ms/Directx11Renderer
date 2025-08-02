@@ -22,9 +22,20 @@ void LogWindowController::LogCallback(const string& log)
 
 void LogWindowController::CreateDebugWindow()
 {
-	ImGui::SetNextWindowPos({ 0, GUI_MainWindowSizeY }, ImGuiCond_Always);
-	ImGui::SetNextWindowSize({ GUI_DebugWindowSizeX, GUI_DebugWindowSizeY }, ImGuiCond_Always);
-	ImGui::Begin("DebugWindow", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
+	if (_bWindowCollapsed)
+	{
+		ImGui::SetNextWindowPos({ 0, GWinSizeY - 20 }, ImGuiCond_Always);
+		ImGui::SetNextWindowSize({ 150, 20 }, ImGuiCond_Always);
+	}
+	else
+	{
+		ImGui::SetNextWindowPos({ 0, GWinSizeY - GUI_DebugWindowSizeY }, ImGuiCond_Always);
+		ImGui::SetNextWindowSize({ GUI_DebugWindowSizeX, GUI_DebugWindowSizeY }, ImGuiCond_Always);
+	}
+
+	ImGui::Begin("Debug Window", nullptr, ImGuiWindowFlags_NoMove);
+
+	_bWindowCollapsed = ImGui::IsWindowCollapsed();
 
 	ImGui::Separator();
 	// Begin a child window with scroll functionality

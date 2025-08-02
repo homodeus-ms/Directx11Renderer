@@ -16,11 +16,10 @@ void RightWindowController::BeginPlay()
 
 void RightWindowController::CreateRightWindow()
 {
-	ImGui::SetNextWindowPos({ GWinSizeX - GUI_MainWindowSizeX, 0 }, ImGuiCond_Always);
-	ImGui::SetNextWindowSize({ GUI_MainWindowSizeX, GUI_MainWindowSizeY }, ImGuiCond_Always);
-	ImGui::Begin("RightWindow", nullptr,
-		ImGuiWindowFlags_NoTitleBar |
-		ImGuiWindowFlags_NoMove);
+	ImGui::SetNextWindowPos({ GWinSizeX - GUI_RightWindowSizeX, 0 }, ImGuiCond_Once);
+	ImGui::SetNextWindowSize({ GUI_RightWindowSizeX, GUI_RightWindowSizeY }, ImGuiCond_Once);
+
+	ImGui::Begin("RightWindow", nullptr);
 
 	DrawCameraSettingWidget();
 

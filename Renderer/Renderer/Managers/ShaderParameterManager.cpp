@@ -21,8 +21,9 @@ void ShaderParameterManager::BeginPlay()
 	RegisterBuffer<ShadowDataDesc>("Shadow", static_cast<uint8>(EConstBufferRegisterNumber::ShadowData), EShaderStage::Both);
 	RegisterBuffer<PointShadowDataDesc>("PointShadow", static_cast<uint8>(EConstBufferRegisterNumber::PointShadowData), EShaderStage::PsStage | EShaderStage::GsStage);
 	
-	// register 0번(현재 GlobalBuffer 역시 0번 사용)을 사용하지만 섀도우맵 pass에서만 사용함
+	// 특수하게 정의 되어 있는 const Buffers, Global하게 사용하는 cbuffer와 slot번호가 겹쳐서 사용함
 	RegisterBuffer<PointShadowDataDesc>("LightIndex", 0, EShaderStage::VsStage);
+	RegisterBuffer<FilterData>("FilterData", 0, EShaderStage::PsStage);
 }
 
 void ShaderParameterManager::Update()
@@ -102,11 +103,33 @@ void ShaderParameterManager::PushMaterialData(const MaterialDesc& desc)
 	UpdateData("Material", desc);
 }
 
+void ShaderParameterManager::PushFilterData(const FilterData& data)
+{
+	UpdateData("FilterData", data);
+	// TEMP : 이걸 정리해야하는데?
+	BufferBindingInfo& info = _constbuffers["FilterData"];
+	ComPtr<ID3D11Buffer> comBuffer = info.buffer->GetComPtr();
+	CONTEXT->PSSetConstantBuffers(info.slot, 1, comBuffer.GetAddressOf());
+	info.dirty = false;
+}
+
 void ShaderParameterManager::PushEnvLight(shared_ptr<SRVBindingInfo> info)
 {
-	_envLightInfo = info;
-	PushEnvLightOnOff(true);
-	_bEnvLightDirty = true;
+	if (info->slot == static_cast<uint8>(ETextureType::IBL_Spec))
+	{
+		_envLightSpecInfo = info;
+		CONTEXT->PSSetShaderResources(_envLightSpecInfo->slot, 1, _envLightSpecInfo->srv.GetAddressOf());
+	}
+	else if (info->slot == static_cast<uint8>(ETextureType::IBL_Diff))
+	{
+		_envLightDiffInfo = info;
+		CONTEXT->PSSetShaderResources(_envLightDiffInfo->slot, 1, _envLightDiffInfo->srv.GetAddressOf());
+	}
+
+	if (_envLightSpecInfo && _envLightDiffInfo)
+		PushEnvLightOnOff(true);
+
+	//_bEnvLightDirty = true;
 }
 
 void ShaderParameterManager::PushEnvLightOnOff(bool bOn)
@@ -147,23 +170,6 @@ void ShaderParameterManager::PushPointLightShadowDesc(const array<Matrix, 6>& VP
 	UpdateData("PointShadow", _pointShadowDataDesc);
 }
 
-//void ShaderParameterManager::UpdateShadowCubeMapVPs(const vector<Matrix>& VPs, uint32 currUsingIndex)
-//{
-//	for (int32 i = 0; i < VPs.size(); ++i)
-//	{
-//		_shadowDataDesc.lightVP[i] = VPs[i];
-//	}
-//	_shadowDataDesc.currUsingCount = currUsingIndex;
-//	_shadowDataDesc.bShadowCubeDataLoaded = 1;
-//
-//	UpdateData("Shadow", _shadowDataDesc);
-//}
-
-
-//void ShaderParameterManager::SetUseShadowCubeTrue()
-//{
-//	_shadowDataDesc.bShadowCubeDataLoaded = 1;
-//}
 
 void ShaderParameterManager::PushShadowMapSRV(shared_ptr<SRVBindingInfo> info)
 {
@@ -197,11 +203,12 @@ void ShaderParameterManager::BindCommonResources()
 		CONTEXT->PSSetShaderResources(_shadowCubeMapSRV->slot, 1, _shadowCubeMapSRV->srv.GetAddressOf());
 
 	// other SRVs
-	if (_bEnvLightDirty)
-	{
-		CONTEXT->PSSetShaderResources(_envLightInfo->slot, 1, _envLightInfo->srv.GetAddressOf());
-		_bEnvLightDirty = false;
-	}
+	//if (_bEnvLightDirty)
+	//{
+	//	CONTEXT->PSSetShaderResources(_envLightSpecInfo->slot, 1, _envLightSpecInfo->srv.GetAddressOf());
+	//	CONTEXT->PSSetShaderResources(_envLightDiffInfo->slot, 1, _envLightDiffInfo->srv.GetAddressOf());
+	//	_bEnvLightDirty = false;
+	//}
 }
 
 void ShaderParameterManager::BindAllDirtyBuffers()

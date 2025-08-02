@@ -11,6 +11,7 @@ enum class EResourceType : int8
 	Material,
 	Animation,
 	XML,
+	LUT,
 
 	End
 };

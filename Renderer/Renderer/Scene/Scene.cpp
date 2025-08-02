@@ -11,6 +11,7 @@
 #include "Components/LightComponent/PointLight.h"
 #include "Managers/RenderManager.h"
 #include "Managers/LightManager.h"
+#include "Graphics/Filter/FilterManager.h"
 #include "Resource/Material.h"
 #include "Resource/Texture/LoadedTexture.h"
 #include "Resource/BasicMesh/VertexUVBasicMesh.h"
@@ -54,8 +55,8 @@ void Scene::Construct()
 	_topViewCamera = make_shared<CameraActor>();
 	_topViewCamera->Construct();
 	{
-		_topViewCamera->GetTransform()->SetWorldPosition(Vec3(0.f, 20.f, -30.f));
-		Vec3 targetLook = { 0.f, -1.f, 2.f };
+		_topViewCamera->GetTransform()->SetWorldPosition(Vec3(0.f, 38.f, -38.f));
+		Vec3 targetLook = { 0.f, -1.f, 1.f };
 		_topViewCamera->GetTransform()->SetLocalRotationByTargetLook(targetLook);
 		Vec3 look = _topViewCamera->GetTransform()->GetLook();
 	}
@@ -189,20 +190,29 @@ void Scene::CreateEnvironment(const wstring& textureName, bool bSetEnvLighting)
 	}
 
 	_cubeMapCached = make_shared<Actor>(EActorType::Actor, "CubeMap");
-	shared_ptr<LoadedTexture> tex = RESOURCE_MANAGER->Get<LoadedTexture>(textureName);
-	if (tex == nullptr)
+
+	const wstring specName = textureName + L"_spec";
+	const wstring diffName = textureName + L"_diff";
+
+	//shared_ptr<LoadedTexture> tex = RESOURCE_MANAGER->Get<LoadedTexture>(textureName);
+	shared_ptr<LoadedTexture> texSpec = RESOURCE_MANAGER->Get<LoadedTexture>(specName);
+	shared_ptr<LoadedTexture> texDiff = RESOURCE_MANAGER->Get<LoadedTexture>(diffName);
+
+	if (texSpec == nullptr || texDiff == nullptr)
 	{
 		LOG(Log, "Can't find Env Texture");
 		return;
 	}
 
 	shared_ptr<Material> cubeMapMat = make_shared<Material>();
-	cubeMapMat->SetDiffuseMap(tex);
+	MaterialDesc& desc = cubeMapMat->GetMaterialDesc();
+
+	cubeMapMat->SetSpecularMap(texSpec);
+	cubeMapMat->SetDiffuseMap(texDiff);
 	{
-		MaterialDesc& desc = cubeMapMat->GetMaterialDesc();
-		desc.ambient = Vec4(1.f);
-		desc.diffuse = Vec4(1.f);
-		desc.specular = Vec4(1.f);
+		desc.ambient = Vec4(1.f, 1.f, 1.f, 1.f);
+		desc.diffuse = Vec4(1.f, 1.f, 1.f, 1.f);
+		desc.specular = Vec4(1.f, 1.f, 1.f, 1.f);
 		desc.emissive = Vec4(0.f, 0.f, 0.0f, 1.f);
 	}
 
@@ -254,6 +264,26 @@ shared_ptr<LightActor> Scene::AddPointLightOrNull()
 void Scene::RemoveLight(shared_ptr<LightActor> actor)
 {
 	RemoveActor(actor);
+}
+
+void Scene::AddFilter(EFilterType type)
+{
+	FILTER_MANAGER->AddFilter(type);
+}
+
+void Scene::RemoveFilter(EFilterType type)
+{
+	FILTER_MANAGER->RemoveFilter(type);
+}
+
+void Scene::SetFilterOnOff(bool bFilterOn)
+{
+	FILTER_MANAGER->SetFilterOnOff(bFilterOn);
+}
+
+void Scene::SetLUTType(const wstring& LUTName)
+{
+	FILTER_MANAGER->SetLUTType(LUTName);
 }
 
 void Scene::OnMainCameraLookChangedCallback(const Vec3& look)

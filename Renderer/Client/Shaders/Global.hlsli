@@ -83,8 +83,9 @@ struct MaterialDesc
     float4 specular;
     float4 emissive;
     uint bUnLit;
+    uint bGetIBL;
     uint MaterialType;
-    uint pad[2];
+    float pad;
 };
 
 cbuffer MaterialBuffer : register(CBUFFER_NUM_MATERIAL)
@@ -131,13 +132,13 @@ cbuffer PointShadowData : register(CBUFFER_NUM_POINT_SHADOW)
     float pointShadowDataPad;
 }
 
-
-
 // SRV
 Texture2D DiffuseMap : register(t0);
 Texture2D NormalMap : register(t1);
 Texture2D SpecularMap : register(t2);
-TextureCube textureCube : register(t3);
+//TextureCube TextureCubeMap : register(t3);
+TextureCube TextureCubeSpec : register(t3);
+TextureCube TextureCubeDiff : register(t4);
 Texture2D ShadowMaps[MAX_ACTIVE_SHADOW_LIGHT] : register(SHADOW_MAP_REG_NUM);
 TextureCube ShadowCubeMap : register(SHADOW_CUBE_MAP_REG_NUM);
 

@@ -172,37 +172,6 @@ void ShadowMap::CreateShadowMapResources()
 		ComPtr<ID3DBlob> blob = _resources.defaultVertexShader->GetBlob();
 		_resources.inputLayout->Create(desc, blob);
 	}
-
-	// Rasterizer State
-	{
-		D3D11_RASTERIZER_DESC desc = {};
-		desc.FillMode = D3D11_FILL_SOLID;
-		desc.CullMode = D3D11_CULL_BACK;
-		desc.FrontCounterClockwise = false;
-		desc.DepthBias = 100;
-		desc.SlopeScaledDepthBias = 3.f;
-		desc.DepthBiasClamp = 0.0f;
-		desc.DepthClipEnable = true;
-		desc.ScissorEnable = false;
-		desc.MultisampleEnable = false;
-		desc.AntialiasedLineEnable = false;
-
-		HRESULT hr = DEVICE->CreateRasterizerState(&desc, _resources.rasterizerState.GetAddressOf());
-		check(hr);
-	}
-
-	// Depth Stencil State
-	{ 
-		D3D11_DEPTH_STENCIL_DESC desc = {};
-		desc.DepthEnable = TRUE;							// 깊이 테스트 활성화
-		desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;  // 깊이값 기록 허용
-		desc.DepthFunc = D3D11_COMPARISON_LESS;			// 더 가까운 픽셀만 통과
-		desc.StencilEnable = FALSE;						// 그림자맵에서는 Stencil 불필요
-
-		ID3D11DepthStencilState* shadowDepthState = nullptr;
-		HRESULT hr = DEVICE->CreateDepthStencilState(&desc, _resources.depthStencilState.GetAddressOf());
-		check(hr);
-	}
 }
 
 

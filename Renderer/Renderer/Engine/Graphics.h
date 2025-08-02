@@ -15,10 +15,14 @@ public:
 	shared_ptr<ShadowMap> GetShadowMap() const { return _shadowMap; }
 	ComPtr<ID3D11Device> GetDevice() { return _device; }
 	ComPtr<ID3D11DeviceContext> GetDeviceContext() { return _deviceContext; }
+	ComPtr<ID3D11RenderTargetView> GetBackBufferRTV() { return _renderTargetView; }
+	ComPtr<ID3D11ShaderResourceView> GetBackBufferSRV();
+	
 
 private:
 	void CreateDeviceAndSwapChain();
-	void CreateRenderTargetView();
+	void CreateRTVAndSRV();
+	void CreateCopyTexture();
 	void CreateDepthStencilView();
 	void SetViewport();
 
@@ -32,6 +36,10 @@ private:
 
 	ComPtr<ID3D11Texture2D> _depthStencilTexture;
 	ComPtr<ID3D11DepthStencilView> _depthStencilView;
+	ComPtr<ID3D11ShaderResourceView> _shaderResourceView;
+
+	ComPtr<ID3D11Texture2D> _copyTexture;
+	ComPtr<ID3D11ShaderResourceView> _copyTextureSRV;
 
 	D3D11_VIEWPORT _viewport{};
 

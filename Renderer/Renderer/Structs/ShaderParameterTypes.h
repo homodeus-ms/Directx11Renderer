@@ -102,8 +102,9 @@ struct MaterialDesc
 	Color specular = Color(1.f, 1.f, 1.f, 1.f); 
 	Color emissive = Color(0.f, 0.f, 0.f, 1.f);
 	uint32 bUnLit = 0;
+	uint32 bGetIBL = 1;
 	EMaterialType MaterialType = EMaterialType::Default;
-	uint32 pad[2]{};
+	float pad = 0;
 };
 
 
@@ -136,4 +137,13 @@ struct CurrentLightVPIndex
 {
 	uint32 index = 0;
 	float pad[3];
+};
+
+struct FilterData
+{
+	float dx;
+	float dy;
+	float brightnessThreshold;
+	float strength;
+	Vec4 options;
 };

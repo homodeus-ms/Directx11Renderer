@@ -8,6 +8,7 @@ class Shader;
 class LoadedTexture;
 class Material;
 class StaticMesh;
+class LUT;
 
 namespace tinyxml2
 {
@@ -41,7 +42,6 @@ private:
 	void CreateDefaultMesh();
 	void CreateDefaultMaterials();
 	
-	
 	wstring _resourcePath;
 	wstring _assetPath = L"../Resources/Assets/";
 
@@ -64,6 +64,9 @@ EResourceType ResourceManager::GetResourceType()
 		return EResourceType::Shader;
 	if (std::is_same_v<T, StaticMesh>)
 		return EResourceType::StaticMesh;
+	if (std::is_same_v<T, LUT>)
+		return EResourceType::LUT;
+
 	/*if (std::is_same_v<T, SkeletalMesh>)
 		return EResourceType::SkeletalMesh;
 	if (std::is_same_v<T, Animation>)

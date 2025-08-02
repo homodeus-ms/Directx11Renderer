@@ -4,6 +4,7 @@
 #include "Managers/LightManager.h"
 #include "Engine/Core/CommandQueue.h"
 #include "Structs/ECameraType.h"
+#include "Structs/EFilterType.h"
 
 class Actor;
 class CameraActor;
@@ -49,6 +50,12 @@ public:
 	// Shadow Map
 	bool ShouldDrawDebugShadowMap() { return _bDrawDebugShadowMap; }
 	void SetDrawShadowMap(bool bDraw) { _bDrawDebugShadowMap = bDraw; }
+
+	// PostProcess
+	void AddFilter(EFilterType type);
+	void RemoveFilter(EFilterType type);
+	void SetFilterOnOff(bool bFilterOn);
+	void SetLUTType(const wstring& LUTName);
 
 	OnLightManagerCreatedDelegate _onLightManagerCreated;
 	OnRenderedActorRegistered _onRenderedActorRegistered;

@@ -26,8 +26,10 @@ void CameraActor::Construct()
 	Super::Construct();
 
 	_moveSpeed = 10.f;
-	GetTransform()->SetWorldPosition(Vec3(0.f, 3.f, -30.f));
-	GetTransform()->SetLocalRotationByTargetLook(Vec3(0.f, -1.f, 10.f));
+	GetTransform()->SetWorldPosition(Vec3(0.f, 5.f, -38.f));
+	Vec3 targetLook = -GetTransform()->GetWorldPosition();
+	GetTransform()->SetLocalRotationByTargetLook(targetLook);
+	Vec3 look = GetTransform()->GetLook();
 	_cameraComponent = make_shared<CameraComponent>();
 	AddComponent(_cameraComponent);
 	GetController()->SetMoveMode(EMoveMode::CameraMove);

@@ -95,24 +95,45 @@ void LightManager::ReduceLight(shared_ptr<LightActor> actor)
 
 void LightManager::SetEnvLightTexture(const wstring& textureName)
 {
-	_envTexture = RESOURCE_MANAGER->Get<LoadedTexture>(textureName);
-	if (_envTexture == nullptr)
-	{
-		LOG(Log, "Can't find Texture");
-		return;
-	}
-	
-	_envBindingInfo = make_shared<SRVBindingInfo>();
-	_envBindingInfo->slot = IBL_LIGHT_SLOT_NUM;
-	_envBindingInfo->stage = EShaderStage::PsStage;
-	_envBindingInfo->srv = _envTexture->GetSRV();
+	const wstring specName = textureName + L"_spec";
+	const wstring diffName = textureName + L"_diff";
 
-	SHADER_PARAM_MANAGER->PushEnvLight(_envBindingInfo);
+	// Specular
+	{
+		_envTextureSpec = RESOURCE_MANAGER->Get<LoadedTexture>(specName);
+		if (_envTextureSpec == nullptr)
+		{
+			LOG(Log, "Can't find Texture");
+			return;
+		}
+
+		_envSpecBindingInfo = make_shared<SRVBindingInfo>();
+		_envSpecBindingInfo->slot = static_cast<uint8>(ETextureType::IBL_Spec);
+		_envSpecBindingInfo->stage = EShaderStage::PsStage;
+		_envSpecBindingInfo->srv = _envTextureSpec->GetSRV();
+		SHADER_PARAM_MANAGER->PushEnvLight(_envSpecBindingInfo);
+	}
+
+	// Diffuse
+	{
+		_envTextureDiff = RESOURCE_MANAGER->Get<LoadedTexture>(diffName);
+		if (_envTextureDiff == nullptr)
+		{
+			LOG(Log, "Can't find Texture");
+			return;
+		}
+
+		_envDiffBindingInfo = make_shared<SRVBindingInfo>();
+		_envDiffBindingInfo->slot = static_cast<uint8>(ETextureType::IBL_Diff);
+		_envDiffBindingInfo->stage = EShaderStage::PsStage;
+		_envDiffBindingInfo->srv = _envTextureDiff->GetSRV();
+		SHADER_PARAM_MANAGER->PushEnvLight(_envDiffBindingInfo);
+	}
 }
 
 void LightManager::TurnEnvLightOnOff(bool bOn)
 {
-	if (_envBindingInfo == nullptr)
+	if (_envSpecBindingInfo == nullptr || _envDiffBindingInfo == nullptr)
 		return;
 	
 	SHADER_PARAM_MANAGER->PushEnvLightOnOff(bOn);

@@ -30,6 +30,7 @@ private:
 	void MovePawn();
 	void MoveCamera();
 	void HandleDirty();
+	void OrbitCameraByWorldCenter(float dtAngle);
 
 	weak_ptr<Pawn> _owner;
 	EMoveMode _moveMode = EMoveMode::PawnMove;

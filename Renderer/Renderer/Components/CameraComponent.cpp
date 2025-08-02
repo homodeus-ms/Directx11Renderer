@@ -27,8 +27,11 @@ void CameraComponent::Tick()
 void CameraComponent::UpdateMatrix()
 {
 	Vec3 eyePosition = GetOwnerTransform()->GetWorldPosition();
-	Vec3 focusPosition = eyePosition + GetOwnerTransform()->GetLook();
+	Vec3 Look = GetOwnerTransform()->GetLook();
+	Look.Normalize();
+	Vec3 focusPosition = eyePosition + Look;
 	Vec3 upDirection = GetOwnerTransform()->GetUp();
+	upDirection.Normalize();
 	_matView = ::XMMatrixLookAtLH(eyePosition, focusPosition, upDirection);
 	_matProjection = ::XMMatrixPerspectiveFovLH(_fov, _width / _height, _near, _far);
 }

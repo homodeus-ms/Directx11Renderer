@@ -31,8 +31,6 @@ float4 PS(MeshOutput input) : SV_Target
     if (!bUnLit)
         litColor = CalculateLitColor(input);
     
-    return litColor;
-    
     int matType = Material.MaterialType;
     switch (matType)
     {
@@ -49,12 +47,19 @@ float4 PS(MeshOutput input) : SV_Target
     }
     
     // Env Lighting
-    if (bEnvLightUsing == 1)
+    if (bEnvLightUsing == 1 && Material.bGetIBL == 1)
     {
-        inputNormal = float3(0.f, 0.f, 1.f);
         float3 viewR = reflect(-toEye, inputNormal);
-        float4 envColor = textureCube.Sample(LinearSampler, normalize(input.worldPosition));
-        litColor = litColor * 0.7f + envColor * 0.3f;
+        float4 envSpec = TextureCubeSpec.Sample(LinearSampler, viewR);
+        float4 envDiff = TextureCubeDiff.Sample(LinearSampler, inputNormal);
+        
+        envSpec *= pow((envSpec.x + envSpec.y + envSpec.z) / 3.f, 1.f);
+        envSpec *= float4(Material.specular.xyz, 1.f);
+        envDiff *= float4(Material.diffuse.xyz, 1.f);
+        
+        float4 envColor = envSpec + envDiff;
+        
+        litColor = litColor * 0.8f + envColor * 0.2f;
         return float4(litColor.xyz, 1.f); 
     }
     

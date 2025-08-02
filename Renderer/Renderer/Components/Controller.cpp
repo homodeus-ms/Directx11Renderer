@@ -107,7 +107,7 @@ void Controller::MoveCamera()
 	/*shared_ptr<Transform> transform = GetOwnerTransform();
 	transform->SetWorldPosition(moveDelta);
 	_owner.lock()->SetTransformChanged(true);*/
-
+	
 	HandleDirty();
 
 
@@ -130,17 +130,26 @@ void Controller::MoveCamera()
 	}
 	else if (INPUT_MANAGER->ButtonHold(KeyType::Z))
 	{
-		Vec3 rotation = GetOwnerTransform()->GetLocalRotation();
-		rotation.y += dt * _cameraRotateSpeed;
-		GetOwnerTransform()->SetLocalRotation(rotation);
+		//Vec3 rotation = GetOwnerTransform()->GetLocalRotation();
+		//rotation.y += dt * _cameraRotateSpeed;
+		//GetOwnerTransform()->SetLocalRotation(rotation);
+		//
+		//_bDirty = true;
+		
+		// 원점 기준 공전 이동으로 바꿈
+		float angle = dt * _cameraRotateSpeed / 2.f;
+		OrbitCameraByWorldCenter(angle);
 
 		_bDirty = true;
 	}
 	else if (INPUT_MANAGER->ButtonHold(KeyType::C))
 	{
-		Vec3 rotation = GetOwnerTransform()->GetLocalRotation();
-		rotation.y -= dt * _cameraRotateSpeed;
-		GetOwnerTransform()->SetLocalRotation(rotation);
+		//Vec3 rotation = GetOwnerTransform()->GetLocalRotation();
+		//rotation.y -= dt * _cameraRotateSpeed;
+		//GetOwnerTransform()->SetLocalRotation(rotation);
+
+		float angle = dt * _cameraRotateSpeed / 2.f;
+		OrbitCameraByWorldCenter(-angle);
 
 		_bDirty = true;
 	}
@@ -165,4 +174,22 @@ void Controller::HandleDirty()
 	{
 		_owner.lock()->SetTransformChanged(false);
 	}
+}
+
+void Controller::OrbitCameraByWorldCenter(float dtAngle)
+{
+	Vec3 pos = GetOwnerTransform()->GetLocalPosition();
+	Matrix rotation = Matrix::CreateRotationY(dtAngle);
+	Vec3 rotatedPos = Vec3::Transform(pos, rotation);
+	GetOwnerTransform()->SetLocalPosition(rotatedPos);
+
+	Vec3 look = -rotatedPos;
+	look.Normalize();
+
+	// 방향 벡터를 이용해서 회전각 계산
+	float yaw = atan2(look.x, look.z); // Y축 회전각
+
+	Vec3 newRotation = GetOwnerTransform()->GetLocalRotation();
+	newRotation.y = yaw;
+	GetOwnerTransform()->SetLocalRotation(newRotation);
 }

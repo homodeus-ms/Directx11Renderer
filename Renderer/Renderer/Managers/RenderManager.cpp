@@ -6,6 +6,14 @@
 #include "Managers/SceneManager.h"
 #include "Managers/ShaderParameterManager.h"
 #include "Components/CameraComponent.h"
+#include "Graphics/Shader/ShaderInfo.h"
+#include "Graphics/PipelineState/PipelineState.h"
+#include "Graphics/Filter/FilterManager.h"
+
+void RenderManager::BeginPlay()
+{
+	GET_SINGLE(FilterManager)->Construct();
+}
 
 void RenderManager::Render(vector<shared_ptr<Actor>>& actors)
 {
@@ -48,6 +56,8 @@ void RenderManager::Render(vector<shared_ptr<Actor>>& actors)
 	// Render
 	for (const shared_ptr<Actor>& actor : drawTargets)
 		actor->Render();
+
+	FILTER_MANAGER->RenderFilters();
 	
 	SHADER_PARAM_MANAGER->CleanUpDatasAfterRender();
 }

@@ -13,7 +13,7 @@
 #include "Actor/BulbActor.h"
 #include "Utils/Utils.h"
 #include "Graphics/RenderPass/ShadowMap.h"
-
+#include "Graphics/Filter/FilterFactory.h"
 
 LeftWindowController::LeftWindowController()
 {
@@ -77,11 +77,9 @@ void LeftWindowController::BeginPlay()
 
 void LeftWindowController::CreateLeftWindow()
 {
-	ImGui::SetNextWindowPos({ 0, 0 }, ImGuiCond_Always);
-	ImGui::SetNextWindowSize({ GUI_MainWindowSizeX, GUI_MainWindowSizeY }, ImGuiCond_Always);
-	ImGui::Begin("LeftWindow", nullptr,
-		ImGuiWindowFlags_NoTitleBar |
-		ImGuiWindowFlags_NoMove);
+	ImGui::SetNextWindowPos({ 0, 0 }, ImGuiCond_Once);
+	ImGui::SetNextWindowSize({ GUI_LeftWindowSizeX, GUI_LeftWindowSizeY }, ImGuiCond_Once);
+	ImGui::Begin("LeftWindow", nullptr);// , ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove);
 
 	// Variables Cache Once
 	if (!_bVariableCached)
@@ -94,6 +92,7 @@ void LeftWindowController::CreateLeftWindow()
 	DrawActorControlWidget();
 	DrawCubeMap();
 	DrawShowDebugShadowMapSelector();
+	DrawFilterControls();
 
 	ImGui::End();
 }
@@ -462,11 +461,12 @@ void LeftWindowController::DrawCubeMap()
 			}
 		}
 		
-		ImGui::SameLine();
+		if (i % 3 != 2)
+			ImGui::SameLine();
 	}
 
-	ImGui::Text("   ");
-	ImGui::SameLine();
+	ImGui::NewLine();
+	
 
 	if (ImGui::Checkbox("EnvLight On", &_bEnvLightingOn))
 	{
@@ -595,8 +595,92 @@ void LeftWindowController::MoveLightOrbitOnSpaceKeyDown(shared_ptr<LightActor> l
 	}
 }
 
+void LeftWindowController::DrawFilterControls()
+{
+	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::Spacing();
 
+	// All Filter On Off
+	if (ImGui::Selectable("All Filters On/Off", _bAllFilterOn, 0, ImGui::CalcTextSize("All Filters On/Off")))
+	{
+		_bAllFilterOn = !_bAllFilterOn;
+		SCENE->SetFilterOnOff(_bAllFilterOn);
+	}
 
+	// Bloom Filter
+	if (ImGui::Selectable("BloomFilter", _bBloomFilterOn, 0, ImGui::CalcTextSize("BloomFilter")))
+	{
+		_bBloomFilterOn = !_bBloomFilterOn;
+
+		if (_bBloomFilterOn)
+		{
+			_bloomDelegateNum = GET_SINGLE(FilterFactory)->_onBloomFilterCreated.BindObject(
+				shared_from_this(), &LeftWindowController::OnBloomFilterCreated);
+			SCENE->AddFilter(EFilterType::Bloom);
+		}
+		else
+		{
+			GET_SINGLE(FilterFactory)->_onBloomFilterCreated.RemoveDelegate(_bloomDelegateNum);
+			SCENE->RemoveFilter(EFilterType::Bloom);
+			_bloomRange = nullptr;
+			_bloomStrength = nullptr;
+		}
+	}
+	if (_bBloomFilterOn && ImGui::CollapsingHeader("Bloom Filter"))
+	{
+		ImGui::PushItemWidth(180);
+		ImGui::SliderFloat("BloomRange", _bloomRange, 1.0f, 0.0f, SLIDER_W_180_MIN_MAX_LABEL.c_str());
+		ImGui::SliderFloat("BloomStrength", _bloomStrength, 0.0f, 3.0f, SLIDER_W_180_MIN_MAX_LABEL.c_str());
+	}
+
+	// LUT
+	if (ImGui::Selectable("LUTFilter", _bLUTFilterOn, 0, ImGui::CalcTextSize("LUTFilter")))
+	{
+		_bLUTFilterOn = !_bLUTFilterOn;
+
+		if (_bLUTFilterOn)
+		{
+			_LUTDelegateNum = GET_SINGLE(FilterFactory)->_onCombineFilterCreated.BindObject(
+				shared_from_this(), &LeftWindowController::OnLUTFilterCreated);
+
+			SCENE->AddFilter(EFilterType::LUT_ColorGrading);
+			SCENE->SetLUTType(Utils::ToWString(_LUTNames[0]));
+		}
+		else
+		{
+			GET_SINGLE(FilterFactory)->_onCombineFilterCreated.RemoveDelegate(_LUTDelegateNum);
+			SCENE->RemoveFilter(EFilterType::LUT_ColorGrading);
+			_LUTStrength = nullptr;
+		}
+	}
+	if (_bLUTFilterOn && ImGui::CollapsingHeader("LUT Filter"))
+	{
+		if (ImGui::Combo("LUT Select", &_LUTSelected, _LUTNames.data(), _LUTNames.size())) 
+		{
+			LUDSelected();
+		}
+
+		ImGui::PushItemWidth(180);
+		ImGui::SliderFloat("LUTStrength", _LUTStrength, 0.0f, 3.0f, SLIDER_W_180_MIN_MAX_LABEL.c_str());
+	}
+}
+
+void LeftWindowController::LUDSelected()
+{
+	SCENE->SetLUTType(Utils::ToWString(_LUTNames[_LUTSelected]));
+}
+
+void LeftWindowController::OnBloomFilterCreated(float* bloomRange, float* filterStrength)
+{
+	_bloomRange = bloomRange;
+	_bloomStrength = filterStrength;
+}
+
+void LeftWindowController::OnLUTFilterCreated(float* filterStrength)
+{
+	_LUTStrength = filterStrength;
+}
 
 
 

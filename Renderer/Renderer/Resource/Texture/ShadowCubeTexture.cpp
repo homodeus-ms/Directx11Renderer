@@ -45,7 +45,7 @@ void ShadowCubeTexture::CreateTexture()
 
 		// SRV Binding Info
 		_srvBindingInfo = make_shared<SRVBindingInfo>();
-		_srvBindingInfo->slot = SHADOW_SLOT_NUM + MAX_SHADOW_MAP_COUNT;
+		_srvBindingInfo->slot = static_cast<uint8>(ETextureType::Shadow) + MAX_SHADOW_MAP_COUNT;
 		_srvBindingInfo->stage = EShaderStage::PsStage;
 		_srvBindingInfo->srv = _SRV;
 	}

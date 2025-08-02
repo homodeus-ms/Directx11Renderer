@@ -11,7 +11,8 @@ struct ShaderInfo
 
 public:
 
-	ShaderInfo(const wstring& shaderFileName, string vsEntryName = "VS", string psEntryName = "PS", EShaderVersion version = EShaderVersion::Ver5_0);
+	ShaderInfo(const wstring& shaderName, string vsEntryName = "VS", string psEntryName = "PS", EShaderVersion version = EShaderVersion::Ver5_0);
+	ShaderInfo(const wstring& vsShaderName, const wstring& psShaderName, string vsEntryName = "VS", string psEntryName = "PS", EShaderVersion version = EShaderVersion::Ver5_0);
 	~ShaderInfo();
 
 	// TEMP : VS가 있는 셰이더 파일에 같은 사용한다고 가정
@@ -23,6 +24,8 @@ public:
 	}
 
 	wstring _shaderPath{};
+	wstring _vsShaderPath{};
+	wstring _psShaderPath{};
 	string _vsEntryName{}; 
 	string _psEntryName{};
 	string _vsVersion{};

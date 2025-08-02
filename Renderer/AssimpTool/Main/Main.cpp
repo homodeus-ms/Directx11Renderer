@@ -36,10 +36,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	converter.ExportModelData(L"House/House");
 	converter.Cleanup();*/
 
-	converter.LoadRawAssetFile(L"Zelda/Zelda.fbx");
-	converter.ExportMaterialData(L"Zelda/Zelda");
-	converter.ExportModelData(L"Zelda/Zelda");
-	converter.Cleanup();
+	//converter.LoadRawAssetFile(L"Zelda/Zelda.fbx");
+	//converter.ExportMaterialData(L"Zelda/Zelda");
+	//converter.ExportModelData(L"Zelda/Zelda");
+	//converter.Cleanup();
 
 	//converter.LoadRawAssetFile(L"Tank/Tank.fbx");
 	//converter.ExportModelData(L"Tank/Tank");

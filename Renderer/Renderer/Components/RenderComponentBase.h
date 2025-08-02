@@ -7,7 +7,7 @@
 class InputLayout;
 class VertexShader;
 class PixelShader;
-class PipelineState;
+struct PipelineState;
 class BasicMesh;
 class Material;
 struct ShaderInfo;
@@ -43,16 +43,16 @@ protected:
 	shared_ptr<InputLayout> _inputLayout = nullptr;
 	shared_ptr<VertexShader> _vertexShader;
 	shared_ptr<PixelShader> _pixelShader;
-	shared_ptr<PipelineState> _pipelineState;
-	ComPtr<ID3D11SamplerState> _samplerState;
+
+	// Pipeline States
+	PipelineState* _defaultStates;
+	PipelineState* _shadowStates;
 
 	bool _bRenderReady = false;
 
 	// ShadowMap
 	ShadowMapResources _shadowMapResources;
 
-	// TEMP
-	ComPtr<ID3D11RasterizerState> _tempRS;
-	ComPtr<ID3D11SamplerState> _tempSS;
+	
 };
 

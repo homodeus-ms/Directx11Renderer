@@ -1,18 +1,22 @@
 #pragma once
 
 constexpr uint32 GWinSizeX = 1500;
-constexpr uint32 GWinSizeY = 700;
-constexpr uint32 GWinStartX = 10;
-constexpr uint32 GWinStartY = 10;
-// GUI
-constexpr uint32 GUI_AreaX = 700;
-constexpr uint32 GUI_AreaY = 150;
-constexpr uint32 GUI_MainWindowSizeX = 350;
-constexpr uint32 GUI_MainWindowSizeY = 550;
-constexpr uint32 GUI_DebugWindowSizeX = 1500;
-constexpr uint32 GUI_DebugWindowSizeY = 150;
+constexpr uint32 GWinSizeY = 675;
+constexpr uint32 GWinStartX = 0;
+constexpr uint32 GWinStartY = 0;
 
-enum { VIEW_X = GWinSizeX - GUI_AreaX, VIEW_Y = GWinSizeY - GUI_AreaY };
+constexpr uint32 GUI_LeftWindowSizeX = 300;
+constexpr uint32 GUI_LeftWindowSizeY = 600;
+
+constexpr uint32 GViewportStartX = GUI_LeftWindowSizeX;
+constexpr uint32 GViewportStartY = 0;
+
+constexpr uint32 GUI_RightWindowSizeX = 300;
+constexpr uint32 GUI_RightWindowSizeY = 600;
+constexpr uint32 GUI_DebugWindowSizeX = GWinSizeX;
+constexpr uint32 GUI_DebugWindowSizeY = 120;
+
+enum { VIEW_X = GWinSizeX - GUI_LeftWindowSizeX, VIEW_Y = GWinSizeY };
 
 #define DECLARE_SINGLE(classname)			\
 private:									\

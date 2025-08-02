@@ -56,8 +56,11 @@ public:
 	void PushMaterial(shared_ptr<Material> material);
 	void PushMaterialData(const MaterialDesc& desc);
 
+	// Filter
+	void PushFilterData(const FilterData& data);
+
 	// Other SRV
-	void PushEnvLight(shared_ptr<SRVBindingInfo> info);
+	void PushEnvLight(shared_ptr<SRVBindingInfo> spec);
 	void PushEnvLightOnOff(bool bOn);
 
 	// ShadowMap
@@ -97,7 +100,8 @@ private:
 	array<SRVBindingInfo, TEXTURE_TYPE_COUNT> _srvBindings;
 	SpotLightBuffer _spotLightBuffer{};
 	PointLightBuffer _pointLightBuffer{};
-	shared_ptr<SRVBindingInfo> _envLightInfo = nullptr;
+	shared_ptr<SRVBindingInfo> _envLightSpecInfo = nullptr;
+	shared_ptr<SRVBindingInfo> _envLightDiffInfo = nullptr;
 	
 	vector<SamplerBindingInfo> _samplerBindings;
 

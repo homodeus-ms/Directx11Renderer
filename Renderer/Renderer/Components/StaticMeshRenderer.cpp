@@ -129,8 +129,8 @@ void StaticMeshRenderer::RenderDepthOnly(bool bForPointLight, int32 instanceCoun
 
 	// Mesh, Materials
 	const auto& meshes = _staticMesh->GetMeshes();
-	int32 meshsize = meshes.size();
-	for (int32 i = 0; i < meshsize; ++i)
+	uint32 meshsize = static_cast<uint32>(meshes.size());
+	for (uint32 i = 0; i < meshsize; ++i)
 	{
 		auto mesh = meshes[i];
 		// BoneIndex

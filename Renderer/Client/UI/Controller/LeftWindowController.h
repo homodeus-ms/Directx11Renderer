@@ -20,6 +20,8 @@ public:
 
 	void CreateLeftWindow();
 	void OnLightManagerCreatedCallback();
+	void OnBloomFilterCreated(float* bloomRange, float* filterStrength);
+	void OnLUTFilterCreated(float* filterStrength);
 
 private:
 	void CacheVariables();
@@ -34,10 +36,12 @@ private:
 	void HandleMoveLight(const shared_ptr<LightActor>& light);
 	void SetLightOrbitMode(shared_ptr<LightActor> light, bool bOnOff);
 	void MoveLightOrbitOnSpaceKeyDown(shared_ptr<LightActor> light);
-	
+	void DrawFilterControls();
+	void LUDSelected();
 
 	const vector<string> DEFAULT_VAR_NAMES = { "Ambient", "Diffuse", "Specular", "Emissive" };
 	enum { MAX_SHOW_ACTOR_COUNT = 3 };
+	const string SLIDER_W_180_MIN_MAX_LABEL = "min                  max";
 
 	template<typename T>
 	void TickSliders(const vector<T>& sliders)
@@ -49,6 +53,7 @@ private:
 	shared_ptr<LightActor> CreateLightControlWidget(ELightType lightType, int32 index);
 	void RemoveLightControlWidget(ELightType lightType, int32 index);
 	
+	bool _bShowWindow = true;
 	bool _bVariableCached = false;
 
 	// Light Move Common
@@ -97,14 +102,31 @@ private:
 	// Env Setting
 	shared_ptr<Actor> _cubeMap = nullptr;
 	// TEMP 3-CubeMap
-	enum { CACHED_CUBE_MAP_COUNT = 3 };
+	enum { CACHED_CUBE_MAP_COUNT = 7 };
 	int32 _currCubeMapIndex = -1;
-	string CUBE_MAP_NAMES[CACHED_CUBE_MAP_COUNT] = { "Skybox", "Night", "Snow" };
+	string CUBE_MAP_NAMES[CACHED_CUBE_MAP_COUNT] = { 
+		"NightCity1", "NightCity2", "NightPath", 
+		"SnowForest", "Museum", "DawnField", "DayLight1"};
 	ImVec2 _cubeMapLabelSize;
 	bool _bEnvLightingOn = false;
 
 	// Show Debug Shadow Map
 	bool _bShowDebugShadowMap = false;
 	bool _bShowDebugCubeMap = false;
+
+	// Filter
+	bool _bAllFilterOn = true;
+
+	bool _bBloomFilterOn = false; 
+	float* _bloomRange = nullptr;
+	float* _bloomStrength = nullptr;
+	uint32 _bloomDelegateNum;
+
+	float* _LUTStrength = nullptr;
+	bool _bLUTFilterOn = false;
+	uint32 _LUTDelegateNum;
+	int32 _LUTSelected = 0;
+	vector<const char*> _LUTNames = { "LUT_BlueArchitecture", "LUT_BlueHour", "LUT_ColdChrome" , "LUT_CrispAutumn" , "LUT_DarkAndSomber" };
+	
 };
 

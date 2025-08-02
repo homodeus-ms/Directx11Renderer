@@ -4,6 +4,7 @@
 #include "Resource/BasicMesh/BasicMesh.h"
 #include "Resource/BasicMesh/DefaultBasicMesh.h"
 #include "Resource/Texture/LoadedTexture.h"
+#include "Resource/LUT.h"
 #include "Graphics/Shader/ShaderInfo.h"
 #include "Graphics/Buffer/ConstantBuffer.h"
 #include "Actor/CameraActor.h"
@@ -17,7 +18,6 @@
 #include "Components/LightComponent/SpotLight.h"
 #include "Components/LightComponent/PointLight.h"
 #include "Actor/BulbActor.h"
-
 
 LoadMaterialDemo::~LoadMaterialDemo()
 {
@@ -38,13 +38,30 @@ void LoadMaterialDemo::Construct()
 	RESOURCE_MANAGER->Load<LoadedTexture>(L"Leather", L"..\\Resources\\Images\\Leather.jpg");
 	RESOURCE_MANAGER->Load<LoadedTexture>(L"Leather_Normal", L"..\\Resources\\Images\\Leather_Normal.jpg");
 	// C:\\Users\\seekc\\OneDrive\\Documents\\Renderer\\Renderer
-	RESOURCE_MANAGER->Load<LoadedTexture>(L"Snow", L"..\\Resources\\Images\\DDS\\Areskutan.dds");
-	RESOURCE_MANAGER->Load<LoadedTexture>(L"CubeMap1", L"..\\Resources\\Images\\DDS\\SanFrancisco2.dds");
-	RESOURCE_MANAGER->Load<LoadedTexture>(L"CubeMap2", L"..\\Resources\\Images\\DDS\\SanFrancisco4.dds");
-	RESOURCE_MANAGER->Load<LoadedTexture>(L"CubeMap3", L"..\\Resources\\Images\\DDS\\DropdownTriangle.dds");
-	RESOURCE_MANAGER->Load<LoadedTexture>(L"CubeMap4", L"..\\Resources\\Images\\DDS\\Lycksele3.dds");
-	RESOURCE_MANAGER->Load<LoadedTexture>(L"Night", L"..\\Resources\\Images\\DDS\\NightPath.dds");
-	RESOURCE_MANAGER->Load<LoadedTexture>(L"Skybox", L"..\\Resources\\Images\\DDS\\Skybox.dds");
+	//RESOURCE_MANAGER->Load<LoadedTexture>(L"Snow_spec", L"..\\Resources\\Images\\DDS\\Areskutan.dds");
+	//RESOURCE_MANAGER->Load<LoadedTexture>(L"Snow_diff", L"..\\Resources\\Images\\DDS\\Areskutan.dds");
+
+	
+	RESOURCE_MANAGER->Load<LoadedTexture>(L"NightCity1_spec", L"..\\Resources\\Images\\DDS\\NightCity1\\NightCity1_spec.dds");
+	RESOURCE_MANAGER->Load<LoadedTexture>(L"NightCity1_diff", L"..\\Resources\\Images\\DDS\\NightCity1\\NightCity1_diff.dds");
+	RESOURCE_MANAGER->Load<LoadedTexture>(L"NightCity2_spec", L"..\\Resources\\Images\\DDS\\NightCity2\\NightCity2_spec.dds");
+	RESOURCE_MANAGER->Load<LoadedTexture>(L"NightCity2_diff", L"..\\Resources\\Images\\DDS\\NightCity2\\NightCity2_diff.dds");
+	RESOURCE_MANAGER->Load<LoadedTexture>(L"NightPath_spec", L"..\\Resources\\Images\\DDS\\NightPath\\NightPath_spec.dds");
+	RESOURCE_MANAGER->Load<LoadedTexture>(L"NightPath_diff", L"..\\Resources\\Images\\DDS\\NightPath\\NightPath_diff.dds");
+	RESOURCE_MANAGER->Load<LoadedTexture>(L"Museum_spec", L"..\\Resources\\Images\\DDS\\Museum\\Museum_spec.dds");
+	RESOURCE_MANAGER->Load<LoadedTexture>(L"Museum_diff", L"..\\Resources\\Images\\DDS\\Museum\\Museum_diff.dds");
+	RESOURCE_MANAGER->Load<LoadedTexture>(L"SnowForest_spec", L"..\\Resources\\Images\\DDS\\SnowForest\\SnowForest_spec.dds");
+	RESOURCE_MANAGER->Load<LoadedTexture>(L"SnowForest_diff", L"..\\Resources\\Images\\DDS\\SnowForest\\SnowForest_diff.dds");
+	RESOURCE_MANAGER->Load<LoadedTexture>(L"DawnField_spec", L"..\\Resources\\Images\\DDS\\DawnField\\DawnField_spec.dds");
+	RESOURCE_MANAGER->Load<LoadedTexture>(L"DawnField_diff", L"..\\Resources\\Images\\DDS\\DawnField\\DawnField_diff.dds");
+	RESOURCE_MANAGER->Load<LoadedTexture>(L"DayLight1_spec", L"..\\Resources\\Images\\DDS\\DayLight1\\DayLight1_spec.dds");
+	RESOURCE_MANAGER->Load<LoadedTexture>(L"DayLight1_diff", L"..\\Resources\\Images\\DDS\\DayLight1\\DayLight1_diff.dds");
+
+	RESOURCE_MANAGER->Load<LUT>(L"LUT_BlueArchitecture", L"..\\Resources\\LUT\\BlueArchitecture.cube");
+	RESOURCE_MANAGER->Load<LUT>(L"LUT_BlueHour", L"..\\Resources\\LUT\\BlueHour.cube");
+	RESOURCE_MANAGER->Load<LUT>(L"LUT_ColdChrome", L"..\\Resources\\LUT\\ColdChrome.cube");
+	RESOURCE_MANAGER->Load<LUT>(L"LUT_CrispAutumn", L"..\\Resources\\LUT\\CrispAutumn.cube");
+	RESOURCE_MANAGER->Load<LUT>(L"LUT_DarkAndSomber", L"..\\Resources\\LUT\\DarkAndSomber.cube");
 
 	// Material
 	shared_ptr<Material> material = make_shared<Material>();
@@ -64,7 +81,7 @@ void LoadMaterialDemo::Construct()
 	RESOURCE_MANAGER->Add(L"Leather", material);
 	
 	// Tank
-	if (1)
+	if (0)
 	{
 		shared_ptr<ClientPawn> clientPawn = make_shared<ClientPawn>("Tank");
 		shared_ptr<StaticMesh> staticMesh = RESOURCE_MANAGER->Get<StaticMesh>(L"Tank");
@@ -72,7 +89,7 @@ void LoadMaterialDemo::Construct()
 		clientPawn->SetStaticMesh(staticMesh);
 		//_clientPawn->GetOrAddTransform()->SetLocalScale(Vec3(0.03f));
 		clientPawn->GetOrAddTransform()->SetLocalScale(Vec3(15.f, 15.f, 15.f));
-		clientPawn->GetOrAddTransform()->SetWorldPosition({ 0.f, 4.f, 0.f });
+		clientPawn->GetOrAddTransform()->SetWorldPosition({ 0.f, 1.f, 0.f });
 		//clientPawn->GetOrAddTransform()->SetWorldRotation({ -0.1f, 0.0f, 0.0f });
 
 		shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"BasicShader.hlsl");
@@ -128,19 +145,20 @@ void LoadMaterialDemo::Construct()
 
 	if (1)
 	{
-		if (0) // 바닥 평면
+		if (1) // 바닥 평면
 		{
 			shared_ptr<Actor> pawn = make_shared<ClientPawn>();
 			pawn->Construct();
 
-			pawn->GetOrAddTransform()->SetLocalScale({ 80.f, 80.f, 80.f });
+			pawn->GetOrAddTransform()->SetLocalScale({ 40.f, 40.f, 40.f });
 			pawn->GetOrAddTransform()->SetLocalRotation({ 3.14f / 2, 0.0f, 0.f });
-			pawn->GetOrAddTransform()->SetWorldPosition({ 0.f, 0.f, 0.f });
+			pawn->GetOrAddTransform()->SetWorldPosition({ 0.f, -3.f, 0.f });
 
 			shared_ptr<BasicMesh> mesh;
 			mesh = RESOURCE_MANAGER->Get<BasicMesh>(L"Quad");
 
-			shared_ptr<Material> mat = RESOURCE_MANAGER->Get<Material>(L"BasicWhite");
+			shared_ptr<Material> mat = RESOURCE_MANAGER->Get<Material>(L"BasicWhite")->Clone();
+			mat->GetDesc()->bGetIBL = 0;
 			pawn->SetBasicMesh(mesh);
 			pawn->SetBasicMaterial(mat);
 			pawn->SetIsCastShadowedActor(false);
@@ -148,7 +166,7 @@ void LoadMaterialDemo::Construct()
 			SCENE->AddActor(pawn);
 		}
 		
-		if (1) // Room
+		if (0) // Room
 		{
 			shared_ptr<Actor> pawn = make_shared<ClientPawn>();
 			pawn->Construct();
@@ -167,9 +185,10 @@ void LoadMaterialDemo::Construct()
 		}
 
 		// 기본 물체
-		if (0)
+		if (1)
 		{
 			// 큐브
+			if (0)
 			{
 				shared_ptr<Actor> pawn = make_shared<ClientPawn>();
 				pawn->Construct();
@@ -180,7 +199,7 @@ void LoadMaterialDemo::Construct()
 
 				shared_ptr<BasicMesh> mesh;
 				mesh = RESOURCE_MANAGER->Get<BasicMesh>(L"Cube");
-				shared_ptr<Material> mat = RESOURCE_MANAGER->Get<Material>(L"BasicRed");
+				shared_ptr<Material> mat = RESOURCE_MANAGER->Get<Material>(L"BasicWhite");
 				pawn->SetBasicMesh(mesh);
 				pawn->SetBasicMaterial(mat);
 
@@ -191,19 +210,19 @@ void LoadMaterialDemo::Construct()
 			if (1)
 			{
 				shared_ptr<Actor> pawn2 = make_shared<ClientPawn>();
-				pawn2->GetOrAddTransform()->SetLocalScale({ 5.f, 5.f, 5.f });
-				pawn2->GetOrAddTransform()->SetWorldPosition({ 0.f, 3.5f, 10.f });
+				pawn2->GetOrAddTransform()->SetLocalScale({ 15.f, 15.f, 15.f });
+				pawn2->GetOrAddTransform()->SetWorldPosition({ 0.f, 4.f, 0.f });
 
 				shared_ptr<BasicMesh> mesh;
 				mesh = RESOURCE_MANAGER->Get<BasicMesh>(L"Sphere");
-				shared_ptr<Material> mat = RESOURCE_MANAGER->Get<Material>(L"BasicYellow");
+				shared_ptr<Material> mat = RESOURCE_MANAGER->Get<Material>(L"BasicWhite");
 				pawn2->SetBasicMesh(mesh);
 				pawn2->SetBasicMaterial(mat);
 
 				SCENE->AddActor(pawn2);
 			}
 
-			if (1)
+			if (0)
 			{
 				shared_ptr<Actor> pawn2 = make_shared<ClientPawn>();
 				pawn2->GetOrAddTransform()->SetLocalScale({ 3.f, 3.f, 3.f });
@@ -220,9 +239,8 @@ void LoadMaterialDemo::Construct()
 		}
 	}
 
-	// IBL
-	//SCENE->CreateEnvironment(L"Night");
-	//SCENE->SetEnvLightTexture(L"Night");
+	// PostProcess
+	//SCENE->AddFilter(EFilterType::Bloom);
 	
 }
 

@@ -3,9 +3,9 @@
 
 void GeometryCreator::CreateCubeMap(shared_ptr<Geometry<VertexData>> geometry, uint32 width)
 {
-	const float w = width;
-	const float h = width;
-	const float d = width;
+	const float w = static_cast<float>(width);
+	const float h = w;
+	const float d = w;
 
 	vector<VertexData> vtx(24);
 
@@ -92,13 +92,13 @@ void GeometryCreator::CreateQuad(shared_ptr<Geometry<VertexUVData>> geometry)
 	vector<VertexUVData> vertices;
 	vertices.resize(4);
 
-	vertices[0].position = Vec3(-0.5f, -0.5f, 0.f);
+	vertices[0].position = Vec3(-1.f, -1.f, 0.f);
 	vertices[0].uv = Vec2(0.f, 1.f);
-	vertices[1].position = Vec3(-0.5f, 0.5f, 0.f);
+	vertices[1].position = Vec3(-1.f, 1.f, 0.f);
 	vertices[1].uv = Vec2(0.f, 0.f);
-	vertices[2].position = Vec3(0.5f, -0.5f, 0.f);
+	vertices[2].position = Vec3(1.f, -1.f, 0.f);
 	vertices[2].uv = Vec2(1.f, 1.f);
-	vertices[3].position = Vec3(0.5f, 0.5f, 0.f);
+	vertices[3].position = Vec3(1.f, 1.f, 0.f);
 	vertices[3].uv = Vec2(1.f, 0.f);
 
 	geometry->SetVertices(vertices);

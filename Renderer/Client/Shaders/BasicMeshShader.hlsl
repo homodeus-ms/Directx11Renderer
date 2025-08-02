@@ -18,7 +18,7 @@ MeshOutput VS(VertexTangentInput input)
 float4 PS(MeshOutput input) : SV_Target
 {
     float3 toEye = normalize(CameraPosition - input.worldPosition);
-    float3 limLightNormal = normalize(input.normal);
+    float3 inputNormal = normalize(input.normal);
     ComputeNormalMapping(input.normal, input.tangent, input.uv);
     input.normal = normalize(input.normal);
     
@@ -35,13 +35,34 @@ float4 PS(MeshOutput input) : SV_Target
         case MATERIAL_TYPE_DEFAULT:
             break;
         case MATERIAL_TYPE_LIM_LIGHT:
-            float4 limLight = ComputeRimLight(false, DEFAULT_LIM_LIGHT_COLOR, toEye, limLightNormal);
+            float4 limLight = ComputeRimLight(false, DEFAULT_LIM_LIGHT_COLOR, toEye, inputNormal);
             litColor += limLight;
             break;
         case MATERIAL_TYPE_TOON:
             return GetToonShadingByGlobalLight(litColor, input.normal, input.uv);
         default:
             return float4(0.f, 1.f, 0.f, 1.f);
+    }
+    
+    // Env Lighting
+    if (bEnvLightUsing == 1 && Material.bGetIBL == 1)
+    {
+        float3 viewR = reflect(-toEye, inputNormal);
+        float4 envSpec = TextureCubeSpec.Sample(LinearSampler, viewR);
+        envSpec *= pow((envSpec.r + envSpec.g + envSpec.b) / 3.f, 2.f);
+        envSpec.xyz *= Material.specular.xyz;
+        
+        float4 envDiff = TextureCubeDiff.Sample(LinearSampler, inputNormal);
+        envDiff.xyz *= Material.diffuse.xyz;
+        
+        float4 envColor = envSpec + envDiff; 
+        
+        // TEMP : IBL Check 
+        return float4(envColor.xyz, 1.f);
+        
+        litColor = litColor * 0.8 + envColor * 0.2;
+        
+        return float4(litColor.xyz, 1.f);
     }
     
     return litColor;

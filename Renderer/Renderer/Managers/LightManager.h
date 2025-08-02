@@ -35,7 +35,9 @@ private:
 
 	shared_ptr<LightActor> _globalLightCache;
 	
-	shared_ptr<LoadedTexture> _envTexture;
-	shared_ptr<struct SRVBindingInfo> _envBindingInfo;
+	shared_ptr<LoadedTexture> _envTextureSpec;
+	shared_ptr<LoadedTexture> _envTextureDiff;
+	shared_ptr<struct SRVBindingInfo> _envSpecBindingInfo;
+	shared_ptr<struct SRVBindingInfo> _envDiffBindingInfo;
 };
 
