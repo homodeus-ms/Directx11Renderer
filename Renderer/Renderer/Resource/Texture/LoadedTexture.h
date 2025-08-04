@@ -14,10 +14,11 @@ public:
 	Vec2 GetSize() const { return _size; }
 
 	const DirectX::ScratchImage& GetInfo() const { return _img; }
-
+	
 private:
 	
 	Vec2 _size = { 0.f, 0.f };
 	DirectX::ScratchImage _img = {};
+	ComPtr<ID3D11Texture2D> _texture{};
 };
 

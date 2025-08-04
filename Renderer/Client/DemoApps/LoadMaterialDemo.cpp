@@ -58,10 +58,18 @@ void LoadMaterialDemo::Construct()
 	RESOURCE_MANAGER->Load<LoadedTexture>(L"DayLight1_diff", L"..\\Resources\\Images\\DDS\\DayLight1\\DayLight1_diff.dds");
 
 	RESOURCE_MANAGER->Load<LUT>(L"LUT_BlueArchitecture", L"..\\Resources\\LUT\\BlueArchitecture.cube");
-	RESOURCE_MANAGER->Load<LUT>(L"LUT_BlueHour", L"..\\Resources\\LUT\\BlueHour.cube");
-	RESOURCE_MANAGER->Load<LUT>(L"LUT_ColdChrome", L"..\\Resources\\LUT\\ColdChrome.cube");
+	//RESOURCE_MANAGER->Load<LUT>(L"LUT_BlueHour", L"..\\Resources\\LUT\\BlueHour.cube");
+	//RESOURCE_MANAGER->Load<LUT>(L"LUT_ColdChrome", L"..\\Resources\\LUT\\ColdChrome.cube");
 	RESOURCE_MANAGER->Load<LUT>(L"LUT_CrispAutumn", L"..\\Resources\\LUT\\CrispAutumn.cube");
 	RESOURCE_MANAGER->Load<LUT>(L"LUT_DarkAndSomber", L"..\\Resources\\LUT\\DarkAndSomber.cube");
+	RESOURCE_MANAGER->Load<LUT>(L"LUT_Waves", L"..\\Resources\\LUT\\Waves.cube");
+	RESOURCE_MANAGER->Load<LUT>(L"LUT_HardBoost", L"..\\Resources\\LUT\\HardBoost.cube");
+	RESOURCE_MANAGER->Load<LUT>(L"LUT_LongBeachMorning", L"..\\Resources\\LUT\\LongBeachMorning.cube");
+	RESOURCE_MANAGER->Load<LUT>(L"LUT_LushGreen", L"..\\Resources\\LUT\\LushGreen.cube");
+	//RESOURCE_MANAGER->Load<LUT>(L"LUT_MagicHour", L"..\\Resources\\LUT\\MagicHour.cube");
+	//RESOURCE_MANAGER->Load<LUT>(L"LUT_NaturalBoost", L"..\\Resources\\LUT\\NaturalBoost.cube");
+	RESOURCE_MANAGER->Load<LUT>(L"LUT_OrangeAndBlue", L"..\\Resources\\LUT\\OrangeAndBlue.cube");
+	RESOURCE_MANAGER->Load<LUT>(L"LUT_SoftBlackAndWhite", L"..\\Resources\\LUT\\SoftBlackAndWhite.cube");
 
 	// Material
 	shared_ptr<Material> material = make_shared<Material>();
@@ -215,7 +223,7 @@ void LoadMaterialDemo::Construct()
 
 				shared_ptr<BasicMesh> mesh;
 				mesh = RESOURCE_MANAGER->Get<BasicMesh>(L"Sphere");
-				shared_ptr<Material> mat = RESOURCE_MANAGER->Get<Material>(L"BasicWhite");
+				shared_ptr<Material> mat = RESOURCE_MANAGER->Get<Material>(L"BasicWhite")->Clone();
 				pawn2->SetBasicMesh(mesh);
 				pawn2->SetBasicMaterial(mat);
 

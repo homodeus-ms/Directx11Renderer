@@ -14,7 +14,7 @@ public:
 	virtual const vector<D3D11_INPUT_ELEMENT_DESC>& GetInputLayoutDesc() const override { return _geometry->GetInputDesc(); }
 
 protected:
-	enum { DEFAULT_CUBE_MAP_SIZE = 50 };
+	enum { DEFAULT_CUBE_MAP_SIZE = 300 };
 	virtual void CreateBuffers() override;
 
 private:

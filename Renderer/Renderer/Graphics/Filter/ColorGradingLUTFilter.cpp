@@ -12,6 +12,11 @@ ColorGradingLUTFilter::~ColorGradingLUTFilter()
 {
 }
 
+void ColorGradingLUTFilter::Tick()
+{
+	_filterData.strength = _LutMixRatio;
+}
+
 void ColorGradingLUTFilter::SetNewLUT(const wstring& newLUTName)
 {
 	if (_LUTName == newLUTName)

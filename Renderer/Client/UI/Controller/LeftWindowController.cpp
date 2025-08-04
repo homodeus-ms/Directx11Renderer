@@ -641,17 +641,17 @@ void LeftWindowController::DrawFilterControls()
 
 		if (_bLUTFilterOn)
 		{
-			_LUTDelegateNum = GET_SINGLE(FilterFactory)->_onCombineFilterCreated.BindObject(
-				shared_from_this(), &LeftWindowController::OnLUTFilterCreated);
+			_LUTDelegateNum = GET_SINGLE(FilterFactory)->_onFilterWithBlendFactorCreated.BindObject(
+				shared_from_this(), &LeftWindowController::OnFilterWithBlendFactorCreated);
 
 			SCENE->AddFilter(EFilterType::LUT_ColorGrading);
-			SCENE->SetLUTType(Utils::ToWString(_LUTNames[0]));
+			LUDSelected();
 		}
 		else
 		{
-			GET_SINGLE(FilterFactory)->_onCombineFilterCreated.RemoveDelegate(_LUTDelegateNum);
+			GET_SINGLE(FilterFactory)->_onFilterWithBlendFactorCreated.RemoveDelegate(_LUTDelegateNum);
 			SCENE->RemoveFilter(EFilterType::LUT_ColorGrading);
-			_LUTStrength = nullptr;
+			_LUTMixRatio = nullptr;
 		}
 	}
 	if (_bLUTFilterOn && ImGui::CollapsingHeader("LUT Filter"))
@@ -662,13 +662,14 @@ void LeftWindowController::DrawFilterControls()
 		}
 
 		ImGui::PushItemWidth(180);
-		ImGui::SliderFloat("LUTStrength", _LUTStrength, 0.0f, 3.0f, SLIDER_W_180_MIN_MAX_LABEL.c_str());
+		ImGui::SliderFloat("LUT MIX", _LUTMixRatio, 0.0f, 1.0f, SLIDER_W_180_MIN_MAX_LABEL.c_str());
 	}
 }
 
 void LeftWindowController::LUDSelected()
 {
-	SCENE->SetLUTType(Utils::ToWString(_LUTNames[_LUTSelected]));
+	string resourceName = string("LUT_") + _LUTNames[_LUTSelected];
+	SCENE->SetLUTType(Utils::ToWString(resourceName));
 }
 
 void LeftWindowController::OnBloomFilterCreated(float* bloomRange, float* filterStrength)
@@ -677,9 +678,9 @@ void LeftWindowController::OnBloomFilterCreated(float* bloomRange, float* filter
 	_bloomStrength = filterStrength;
 }
 
-void LeftWindowController::OnLUTFilterCreated(float* filterStrength)
+void LeftWindowController::OnFilterWithBlendFactorCreated(float* blendFactor)
 {
-	_LUTStrength = filterStrength;
+	_LUTMixRatio = blendFactor;
 }
 
 

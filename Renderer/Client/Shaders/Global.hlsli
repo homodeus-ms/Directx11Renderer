@@ -164,5 +164,14 @@ void Normalize(inout float3 normal, inout float3 tangent)
     tangent = normalize(tangent);
 }
 
+float GetMipLevel(float3 worldPosition)
+{
+    const float dist = length(CameraPosition - worldPosition);
+    const float distMin = 30.f;
+    const float distMax = 80.f;
+    const float lod = 10.f * saturate((dist - distMin) / (distMax - distMin));
+    return lod;
+}
+
 
 #endif /* STRUCT_HLSLI */

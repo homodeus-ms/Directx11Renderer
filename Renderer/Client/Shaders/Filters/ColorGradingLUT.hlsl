@@ -10,5 +10,6 @@ float4 PS(VertexUVOutput input) : SV_Target
 {
     float3 baseColor = FilterTargetTexture.Sample(FilterSampler, input.uv).xyz;
     float3 graded = ApplyColorGrading(baseColor);
-    return float4(graded, 1.0f);
+    float3 mixColor = baseColor * (1.f - strength) + graded * (strength);
+    return float4(mixColor, 1.0f);
 }

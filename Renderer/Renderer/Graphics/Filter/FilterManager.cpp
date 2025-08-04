@@ -74,8 +74,8 @@ void FilterManager::RemoveFilter(EFilterType type)
 		list<Filter*> temp;
 		temp.push_back(_filters.back());
 		_filters.pop_back();
-		temp.push_front(_filters.back());
-		_filters.pop_back();
+		//temp.push_front(_filters.back());
+		//_filters.pop_back();
 
 		_removableFilters.swap(_filters);
 		_filters.splice(_filters.end(), temp);
@@ -85,8 +85,8 @@ void FilterManager::RemoveFilter(EFilterType type)
 		// LUT, Combine
 		_removableFilters.push_back(_filters.back());
 		_filters.pop_back();
-		_removableFilters.push_back(_filters.back());
-		_filters.pop_back();
+		//_removableFilters.push_back(_filters.back());
+		//_filters.pop_back();
 	}
 
 	SendRemovableFilters();
@@ -138,12 +138,11 @@ void FilterManager::RenderFilters()
 	for (auto it = std::next(_filters.begin()); it != _filters.end(); ++it)
 	{
 		Filter* filter = *it;
-
 		filter->Tick();
-
 		Filter* prevFilter = *std::prev(it);
+		EFilterType filterType = filter->GetFilterType();
 
-		if (filter->GetFilterType() == EFilterType::Combine)
+		if (filterType == EFilterType::Combine || filterType == EFilterType::LUT_ColorGrading)
 		{
 			filter->SetShaderResources({ prevFilter->GetSRV(), inputSRV });
 			inputSRV = filter->GetSRV();

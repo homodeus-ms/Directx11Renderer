@@ -21,7 +21,7 @@ public:
 	void CreateLeftWindow();
 	void OnLightManagerCreatedCallback();
 	void OnBloomFilterCreated(float* bloomRange, float* filterStrength);
-	void OnLUTFilterCreated(float* filterStrength);
+	void OnFilterWithBlendFactorCreated(float* blendFactor);
 
 private:
 	void CacheVariables();
@@ -122,11 +122,16 @@ private:
 	float* _bloomStrength = nullptr;
 	uint32 _bloomDelegateNum;
 
-	float* _LUTStrength = nullptr;
+	float* _LUTMixRatio = nullptr;
 	bool _bLUTFilterOn = false;
 	uint32 _LUTDelegateNum;
 	int32 _LUTSelected = 0;
-	vector<const char*> _LUTNames = { "LUT_BlueArchitecture", "LUT_BlueHour", "LUT_ColdChrome" , "LUT_CrispAutumn" , "LUT_DarkAndSomber" };
+
+	vector<const char*> _LUTNames = { 
+		"BlueArchitecture", "CrispAutumn" , 
+		"DarkAndSomber", "Waves", "HardBoost", "LongBeachMorning",
+		"LushGreen", "OrangeAndBlue", "SoftBlackAndWhite"
+	};
 	
 };
 

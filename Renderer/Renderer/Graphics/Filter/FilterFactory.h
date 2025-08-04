@@ -4,7 +4,7 @@
 class Filter;
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(OnBloomFilterCreatedDelegate, float* /* BloomRange */, float* /* FilterStrength*/);
-DECLARE_MULTICAST_DELEGATE_OneParam(OnCombineFilterCreatedDelegate, float* /* FilterStrength */);
+DECLARE_MULTICAST_DELEGATE_OneParam(OnFilterWithBlendFactorCreatedDelegate, float* /* BlendFactor */);
 
 class FilterFactory
 {
@@ -18,7 +18,8 @@ public:
 	//OnBloomPreFilterCreatedDelegate& GetBloomPreFilterCreatedDelegate() { return _onBloomPreFilterCreated; }
 	//OnCombineFilterCreatedDelegate& GetCombineFilterCreatedDelegate() { return _onCombineFilterCreated; }
 	OnBloomFilterCreatedDelegate _onBloomFilterCreated;
-	OnCombineFilterCreatedDelegate _onCombineFilterCreated;
+	OnFilterWithBlendFactorCreatedDelegate _onFilterWithBlendFactorCreated;
+	
 	
 	Filter* InitCreatedFilter(Filter* newFilter, const wstring& psShaderName, uint32 viewportX = VIEW_X, uint32 viewportY = VIEW_Y);
 	Filter* GetCopyFilter();

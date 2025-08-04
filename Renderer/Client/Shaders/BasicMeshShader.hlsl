@@ -51,14 +51,11 @@ float4 PS(MeshOutput input) : SV_Target
         float4 envSpec = TextureCubeSpec.Sample(LinearSampler, viewR);
         envSpec *= pow((envSpec.r + envSpec.g + envSpec.b) / 3.f, 2.f);
         envSpec.xyz *= Material.specular.xyz;
-        
+         
         float4 envDiff = TextureCubeDiff.Sample(LinearSampler, inputNormal);
         envDiff.xyz *= Material.diffuse.xyz;
-        
+        envDiff *= DiffuseMap.SampleLevel(LinearSampler, input.uv, 11.f);
         float4 envColor = envSpec + envDiff; 
-        
-        // TEMP : IBL Check 
-        return float4(envColor.xyz, 1.f);
         
         litColor = litColor * 0.8 + envColor * 0.2;
         

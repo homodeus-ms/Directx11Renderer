@@ -22,8 +22,8 @@ void FilterFactory::CreateFilter(EFilterType type, OUT list<Filter*>& filters)
 	case EFilterType::LUT_ColorGrading:
 	{ 
 		filters.push_back(GetLUTFilter()); 
-		filters.push_back(GetCombineFilter());
-		_onCombineFilterCreated.Broadcast(static_cast<CombineFilter*>(filters.back())->GetFilterStrengthPtr());
+		_onFilterWithBlendFactorCreated.Broadcast(static_cast<ColorGradingLUTFilter*>(filters.back())->GetLUTMixRatioPtr());
+		
 		break; 
 	}
 	case EFilterType::Combine: break;
@@ -131,7 +131,7 @@ Filter* FilterFactory::GetCombineFilter()
 Filter* FilterFactory::GetLUTFilter()
 {
 	Filter* filter = new ColorGradingLUTFilter();
-	return InitCreatedFilter(filter, L"Filters/ColorGradingLUT.hlsl");
+	return InitCreatedFilter(filter, L"Filters/ColorGradingLUT.hlsl", GWinSizeX, GWinSizeY);
 }
 
 

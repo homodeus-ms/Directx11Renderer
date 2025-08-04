@@ -163,7 +163,7 @@ float ComputePointLightShadowFactor(float3 lightPos, float3 worldPosition, float
     return shadowFactor;
 }
 
-float4 ComputeDirectionalLight(float3 normal, float2 uv, float3 worldPosition)
+float4 ComputeDirectionalLight(float3 normal, float2 uv, float3 worldPosition, float mipLevel)
 {
     if (GlobalLight.isOn == 0)
         return float4(0.f, 0.f, 0.f, 0.f);
@@ -173,7 +173,7 @@ float4 ComputeDirectionalLight(float3 normal, float2 uv, float3 worldPosition)
     float4 specular = { 0.f, 0.f, 0.f, 0.f };
     float4 emissive = { 0.f, 0.f, 0.f, 0.f };
  
-    float4 sampledColor = DiffuseMap.Sample(LinearSampler, uv);
+    float4 sampledColor = DiffuseMap.SampleLevel(LinearSampler, uv, mipLevel);
     
     // ambient
     float4 ambientFactor = GlobalLight.ambient * Material.ambient;
@@ -203,7 +203,7 @@ float4 ComputeDirectionalLight(float3 normal, float2 uv, float3 worldPosition)
     return ambient + (diffuse + specular) * shadowFactor;
 }
 
-float4 ComputeSpotLight(SpotLightDesc L, float3 normal, float2 uv, float3 worldPosition)
+float4 ComputeSpotLight(SpotLightDesc L, float3 normal, float2 uv, float3 worldPosition, float mipLevel)
 {
     if (L.isOn = 0)
         return float4(0.f, 0.f, 0.f, 0.f);
@@ -225,7 +225,7 @@ float4 ComputeSpotLight(SpotLightDesc L, float3 normal, float2 uv, float3 worldP
     float4 emissive = { 0.f, 0.f, 0.f, 0.f };
    
     // Ambient
-    float4 sampledColor = DiffuseMap.Sample(LinearSampler, uv);
+    float4 sampledColor = DiffuseMap.SampleLevel(LinearSampler, uv, mipLevel);
     ambient = sampledColor * L.ambient * Material.ambient;
     
     // Diffuse
@@ -260,7 +260,7 @@ float4 ComputeSpotLight(SpotLightDesc L, float3 normal, float2 uv, float3 worldP
     return (ambient + diffuse + specular) * shadowFactor;
 }
 
-float4 ComputePointLight(PointLightDesc L, float3 normal, float2 uv, float3 worldPosition)
+float4 ComputePointLight(PointLightDesc L, float3 normal, float2 uv, float3 worldPosition, float mipLevel)
 {
     if (L.isOn = 0)
         return float4(0.f, 0.f, 0.f, 0.f);
@@ -281,7 +281,7 @@ float4 ComputePointLight(PointLightDesc L, float3 normal, float2 uv, float3 worl
     float4 emissive = { 0.f, 0.f, 0.f, 0.f };
    
     // Ambient
-    float4 sampledColor = DiffuseMap.Sample(LinearSampler, uv);
+    float4 sampledColor = DiffuseMap.SampleLevel(LinearSampler, uv, mipLevel);
     ambient = sampledColor * L.ambient * Material.ambient;
     
     // Diffuse
@@ -336,19 +336,21 @@ void ComputeNormalMapping(inout float3 worldNormal, float3 worldTangent, float2 
 
 float4 CalculateLitColor(in MeshOutput input)
 {
-    float4 directionalColor = ComputeDirectionalLight(input.normal, input.uv, input.worldPosition);
+    float mipLevel = GetMipLevel(input.worldPosition);
+    
+    float4 directionalColor = ComputeDirectionalLight(input.normal, input.uv, input.worldPosition, mipLevel);
     
     float4 spotColor = { 0.0f, 0.0f, 0.0f, 1.f };
     for (uint i = 0; i < SpotlightCount; ++i)
     {
-        spotColor += ComputeSpotLight(SpotLights[i], input.normal, input.uv, input.worldPosition);
+        spotColor += ComputeSpotLight(SpotLights[i], input.normal, input.uv, input.worldPosition, mipLevel);
         
     }
     
     float4 pointColor = { 0.f, 0.f, 0.f, 0.f };
     for (uint j = 0; j < PointlightCount; ++j)
     {
-        pointColor += ComputePointLight(PointLights[j], input.normal, input.uv, input.worldPosition);
+        pointColor += ComputePointLight(PointLights[j], input.normal, input.uv, input.worldPosition, mipLevel);
     }
     
     float4 color = directionalColor + spotColor + pointColor;

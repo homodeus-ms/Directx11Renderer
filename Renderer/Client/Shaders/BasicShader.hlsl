@@ -54,8 +54,13 @@ float4 PS(MeshOutput input) : SV_Target
         float4 envDiff = TextureCubeDiff.Sample(LinearSampler, inputNormal);
         
         envSpec *= pow((envSpec.x + envSpec.y + envSpec.z) / 3.f, 1.f);
+        
         envSpec *= float4(Material.specular.xyz, 1.f);
         envDiff *= float4(Material.diffuse.xyz, 1.f);
+        
+        const float mipLevel = GetMipLevel(input.worldPosition);
+        envSpec *= DiffuseMap.SampleLevel(LinearSampler, input.uv, mipLevel);
+        envDiff *= DiffuseMap.SampleLevel(LinearSampler, input.uv, mipLevel);
         
         float4 envColor = envSpec + envDiff;
         
