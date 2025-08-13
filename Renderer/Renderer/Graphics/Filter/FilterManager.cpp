@@ -10,12 +10,19 @@ FilterManager::~FilterManager()
 {
 	if (_filterFactory)
 		_filterFactory->RemoveFilter(_filters);
+
+	SAFE_DELETE(_toneMappingFilter);
 }
 
 void FilterManager::Construct()
 {
 	_filterFactory = GET_SINGLE(FilterFactory);
 	_filterStates = PipelineState::GetFilterStates();
+
+	list<Filter*> temp;
+	_filterFactory->CreateFilter(EFilterType::ToneMapping, temp);
+	_toneMappingFilter = temp.back();
+	_toneMappingFilter->SetRenderTargets({ GRAPHICS->GetBackBufferRTV() });
 }
 
 void FilterManager::AddFilter(EFilterType type) 
@@ -112,6 +119,14 @@ void FilterManager::SetLUTType(const wstring& LUTName)
 	static_cast<ColorGradingLUTFilter*>(filter)->SetNewLUT(LUTName);
 }
 
+void FilterManager::GetToneMappingPtrs(OUT float** exposure, OUT float** gamma)
+{
+	if (_toneMappingFilter)
+	{
+		_filterFactory->GetToneMappingValuePtrs(_toneMappingFilter, exposure, gamma);
+	}
+}
+
 void FilterManager::SendRemovableFilters()
 {
 	_filterFactory->RemoveFilter(_removableFilters);
@@ -120,20 +135,25 @@ void FilterManager::SendRemovableFilters()
 
 void FilterManager::RenderFilters()
 {
-	if (_filters.empty() || !_bFilterOn)
-		return;
-
 	CONTEXT->IASetPrimitiveTopology(_filterStates->_topology);
 	CONTEXT->RSSetState(_filterStates->_rsState.Get());
 	CONTEXT->PSSetSamplers(0, 1, _filterStates->_samplerState.GetAddressOf());
 
-	ComPtr<ID3D11ShaderResourceView> inputSRV = GRAPHICS->GetBackBufferSRV();
+	ComPtr<ID3D11ShaderResourceView> inputSRV = GRAPHICS->GetResolvedSRV();
+
+	if (_filters.empty() || !_bFilterOn)
+	{
+		// Handle Only ToneMapping Filter
+		assert(_toneMappingFilter != nullptr);
+		_toneMappingFilter->SetShaderResources({ inputSRV });
+		_toneMappingFilter->SetRenderTargets({ GRAPHICS->GetBackBufferRTV() });
+		_toneMappingFilter->Render();
+		return;
+	}
 
 	Filter* startFilter = _filters.front();
 	startFilter->SetShaderResources({ inputSRV });
 	startFilter->Render();
-	Filter* lastCombineFilter = _filters.back();
-	lastCombineFilter->SetRenderTargets({ GRAPHICS->GetBackBufferRTV() });
 
 	for (auto it = std::next(_filters.begin()); it != _filters.end(); ++it)
 	{
@@ -145,7 +165,7 @@ void FilterManager::RenderFilters()
 		if (filterType == EFilterType::Combine || filterType == EFilterType::LUT_ColorGrading)
 		{
 			filter->SetShaderResources({ prevFilter->GetSRV(), inputSRV });
-			inputSRV = filter->GetSRV();
+			//inputSRV = filter->GetSRV();
 		}
 		else
 		{
@@ -154,4 +174,7 @@ void FilterManager::RenderFilters()
 
 		filter->Render();
 	}
+
+	_toneMappingFilter->SetShaderResources({_filters.back()->GetSRV()});
+	_toneMappingFilter->Render();
 }

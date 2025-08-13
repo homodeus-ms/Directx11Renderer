@@ -8,13 +8,24 @@ MeshOutput VS(VertexTangentInput input)
     
     //output.position = mul(input.position, BoneTransforms[BoneIndex]);
     //output.position = mul(output.position, W);
-    output.position = mul(input.position, W);
-    output.worldPosition = output.position.xyz;
     
-    output.position = mul(output.position, VP);
+    float4 pos = mul(input.position, W);
+    
     output.uv = input.uv;
     output.normal = mul(input.normal, (float3x3) W);
+    output.normal = normalize(output.normal);
     output.tangent = mul(input.tangent, (float3x3) W);
+    
+    if (Material.bUseHeightMap == 1)
+    {
+        float height = HeightMap.SampleLevel(LinearSampler, input.uv, 0).r;
+        height = height * 2.f - 1.f;
+        pos += float4(output.normal * g_heightScale * height, 0.f);
+    }
+    
+    output.worldPosition = pos.xyz;
+    output.position = mul(pos, VP);
+    
     return output;
 }
 
@@ -25,11 +36,28 @@ float4 PS(MeshOutput input) : SV_Target
     ComputeNormalMapping(input.normal, input.tangent, input.uv);
     input.normal = normalize(input.normal);
     
-    float4 litColor = BLACK;
-    bool bUnLit = Material.bUnLit == 0 ? false : true;
+    float3 albedo = Material.bUseAlbedoMap ? AlbedoMap.Sample(LinearSampler, input.uv).xyz : Material.diffuse.xyz;
+    float AO = Material.bUseAOMap ? AOMap.Sample(LinearSampler, input.uv).r : 1.f;
+    float metallic = Material.bUseMetallicRoughnessMap ? MetallicRoughnessMap.Sample(LinearSampler, input.uv).b * Material.metallic : Material.metallic;
+    float roughness = Material.bUseMetallicRoughnessMap ? MetallicRoughnessMap.Sample(LinearSampler, input.uv).g * Material.roughness : Material.roughness;
+    float3 emissive = Material.bUseEmissiveMap ? EmissiveMap.Sample(LinearSampler, input.uv).xyz : Material.emissive.xyz;
     
-    if (!bUnLit)
-        litColor = CalculateLitColor(input);
+    float3 iblColor = { 0.f, 0.f, 0.f };
+    float3 litColor = { 0.f, 0.f, 0.f };
+    if (Material.MaterialType == MATERIAL_TYPE_PBR)
+    {
+        iblColor = CalculatePBRIBLLighting(albedo, AO, metallic, roughness, input.normal, toEye);
+        litColor = CalculatePBRLitColor(input, albedo, metallic, roughness).xyz;
+    }
+    else
+    {
+        iblColor = CalculateDefaultIBLLighting(albedo, input.worldPosition, input.normal, toEye, input.uv);
+        litColor = CalculateDefaultLitColor(input, albedo).xyz;
+    }
+    
+    float4 outColor = float4(iblColor * 0.5f + litColor * 1.5f, 1.f);
+    outColor = clamp(outColor, 0.0, 1000.0);
+    return outColor;
     
     int matType = Material.MaterialType;
     switch (matType)
@@ -46,28 +74,7 @@ float4 PS(MeshOutput input) : SV_Target
             return float4(0.f, 1.f, 0.f, 1.f);
     }
     
-    // Env Lighting
-    if (bEnvLightUsing == 1 && Material.bGetIBL == 1)
-    {
-        float3 viewR = reflect(-toEye, inputNormal);
-        float4 envSpec = TextureCubeSpec.Sample(LinearSampler, viewR);
-        float4 envDiff = TextureCubeDiff.Sample(LinearSampler, inputNormal);
-        
-        envSpec *= pow((envSpec.x + envSpec.y + envSpec.z) / 3.f, 1.f);
-        
-        envSpec *= float4(Material.specular.xyz, 1.f);
-        envDiff *= float4(Material.diffuse.xyz, 1.f);
-        
-        const float mipLevel = GetMipLevel(input.worldPosition);
-        envSpec *= DiffuseMap.SampleLevel(LinearSampler, input.uv, mipLevel);
-        envDiff *= DiffuseMap.SampleLevel(LinearSampler, input.uv, mipLevel);
-        
-        float4 envColor = envSpec + envDiff;
-        
-        litColor = litColor * 0.8f + envColor * 0.2f;
-        return float4(litColor.xyz, 1.f); 
-    }
     
-    return litColor;
+    return float4(litColor, 1.f);
     
 }

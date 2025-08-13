@@ -6,6 +6,9 @@
 #include "Components/CameraComponent.h"
 #include "Components/LightComponent/LightComponent.h"
 #include "LightActor.h"
+#include "Resource/BasicMesh/BasicMesh.h"
+#include "Resource/StaticMesh.h"
+#include "Resource/SkeletalMesh.h"
 
 Actor::Actor(EActorType actorType, const string& name)
 	: _actorType(actorType)
@@ -98,6 +101,11 @@ void Actor::RenderShadowMap(bool bForPointLight, int32 instanceCount)
 		_renderer->RenderDepthOnly(bForPointLight, instanceCount);
 }
 
+void Actor::RenderDrawNormal()
+{
+	_renderer->RenderDrawNormal();
+}
+
 
 shared_ptr<Component> Actor::GetFixedComponent(EComponentType type)
 {
@@ -147,10 +155,10 @@ bool Actor::IsRenderedActor()
 	return _bIsRenderedActor;
 }
 
-vector<shared_ptr<Material>> Actor::GetMaterials()
+vector<shared_ptr<MaterialBase>> Actor::GetMaterials()
 {
 	if (!IsRenderedActor())
-		return vector<shared_ptr<Material>>();
+		return vector<shared_ptr<MaterialBase>>();
 
 	return _renderer->GetMaterials();
 }
@@ -158,16 +166,18 @@ vector<shared_ptr<Material>> Actor::GetMaterials()
 void Actor::SetBasicMesh(const shared_ptr<BasicMesh>& mesh)
 {
 	// TODO : Default Basic Mesh 처리를 어떻게 할지?
+	_meshType = mesh->GetType();
 	GetOrAddBasicMeshRenderer()->SetBasicMesh(mesh);
 }
 
-void Actor::SetBasicMaterial(const shared_ptr<Material>& material)
+void Actor::SetBasicMaterial(const shared_ptr<MaterialBase>& material)
 {
 	GetOrAddBasicMeshRenderer()->SetBasicMaterial(material);
 }
 
 void Actor::SetStaticMesh(const shared_ptr<StaticMesh>& staticMesh)
 {
+	_meshType = staticMesh->GetType();
 	GetOrAddStaticMeshRenderer()->SetStaticMesh(staticMesh);
 }
 
@@ -205,3 +215,4 @@ shared_ptr<StaticMeshRenderer> Actor::GetOrAddStaticMeshRenderer()
 
 	return static_pointer_cast<StaticMeshRenderer>(staticMeshRenderer);
 }
+

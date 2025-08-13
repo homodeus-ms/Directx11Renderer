@@ -10,6 +10,7 @@ class RenderComponentBase;
 class BasicMeshRenderer;
 class StaticMeshRenderer;
 class StaticMesh;
+class MaterialBase;
 
 enum class EActorType : uint8
 {
@@ -18,6 +19,7 @@ enum class EActorType : uint8
 	CameraActor,
 	LightActor,
 	DebugActor,
+	ReflectActor,
 };
 
 class Actor : public enable_shared_from_this<Actor>
@@ -34,8 +36,10 @@ public:
 
 	void Render();
 	void RenderShadowMap(bool bForPointLight, int32 instanceCount = 0);
+	void RenderDrawNormal();
 
 	EActorType GetActorType() const { return _actorType; }
+	EResourceType GetMeshType() const { return _meshType; }
 	const string& GetName() const { return _actorName; }
 
 	// Component
@@ -46,10 +50,10 @@ public:
 	bool IsRenderedActor();
 
 	// Mesh, Material
-	vector<shared_ptr<Material>> GetMaterials();
+	vector<shared_ptr<MaterialBase>> GetMaterials();
 
 	void SetBasicMesh(const shared_ptr<BasicMesh>& mesh);
-	void SetBasicMaterial(const shared_ptr<Material>& material);
+	void SetBasicMaterial(const shared_ptr<MaterialBase>& material);
 	void SetStaticMesh(const shared_ptr<StaticMesh>& staticMesh);
 	void ChangeMaterialType(EMaterialType type);
 	shared_ptr<BasicMeshRenderer> GetOrAddBasicMeshRenderer();
@@ -63,6 +67,10 @@ public:
 	bool IsCastShadowedActor() { return _bCastShadow; }
 	void SetIsCastShadowedActor(bool bShadowed) { _bCastShadow = bShadowed; }
 
+	// Draw Normal For Debug
+	bool ShouldDrawNormal() { return _bDrawNormal; }
+	void SetDrawNormal(bool bDraw) { _bDrawNormal = bDraw; };
+
 protected:
 
 	array<shared_ptr<Component>, FIXED_COMPONENT_COUNT> _components;
@@ -71,11 +79,13 @@ protected:
 	shared_ptr<RenderComponentBase> _renderer = nullptr;
 
 	EActorType _actorType;
+	EResourceType _meshType{};
 	string _actorName{};
 
 private:
 	bool _bCastShadow = true;
 	bool _bTransformChanged = true;
 	bool _bIsRenderedActor = true;
+	bool _bDrawNormal = false;
 };
 

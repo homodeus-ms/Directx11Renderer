@@ -2,6 +2,7 @@
 #include "LightActor.h"
 
 class BasicMesh;
+class MaterialBase;
 
 class BulbActor : public LightActor
 {
@@ -17,6 +18,6 @@ public:
 
 private:
 	shared_ptr<BasicMesh> _basicMesh;
-	shared_ptr<Material> _material;
+	shared_ptr<MaterialBase> _material;
 };
 

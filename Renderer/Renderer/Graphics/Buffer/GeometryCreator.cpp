@@ -644,13 +644,21 @@ void GeometryCreator::CreateGrid(shared_ptr<Geometry<VertexUVNormalTangentData>>
 {
 	vector<VertexUVNormalTangentData> vtx;
 
+	float offsetX = sizeX * 0.5f;
+	float offsetZ = sizeZ * 0.5f;
+
 	for (int32 z = 0; z < sizeZ + 1; z++)
 	{
 		for (int32 x = 0; x < sizeX + 1; x++)
 		{
 			VertexUVNormalTangentData v;
-			v.position = Vec3(static_cast<float>(x), 0, static_cast<float>(z));
-			v.uv = Vec2(static_cast<float>(x), static_cast<float>(sizeZ - z));
+
+			// 원점 기준 중앙 정렬
+			v.position = Vec3(static_cast<float>(x) - offsetX, 0.0f, static_cast<float>(z) - offsetZ);
+
+			// UV를 0~1 범위로 정규화
+			v.uv = Vec2(static_cast<float>(x) / sizeX, static_cast<float>(sizeZ - z) / sizeZ);
+
 			v.normal = Vec3(0.f, 1.f, 0.f);
 			v.tangent = Vec3(1.f, 0.f, 0.f);
 
@@ -661,20 +669,14 @@ void GeometryCreator::CreateGrid(shared_ptr<Geometry<VertexUVNormalTangentData>>
 	geometry->SetVertices(vtx);
 
 	vector<uint32> idx;
-
 	for (int32 z = 0; z < sizeZ; z++)
 	{
 		for (int32 x = 0; x < sizeX; x++)
 		{
-			//  [0]
-			//   |	\
-			//  [2] - [1]
 			idx.push_back((sizeX + 1) * (z + 1) + (x));
 			idx.push_back((sizeX + 1) * (z)+(x + 1));
 			idx.push_back((sizeX + 1) * (z)+(x));
-			//  [1] - [2]
-			//   	\  |
-			//		  [0]
+
 			idx.push_back((sizeX + 1) * (z)+(x + 1));
 			idx.push_back((sizeX + 1) * (z + 1) + (x));
 			idx.push_back((sizeX + 1) * (z + 1) + (x + 1));
@@ -687,8 +689,8 @@ void GeometryCreator::CreateGrid(shared_ptr<Geometry<VertexUVNormalTangentData>>
 void GeometryCreator::CreateSphere(shared_ptr<Geometry<VertexUVNormalTangentData>> geometry)
 {
 	float radius = 0.5f; // 구의 반지름
-	uint32 stackCount = 20; // 가로 분할
-	uint32 sliceCount = 20; // 세로 분할
+	uint32 stackCount = 30; // 가로 분할
+	uint32 sliceCount = 30; // 세로 분할
 
 	vector<VertexUVNormalTangentData> vtx;
 
@@ -796,6 +798,60 @@ void GeometryCreator::CreateSphere(shared_ptr<Geometry<VertexUVNormalTangentData
 	}
 
 	geometry->SetIndices(idx);
+}
+
+void GeometryCreator::CreateSphere(shared_ptr<Geometry<VertexUVNormalTangentData>> geometry, float radius, int numSlices, int numStacks, Vec2 texScale)
+{
+	const float dTheta = -XM_2PI / float(numSlices);
+	const float dPhi = -XM_PI / float(numStacks);
+
+	vector<VertexUVNormalTangentData>& vertices = geometry->GetVertices();
+
+	for (int j = 0; j <= numStacks; j++) {
+
+		// 스택에 쌓일 수록 시작점을 x-y 평면에서 회전 시켜서 위로 올리는 구조
+		Vec3 stackStartPoint = Vec3::Transform(Vec3(0.0f, -radius, 0.0f), Matrix::CreateRotationZ(dPhi * j));
+
+		for (int i = 0; i <= numSlices; i++) {
+			VertexUVNormalTangentData v;
+
+			// 시작점을 x-z 평면에서 회전시키면서 원을 만드는 구조
+			v.position = Vec3::Transform(stackStartPoint, Matrix::CreateRotationY(dTheta * float(i)));
+
+			v.normal = v.position; // 원점이 구의 중심
+			v.normal.Normalize();
+			v.uv = Vec2(float(i) / numSlices, 1.0f - float(j) / numStacks) * texScale;
+
+			// texcoord가 위로 갈수록 증가
+			Vec3 biTangent = Vec3(0.0f, 1.0f, 0.0f);
+
+			Vec3 normalOrth = v.normal - biTangent.Dot(v.normal) * v.normal;
+			normalOrth.Normalize();
+
+			v.tangent = biTangent.Cross(normalOrth);
+			v.tangent.Normalize();
+
+			vertices.push_back(v);
+		}
+	}
+
+	vector<uint32>& indices = geometry->GetIndices();
+
+	for (int j = 0; j < numStacks; j++) {
+
+		const int offset = (numSlices + 1) * j;
+
+		for (int i = 0; i < numSlices; i++) {
+
+			indices.push_back(offset + i);
+			indices.push_back(offset + i + numSlices + 1);
+			indices.push_back(offset + i + 1 + numSlices + 1);
+
+			indices.push_back(offset + i);
+			indices.push_back(offset + i + 1 + numSlices + 1);
+			indices.push_back(offset + i + 1);
+		}
+	}
 }
 
 void GeometryCreator::CreateSquareRoom(shared_ptr<Geometry<VertexUVNormalTangentData>> geometry, int32 size)

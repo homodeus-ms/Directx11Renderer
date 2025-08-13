@@ -82,10 +82,18 @@ struct MaterialDesc
     float4 diffuse;
     float4 specular;
     float4 emissive;
+    float metallic;
+    float roughness;
     uint bUnLit;
     uint bGetIBL;
     uint MaterialType;
-    float pad;
+    uint bUseHeightMap;
+    uint bUseAlbedoMap;
+    uint bUseNormalMap;
+    uint bUseMetallicRoughnessMap;
+    uint bUseAOMap;
+    uint bUseEmissiveMap;
+    float materialPad;
 };
 
 cbuffer MaterialBuffer : register(CBUFFER_NUM_MATERIAL)
@@ -105,6 +113,7 @@ cbuffer GlobalBuffer : register(CBUFFER_NUM_GLOBAL)
 cbuffer TransformBuffer : register(CBUFFER_NUM_TRANSFORM)
 {
     ROW_MAT W;
+    ROW_MAT invW;
 };
 
 #define MAX_BONE_COUNT 50
@@ -131,30 +140,38 @@ cbuffer PointShadowData : register(CBUFFER_NUM_POINT_SHADOW)
     float3 g_ShadowedPointLightPosition;
     float pointShadowDataPad;
 }
+cbuffer ForUIDebug : register(CBUFFER_NUM_FOR_UI_DEBUG)
+{
+    float g_heightScale;
+    float3 forUIDebugPad;
+}
 
 // SRV
-Texture2D DiffuseMap : register(t0);
-Texture2D NormalMap : register(t1);
-Texture2D SpecularMap : register(t2);
-//TextureCube TextureCubeMap : register(t3);
-TextureCube TextureCubeSpec : register(t3);
-TextureCube TextureCubeDiff : register(t4);
-Texture2D ShadowMaps[MAX_ACTIVE_SHADOW_LIGHT] : register(SHADOW_MAP_REG_NUM);
-TextureCube ShadowCubeMap : register(SHADOW_CUBE_MAP_REG_NUM);
+Texture2D AlbedoMap : register(REG_ALBEDO);
+Texture2D NormalMap : register(REG_NORMAL);
+Texture2D HeightMap : register(REG_HEIGHT);
+Texture2D AOMap : register(REG_AO);
+Texture2D SpecularMap : register(REG_SPECULAR);
+Texture2D MetallicRoughnessMap : register(REG_METALLIC_ROUGHNESS);
+Texture2D EmissiveMap : register(REG_EMISSIVE);
 
+TextureCube EnvMap : register(REG_ENV);
+TextureCube IBLSpec : register(REG_IBL_SPEC);
+TextureCube IBLDiff : register(REG_IBL_DIFF);
+Texture2D BRDFMap : register(REG_BRDF);
+
+TextureCube ShadowCubeMap : register(REG_SHADOW_CUBE);
+Texture2D ShadowMaps[MAX_ACTIVE_SHADOW_LIGHT] : register(REG_SHADOW);
+
+// SamplerState
 SamplerState LinearSampler : register(s0);
+SamplerState ClampSampler : register(s1);
 
 SamplerState PointSampler
 {
     Filter = MIN_MAG_MIP_POINT;
     AddressU = Wrap;
     AddressV = Wrap;
-};
-
-// RasterizerState
-RasterizerState FillModeWireFrame
-{
-    FillMode = WireFrame;
 };
 
 // Function

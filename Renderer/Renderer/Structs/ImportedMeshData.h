@@ -3,7 +3,7 @@
 
 class VertexBuffer;
 class IndexBuffer;
-class Material;
+class MaterialBase;
 
 struct ImportedBone
 {
@@ -29,7 +29,7 @@ struct ImportedMesh
 
 	// Material
 	wstring materialName = L"";
-	shared_ptr<Material> material; // Cache
+	shared_ptr<MaterialBase> material; // Cache
 
 	// Bones
 	int32 boneIndex;

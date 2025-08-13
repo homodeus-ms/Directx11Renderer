@@ -12,6 +12,6 @@ public:
 	float* GetFilterStrengthPtr() { return &_filterStrength; }
 
 private:
-	float _filterStrength = 1.f;
+	float _filterStrength = 0.25f;
 };
 

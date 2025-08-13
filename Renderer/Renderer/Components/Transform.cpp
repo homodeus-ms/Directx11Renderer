@@ -117,6 +117,15 @@ Matrix Transform::GetWorldMatrix()
 	return _matToWorld;
 }
 
+Matrix Transform::GetInvWorldMatrix()
+{
+	Matrix invW = GetWorldMatrix();
+	invW.Translation(Vec3(0.f));
+	invW = invW.Invert().Transpose();
+
+	return invW;
+}
+
 Vec3 Transform::GetWorldScale()
 {
 	EnsureWorldValueUpdated();

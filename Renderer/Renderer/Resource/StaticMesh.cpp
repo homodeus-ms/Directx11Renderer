@@ -4,7 +4,8 @@
 #include "Utils/Utils.h"
 #include "Utils/FileUtils.h"
 #include "Utils/tinyxml2.h"
-#include "Material.h"
+#include "Material/MaterialBase.h"
+#include "Material/Material.h"
 
 StaticMesh::StaticMesh(EResourceType type)
     : Super(type)
@@ -15,7 +16,7 @@ StaticMesh::~StaticMesh()
 {
 }
 
-shared_ptr<Material> StaticMesh::GetMaterialByName(const wstring& name)
+shared_ptr<MaterialBase> StaticMesh::GetMaterialByName(const wstring& name)
 {
 	for (auto& material : _materials)
 	{
@@ -82,7 +83,7 @@ void StaticMesh::SetRoot(const shared_ptr<ImportedBone>& root)
 	_root = root;
 }
 
-void StaticMesh::SetMaterials(const vector<shared_ptr<Material>>& materials)
+void StaticMesh::SetMaterials(const vector<shared_ptr<MaterialBase>>& materials)
 {
 	_materials = materials;
 }

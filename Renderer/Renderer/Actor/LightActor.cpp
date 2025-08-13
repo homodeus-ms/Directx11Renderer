@@ -6,7 +6,8 @@
 #include "Components/LightComponent/PointLight.h"
 #include "Components/Transform.h"
 #include "Graphics/RenderPass/ShadowMapResources.h"
-#include "Resource/Material.h"
+#include "Resource/Material/MaterialBase.h"
+#include "Resource/Material/Material.h"
 #include "Resource/Texture/LoadedTexture.h"
 
 
@@ -59,7 +60,7 @@ void LightActor::Construct()
 	shared_ptr<BasicMesh> mesh;
 	mesh = RESOURCE_MANAGER->Get<BasicMesh>(L"Sphere");
 	
-	shared_ptr<Material> mat = RESOURCE_MANAGER->Get<Material>(L"BasicYellow")->Clone();
+	shared_ptr<MaterialBase> mat = RESOURCE_MANAGER->Get<MaterialBase>(L"BasicYellow")->Clone();
 	mat->GetDesc()->bUnLit = 1;
 	if (GetLightType() == ELightType::Spot)
 		mat->GetDesc()->diffuse = { 1.f, 0.7f, 0.f, 1.f };

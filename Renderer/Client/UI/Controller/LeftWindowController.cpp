@@ -1,19 +1,21 @@
 #include "pch.h"
 #include "LeftWindowController.h"
-//#include "Managers/LightManager.h"
 #include "Actor/LightActor.h"
 #include "Components/LightComponent/LightComponent.h"
 #include "Components/LightComponent/DirectionalLight.h"
 #include "Components/LightComponent/SpotLight.h"
 #include "Components/LightComponent/PointLight.h"
 #include "Components/Transform.h"
-#include "Resource/Material.h"
+#include "Resource/Material/MaterialBase.h"
+#include "Resource/Material/IBLMaterial.h"
+#include "Resource/Material/Material.h"
 #include "UI/Sliders/Widget_Slider4.h"
 #include "UI/Sliders/Widget_Slider3.h"
 #include "Actor/BulbActor.h"
 #include "Utils/Utils.h"
 #include "Graphics/RenderPass/ShadowMap.h"
 #include "Graphics/Filter/FilterFactory.h"
+#include "Graphics/Filter/FilterManager.h"
 
 LeftWindowController::LeftWindowController()
 {
@@ -73,6 +75,10 @@ void LeftWindowController::BeginPlay()
 {
 	SCENE->_onLightManagerCreated.BindObject(shared_from_this(), &LeftWindowController::OnLightManagerCreatedCallback);
 	SCENE->_onRenderedActorRegistered.BindObject(shared_from_this(), &LeftWindowController::OnActorRegistered);
+	//GET_SINGLE(FilterFactory)->_onBloomFilterCreated.BindObject(
+	//	shared_from_this(), &LeftWindowController::OnToneMappingFilterCreated);
+	GET_SINGLE(FilterManager)->GetToneMappingPtrs(&_exposure, &_gamma);
+	GUI->_onSubWindowHidden.BindObject(shared_from_this(), &LeftWindowController::OnSubWindowHidden);
 }
 
 void LeftWindowController::CreateLeftWindow()
@@ -86,6 +92,7 @@ void LeftWindowController::CreateLeftWindow()
 		CacheVariables();
 	
 	ShowFPS();
+	ControlWireFrame();
 	DrawGlobalLightWidget();
 	DrawSpotLightWidget();
 	DrawPointLightWidget();
@@ -94,7 +101,16 @@ void LeftWindowController::CreateLeftWindow()
 	DrawShowDebugShadowMapSelector();
 	DrawFilterControls();
 
+	
+	// TEMP
+	if (ImGui::Button("Open Sub Window"))
+	{
+		_bSubWindowOpen = !_bSubWindowOpen;
+	}
+
 	ImGui::End();
+
+	_bSubWindowOpen ? GUI->ShowSubWindow() : GUI->HideSubWindow();
 }
 
 void LeftWindowController::OnLightManagerCreatedCallback()
@@ -269,7 +285,7 @@ void LeftWindowController::CacheVariables()
 		_materialButtonLabelSize.push_back(size);
 	}
 
-	_cubeMapLabelSize = ImGui::CalcTextSize(CUBE_MAP_NAMES[0].c_str());
+	_cubeMapLabelSize = ImGui::CalcTextSize("Environment");
 
 	_bVariableCached = true;
 
@@ -285,6 +301,14 @@ void LeftWindowController::ShowFPS()
 	fpsStr += std::to_string(fps);
 	
 	ImGui::Text(fpsStr.c_str());
+}
+
+void LeftWindowController::ControlWireFrame()
+{
+	if (ImGui::Checkbox("WireFrame", &_bWireFrameMode))
+	{
+		SCENE->SetWireFrameMode(_bWireFrameMode);
+	}
 }
 
 void LeftWindowController::DrawGlobalLightWidget()
@@ -435,7 +459,15 @@ void LeftWindowController::DrawActorControlWidget()
 				}
 				ImGui::SameLine(0, 10.f);
 			}
+			//if (i == 0)
+			{
+				ImGui::NewLine();
+				ImGui::SliderFloat("Metallic", _metallic, 0.f, 1.f, "%.1f");
+				ImGui::SliderFloat("Roughness", _roughness, 0.f, 1.f, "%.1f");
+			}
 		}
+		
+		//ImGui::SliderFloat("HeightScale", _heightScale, 0.f, 5.f, "%.1f");
 
 		ImGui::Spacing();
 	}
@@ -445,7 +477,7 @@ void LeftWindowController::DrawCubeMap()
 {
 	ImGui::Spacing();
 	ImGui::Separator();
-	ImGui::Text("- Environment Map -");
+	ImGui::Text("| Environment Map |");
 
 	for (uint32 i = 0; i < CACHED_CUBE_MAP_COUNT; ++i)
 	{
@@ -498,13 +530,13 @@ void LeftWindowController::OnActorRegistered(weak_ptr<Actor> actor)
 
 	_actors.push_back(actor);
 
-	const vector<shared_ptr<Material>>& materials = actor.lock()->GetMaterials();
+	const vector<shared_ptr<MaterialBase>>& materials = actor.lock()->GetMaterials();
 
 	_actorMaterials.push_back(materials);
 	vector<vector<Widget_Slider4*>> actorMaterialSliders;
 
 	// Sliders for Ambient, Diffuse, Specular, Emissive
-	for (const shared_ptr<Material>& mat : materials)
+	for (const shared_ptr<MaterialBase>& mat : materials)
 	{
 		MaterialDesc* desc = mat->GetDesc();
 
@@ -529,8 +561,11 @@ void LeftWindowController::OnActorRegistered(weak_ptr<Actor> actor)
 
 	_actorSliders.push_back(actorMaterialSliders);
 
-	// Material type : Material이 여러개 있을 수 있지만 Material의 타입은 통일된다고 가정
+	// Material이 여러개 있을 수 있지만 이 부분은 하나의 머테리얼만 대상으로 테스트
 	_materialType.push_back(materials[0]->GetDesc()->MaterialType);
+	_heightScale = materials[0]->GetHeightScalePtr();
+	_metallic = materials[0]->GetMetallicValuePtr();
+	_roughness = materials[0]->GetRoughnessValuePtr();
 }
 
 void LeftWindowController::HandleMoveLight(const shared_ptr<LightActor>& light)
@@ -601,6 +636,13 @@ void LeftWindowController::DrawFilterControls()
 	ImGui::Separator();
 	ImGui::Spacing();
 
+	if (_exposure && _gamma)
+	{
+		ImGui::PushItemWidth(180);
+		ImGui::SliderFloat("Exposure", _exposure, 0.0f, 5.0f);
+		ImGui::SliderFloat("Gamma", _gamma, 0.1f, 5.0f);
+	}
+
 	// All Filter On Off
 	if (ImGui::Selectable("All Filters On/Off", _bAllFilterOn, 0, ImGui::CalcTextSize("All Filters On/Off")))
 	{
@@ -631,7 +673,7 @@ void LeftWindowController::DrawFilterControls()
 	{
 		ImGui::PushItemWidth(180);
 		ImGui::SliderFloat("BloomRange", _bloomRange, 1.0f, 0.0f, SLIDER_W_180_MIN_MAX_LABEL.c_str());
-		ImGui::SliderFloat("BloomStrength", _bloomStrength, 0.0f, 3.0f, SLIDER_W_180_MIN_MAX_LABEL.c_str());
+		ImGui::SliderFloat("BloomStrength", _bloomStrength, 0.0f, 1.0f, SLIDER_W_180_MIN_MAX_LABEL.c_str());
 	}
 
 	// LUT
@@ -681,6 +723,17 @@ void LeftWindowController::OnBloomFilterCreated(float* bloomRange, float* filter
 void LeftWindowController::OnFilterWithBlendFactorCreated(float* blendFactor)
 {
 	_LUTMixRatio = blendFactor;
+}
+
+void LeftWindowController::OnToneMappingFilterCreated(float* exposure, float* gamma)
+{
+	_exposure = exposure;
+	_gamma = gamma;
+}
+
+void LeftWindowController::OnSubWindowHidden()
+{
+	_bSubWindowOpen = false;
 }
 
 

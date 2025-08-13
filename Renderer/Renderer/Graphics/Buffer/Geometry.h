@@ -17,7 +17,7 @@ public:
 
 	uint32 GetIndexCount() const { return static_cast<uint32>(_indices.size()); }
 	void* GetIndexData() const { return _indices.data(); }
-	const vector<uint32>& GetIndices() const { return _indices; }
+	vector<uint32>& GetIndices() { return _indices; }
 	
 	void AddVertex(const T& vertex) { _vertices.push_back(vertex); }
 	void AddVertices(const vector<T>& vertices) 

@@ -7,6 +7,9 @@
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK SubWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 Renderer::~Renderer()
 {
 	_nameManager.reset();
@@ -67,7 +70,7 @@ void Renderer::Tick()
 
 	//GRAPHICS->RenderBegin();
 	GUI->Tick();
-
+		
 	SCENE_MANAGER->Tick();
 	if (_desc.app)
 	{
@@ -77,11 +80,7 @@ void Renderer::Tick()
 	SCENE_MANAGER->Render();
 
 	GUI->Render();
-	
-	GRAPHICS->RenderEnd();
 }
-
-
 
 ATOM Renderer::MyRegisterClass()
 {
@@ -90,7 +89,7 @@ ATOM Renderer::MyRegisterClass()
 	wcex.cbSize = sizeof(WNDCLASSEX);
 
 	wcex.style = CS_HREDRAW | CS_VREDRAW;
-	wcex.lpfnWndProc = WndProc;
+	wcex.lpfnWndProc = MainWndProc;
 	wcex.cbClsExtra = 0;
 	wcex.cbWndExtra = 0;
 	wcex.hInstance = _desc.hInstance;
@@ -121,7 +120,43 @@ BOOL Renderer::InitInstance(int cmdShow)
 	return TRUE;
 }
 
+LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	if (GetFocus() == hWnd) // 메인창이 포커스일 때만
+	{
+		if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
+			return true;
 
+		switch (msg)
+		{
+		case WM_CLOSE:
+		case WM_DESTROY:
+			PostQuitMessage(0);
+			break;
+		}
+	}
+
+	return DefWindowProc(hWnd, msg, wParam, lParam);;
+}
+
+LRESULT CALLBACK SubWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	if (GetFocus() == hWnd) // 서브창이 포커스일 때
+	{
+		if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
+			return true;
+
+		switch (msg)
+		{
+		case WM_CLOSE:
+			ShowWindow(hWnd, SW_HIDE);
+			GUI->BroadcastSubWindowHidden();
+			return 0;
+		}
+	}
+
+	return DefWindowProc(hWnd, msg, wParam, lParam);
+}
 
 LRESULT Renderer::WndProc(HWND handle, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -142,4 +177,27 @@ LRESULT Renderer::WndProc(HWND handle, UINT message, WPARAM wParam, LPARAM lPara
 	}
 
 	return 0;
+}
+
+HWND Renderer::CreateSubWindow(int width, int height)
+{
+	WNDCLASS wc = { 0 };
+	wc.lpfnWndProc = SubWndProc;
+	wc.hInstance = GetModuleHandle(NULL);
+	wc.lpszClassName = L"SubWindowClass";
+	RegisterClass(&wc);
+
+	RECT windowRect = { 0, 0, static_cast<LONG>(width), static_cast<LONG>(height) };
+	::AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, false);
+
+	HWND hwnd = CreateWindowEx(
+		0,
+		L"SubWindowClass", L"Sub Window",
+		WS_OVERLAPPEDWINDOW,
+		0, 0, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top,
+		NULL, NULL, wc.hInstance, NULL);
+	
+	::UpdateWindow(hwnd);
+
+	return hwnd;
 }

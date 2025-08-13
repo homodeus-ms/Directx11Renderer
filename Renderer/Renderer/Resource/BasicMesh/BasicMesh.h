@@ -1,14 +1,14 @@
 #pragma once
 
 #include "Graphics/Buffer/Geometry.h"
-#include "Resource/ResourceBase.h"
+#include "Resource/MeshBase.h"
 
 class VertexBuffer;
 class IndexBuffer;
 
-class BasicMesh : public ResourceBase
+class BasicMesh : public MeshBase
 {
-	using Super = ResourceBase;
+	using Super = MeshBase;
 
 public:
 	BasicMesh() : Super(EResourceType::BasicMesh) {}
@@ -18,6 +18,7 @@ public:
 	virtual void CreateCube() {}
 	virtual void CreateGrid(int32 sizeX, int32 sizeZ) {}
 	virtual void CreateSphere() {}
+	virtual void CreateSphere(float radius, int numSlices, int numStacks, Vec2 texScale) {}
 	virtual void CreateCubeMap() {}
 	virtual void CreateSquareRoom(int32 size = 80) {}
 
@@ -27,6 +28,7 @@ public:
 	shared_ptr<VertexBuffer> GetVertexBuffer() const { return _vertexBuffer; }
 	shared_ptr<IndexBuffer> GetIndexBuffer() const { return _indexBuffer; }
 
+	
 
 protected:
 	virtual void CreateBuffers() abstract;
@@ -34,5 +36,6 @@ protected:
 	// Mesh
 	shared_ptr<VertexBuffer> _vertexBuffer;
 	shared_ptr<IndexBuffer> _indexBuffer;
+
 };
 

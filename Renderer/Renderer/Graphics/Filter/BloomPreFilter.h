@@ -14,6 +14,6 @@ public:
 
 
 private:
-	float _brightnessThreshold = 0.3f;
+	float _brightnessThreshold = 0.2f;
 };
 

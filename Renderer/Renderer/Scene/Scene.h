@@ -44,8 +44,10 @@ public:
 	void RemoveLight(shared_ptr<LightActor> actor);
 	void TurnGlobalLightOnOff(bool bTurnOn);
 	void CreateEnvironment(const wstring& textureName, bool bSetEnvLighting = true);
-	void SetEnvLightTexture(const wstring& textureName);
 	void TurnEnvLightOnOff(bool bOn);
+
+	// Set Render Options
+	void SetWireFrameMode(bool bModeOn);
 
 	// Shadow Map
 	bool ShouldDrawDebugShadowMap() { return _bDrawDebugShadowMap; }

@@ -21,11 +21,14 @@ class Renderer
 	DECLARE_SINGLE(Renderer);
 
 public:
+	
 	~Renderer();
 	WPARAM Run(RenderDesc& desc);
 
 	RenderDesc& GetGameDesc() { return _desc; }
 	shared_ptr<class NameManager> GetNameManager() { return _nameManager; }
+
+	HWND CreateSubWindow(int width, int height);
 
 private:
 	ATOM MyRegisterClass();

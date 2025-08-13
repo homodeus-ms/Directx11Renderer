@@ -6,7 +6,7 @@
 
 class Shader;
 class LoadedTexture;
-class Material;
+class MaterialBase;
 class StaticMesh;
 class LUT;
 
@@ -25,7 +25,7 @@ public:
 	template<typename T>
 	shared_ptr<T> Load(const wstring& key, const wstring& path);
 
-	shared_ptr<StaticMesh> LoadMeshFromAssetFolder(const wstring& key, const wstring& filename, bool bIsStaticMesh = true);
+	shared_ptr<StaticMesh> LoadMeshFromAssetFolder(const wstring& key, const wstring& filename, bool bIsStaticMesh = true, bool bIsPBRMesh = false);
 
 	template<typename T>
 	bool Add(const wstring& key, shared_ptr<T> object);
@@ -58,7 +58,7 @@ EResourceType ResourceManager::GetResourceType()
 		return EResourceType::Texture;
 	if (std::is_base_of_v<BasicMesh, T>)
 		return EResourceType::BasicMesh;
-	if (std::is_same_v<T, Material>)
+	if (std::is_base_of_v<MaterialBase, T>)
 		return EResourceType::Material;
 	if (std::is_same_v<T, Shader>)
 		return EResourceType::Shader;

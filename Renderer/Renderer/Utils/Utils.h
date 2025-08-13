@@ -7,6 +7,8 @@ using namespace std;
 #define OUT
 #endif
 
+class LoadedTexture;
+
 class Utils
 {
 public:
@@ -22,5 +24,6 @@ public:
 	// TEMP : ascii only
 	static wstring ToWString(string value);
 	static string ToString(wstring value);
+
 };
 

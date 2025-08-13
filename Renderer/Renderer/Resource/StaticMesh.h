@@ -1,20 +1,20 @@
 #pragma once
-#include "ResourceBase.h"
+#include "MeshBase.h"
 #include "Structs/ImportedMeshData.h"
 #include "Structs/ShaderParameterTypes.h"
 
-class StaticMesh : public ResourceBase
+class StaticMesh : public MeshBase
 {
-	using Super = ResourceBase;
+	using Super = MeshBase;
 
 public:
 	StaticMesh(EResourceType type = EResourceType::StaticMesh);
 	virtual ~StaticMesh();
 
 	uint32 GetMaterialCount() { return static_cast<uint32>(_materials.size()); }
-	vector<shared_ptr<Material>>& GetMaterials() { return _materials; }
-	shared_ptr<Material> GetMaterialByIndex(uint32 index) { return _materials[index]; }
-	shared_ptr<Material> GetMaterialByName(const wstring& name);
+	vector<shared_ptr<MaterialBase>>& GetMaterials() { return _materials; }
+	shared_ptr<MaterialBase> GetMaterialByIndex(uint32 index) { return _materials[index]; }
+	shared_ptr<MaterialBase> GetMaterialByName(const wstring& name);
 	void ChangeMaterialType(EMaterialType type);
 
 	uint32 GetMeshCount() { return static_cast<uint32>(_meshes.size()); }
@@ -34,10 +34,10 @@ public:
 	void SetMeshes(const vector<shared_ptr<ImportedMesh>>& meshes);
 	void SetBones(const vector<shared_ptr<ImportedBone>>& bones);
 	void SetRoot(const shared_ptr<ImportedBone>& root);
-	void SetMaterials(const vector<shared_ptr<Material>>& materials);
+	void SetMaterials(const vector<shared_ptr<MaterialBase>>& materials);
 
 protected:
-	vector<shared_ptr<Material>> _materials{};
+	vector<shared_ptr<MaterialBase>> _materials{};
 	vector<shared_ptr<ImportedMesh>> _meshes{};
 	shared_ptr<ImportedBone> _root{};
 	vector<shared_ptr<ImportedBone>> _bones{};

@@ -57,7 +57,7 @@ void ShadowTexture::CreateTexture()
 
 		// SRV Binding Info
 		_srvBindingInfo = make_shared<SRVBindingInfo>();
-		_srvBindingInfo->slot = static_cast<uint8>(ETextureType::Shadow);
+		_srvBindingInfo->slot = static_cast<uint8>(EShadowTextureType::Shadow);
 		_srvBindingInfo->stage = EShaderStage::PsStage;
 		_srvBindingInfo->srv = _SRV;
 	}

@@ -5,6 +5,7 @@
 #include "Components/LightComponent/DirectionalLight.h"
 #include "Components/LightComponent/SpotLight.h"
 #include "Components/LightComponent/PointLight.h"
+#include "Resource/Material/IBLMaterial.h"
 #include "Managers/ShaderParameterManager.h"
 #include "Resource/Texture/LoadedTexture.h"
 #include "Components/Transform.h"
@@ -93,48 +94,19 @@ void LightManager::ReduceLight(shared_ptr<LightActor> actor)
 		--_currentPointLightCount;
 }
 
-void LightManager::SetEnvLightTexture(const wstring& textureName)
+void LightManager::SetEnvLightTexture(shared_ptr<IBLMaterial> iblMaterial)
 {
-	const wstring specName = textureName + L"_spec";
-	const wstring diffName = textureName + L"_diff";
-
-	// Specular
-	{
-		_envTextureSpec = RESOURCE_MANAGER->Get<LoadedTexture>(specName);
-		if (_envTextureSpec == nullptr)
-		{
-			LOG(Log, "Can't find Texture");
-			return;
-		}
-
-		_envSpecBindingInfo = make_shared<SRVBindingInfo>();
-		_envSpecBindingInfo->slot = static_cast<uint8>(ETextureType::IBL_Spec);
-		_envSpecBindingInfo->stage = EShaderStage::PsStage;
-		_envSpecBindingInfo->srv = _envTextureSpec->GetSRV();
-		SHADER_PARAM_MANAGER->PushEnvLight(_envSpecBindingInfo);
-	}
-
-	// Diffuse
-	{
-		_envTextureDiff = RESOURCE_MANAGER->Get<LoadedTexture>(diffName);
-		if (_envTextureDiff == nullptr)
-		{
-			LOG(Log, "Can't find Texture");
-			return;
-		}
-
-		_envDiffBindingInfo = make_shared<SRVBindingInfo>();
-		_envDiffBindingInfo->slot = static_cast<uint8>(ETextureType::IBL_Diff);
-		_envDiffBindingInfo->stage = EShaderStage::PsStage;
-		_envDiffBindingInfo->srv = _envTextureDiff->GetSRV();
-		SHADER_PARAM_MANAGER->PushEnvLight(_envDiffBindingInfo);
-	}
+	_iblMaterial = iblMaterial;
+	SHADER_PARAM_MANAGER->PushIBLInfoOnce(iblMaterial);
 }
 
 void LightManager::TurnEnvLightOnOff(bool bOn)
 {
-	if (_envSpecBindingInfo == nullptr || _envDiffBindingInfo == nullptr)
+	if (_iblMaterial == nullptr)
+	{
+		LOG(Log, "IBLMaterial is Null");
 		return;
+	}
 	
 	SHADER_PARAM_MANAGER->PushEnvLightOnOff(bOn);
 }

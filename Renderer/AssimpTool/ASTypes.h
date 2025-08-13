@@ -31,3 +31,17 @@ struct ASMaterial
 	string normalFile;
 };
 
+struct PBRMaterial
+{
+	std::string name;
+
+	Color albedoColor = Color(1.f, 1.f, 1.f, 1.f);
+	std::string albedoFile{};
+	std::string metallicRoughnessFile{};
+	std::string normalFile{};
+	std::string emissiveFile{};
+
+	float metallicFactor = 1.0f;
+	float roughnessFactor = 1.0f;
+	
+};

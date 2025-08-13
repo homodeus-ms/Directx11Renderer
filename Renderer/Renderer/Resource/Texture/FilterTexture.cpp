@@ -46,7 +46,7 @@ void FilterTexture::CreateTexture(uint32 w, uint32 h)
         check(hr);
 
         _srvBindingInfo = make_shared<SRVBindingInfo>();
-        _srvBindingInfo->slot = static_cast<uint8>(ETextureType::Filter);
+        _srvBindingInfo->slot = static_cast<uint8>(EFilterTextureType::Filtered);
         _srvBindingInfo->stage = EShaderStage::PsStage;
         _srvBindingInfo->srv = _SRV;
     }

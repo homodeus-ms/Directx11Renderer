@@ -7,7 +7,8 @@
 #define SHADER_PARAM_MANAGER GET_SINGLE(ShaderParameterManager)
 #endif
 
-class Material;
+class MaterialBase;
+class IBLMaterial;
 
 class ShaderParameterManager
 {
@@ -41,6 +42,7 @@ public:
 
 	// Constant Buffer, Lights
 	void PushGlobalData(const Matrix& view, const Matrix& projection);
+	void PushGlobalData(const Matrix& view, const Matrix& projection, const Matrix& reflectMatrix);
 	void PushTransformData(const TransformDesc& desc);
 	void PushDirectionalLightData(const DirectionalLightDesc& desc);
 	void PushSpotLightData(const SpotLightDesc& desc);
@@ -53,14 +55,17 @@ public:
 	void PushBoneIndex(const BoneIndex& desc);
 
 	// Material
-	void PushMaterial(shared_ptr<Material> material);
+	void PushMaterial(shared_ptr<MaterialBase> material);
 	void PushMaterialData(const MaterialDesc& desc);
 
 	// Filter
 	void PushFilterData(const FilterData& data);
 
+	// ForUIDebug
+	void PushUIDebugDesc(const ForUIDebugDesc& desc);
+
 	// Other SRV
-	void PushEnvLight(shared_ptr<SRVBindingInfo> spec);
+	void PushIBLInfoOnce(shared_ptr<IBLMaterial> iblMaterial);
 	void PushEnvLightOnOff(bool bOn);
 
 	// ShadowMap
@@ -97,21 +102,23 @@ private:
 	}
 
 	unordered_map<string, BufferBindingInfo> _constbuffers;
-	array<SRVBindingInfo, TEXTURE_TYPE_COUNT> _srvBindings;
+	ShadowDataDesc _shadowDataDesc{};
+	PointShadowDataDesc _pointShadowDataDesc{};
+	CurrentLightVPIndex _currentLightVPIndex{};
+
+	// SRV
+	array<SRVBindingInfo, MAT_TEXTURE_TYPE_COUNT> _matSRVBindings;
+	array<SRVBindingInfo, IBL_TEXTURE_TYPE_COUNT> _iblSRVBindings;
+	array<SRVBindingInfo, FILTER_TEXTURE_TYPE_COUNT> _filterSRVBindings;
+	shared_ptr<SRVBindingInfo> _shadowCubeMapSRV;
+	vector<shared_ptr<SRVBindingInfo>> _shadowMapSrvs;
+
 	SpotLightBuffer _spotLightBuffer{};
 	PointLightBuffer _pointLightBuffer{};
 	shared_ptr<SRVBindingInfo> _envLightSpecInfo = nullptr;
 	shared_ptr<SRVBindingInfo> _envLightDiffInfo = nullptr;
 	
 	vector<SamplerBindingInfo> _samplerBindings;
-
-	vector<shared_ptr<SRVBindingInfo>> _shadowMapSrvs;
-	ShadowDataDesc _shadowDataDesc{};
-	PointShadowDataDesc _pointShadowDataDesc{};
-	CurrentLightVPIndex _currentLightVPIndex{};
-	// TEMP
-	shared_ptr<SRVBindingInfo> _shadowCubeMapSRV;
-
 
 	bool _bEnvLigthOn = false;
 	bool _bEnvLightDirty = false;

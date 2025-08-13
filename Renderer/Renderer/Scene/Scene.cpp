@@ -12,7 +12,9 @@
 #include "Managers/RenderManager.h"
 #include "Managers/LightManager.h"
 #include "Graphics/Filter/FilterManager.h"
-#include "Resource/Material.h"
+#include "Resource/Material/MaterialBase.h"
+#include "Resource/Material/Material.h"
+#include "Resource/Material/IBLMaterial.h"
 #include "Resource/Texture/LoadedTexture.h"
 #include "Resource/BasicMesh/VertexUVBasicMesh.h"
 #include "Graphics/Shader/ShaderInfo.h"
@@ -184,63 +186,70 @@ void Scene::TurnGlobalLightOnOff(bool bTurnOn)
 
 void Scene::CreateEnvironment(const wstring& textureName, bool bSetEnvLighting)
 {
-	if (_cubeMapCached != nullptr)
-	{
-		RemoveActor(_cubeMapCached);
-	}
-
+	_cubeMapCached = nullptr;
 	_cubeMapCached = make_shared<Actor>(EActorType::Actor, "CubeMap");
 
 	const wstring specName = textureName + L"_spec";
 	const wstring diffName = textureName + L"_diff";
+	const wstring brdfName = textureName + L"_brdf";
 
-	//shared_ptr<LoadedTexture> tex = RESOURCE_MANAGER->Get<LoadedTexture>(textureName);
+	shared_ptr<LoadedTexture> tex = RESOURCE_MANAGER->Get<LoadedTexture>(textureName);
 	shared_ptr<LoadedTexture> texSpec = RESOURCE_MANAGER->Get<LoadedTexture>(specName);
 	shared_ptr<LoadedTexture> texDiff = RESOURCE_MANAGER->Get<LoadedTexture>(diffName);
+	shared_ptr<LoadedTexture> brdf = RESOURCE_MANAGER->Get<LoadedTexture>(brdfName);
 
-	if (texSpec == nullptr || texDiff == nullptr)
+	if (texSpec == nullptr || texDiff == nullptr || brdf == nullptr)
 	{
 		LOG(Log, "Can't find Env Texture");
 		return;
 	}
 
-	shared_ptr<Material> cubeMapMat = make_shared<Material>();
+	shared_ptr<MaterialBase> cubeMapMat = make_shared<IBLMaterial>();
 	MaterialDesc& desc = cubeMapMat->GetMaterialDesc();
 
-	cubeMapMat->SetSpecularMap(texSpec);
-	cubeMapMat->SetDiffuseMap(texDiff);
+	cubeMapMat->SetEnvMap(tex);
+	cubeMapMat->SetIBLSpecularMap(texSpec);
+	cubeMapMat->SetIBLDiffuseMap(texDiff);
+	cubeMapMat->SetBRDFMap(brdf);
 	{
 		desc.ambient = Vec4(1.f, 1.f, 1.f, 1.f);
 		desc.diffuse = Vec4(1.f, 1.f, 1.f, 1.f);
 		desc.specular = Vec4(1.f, 1.f, 1.f, 1.f);
 		desc.emissive = Vec4(0.f, 0.f, 0.0f, 1.f);
+		desc.MaterialType = EMaterialType::EnvMap;
 	}
 
-	shared_ptr<ShaderInfo> cubeMapShader = make_shared<ShaderInfo>(L"CubeMapShader.hlsl");
-	cubeMapMat->SetShaderInfo(cubeMapShader);
+	//shared_ptr<ShaderInfo> cubeMapShader = make_shared<ShaderInfo>(L"CubeMapShader.hlsl");
+	//cubeMapMat->SetShaderInfo(cubeMapShader);
 	RESOURCE_MANAGER->Add(L"CubeMap", cubeMapMat);
 	
-	_cubeMapCached->Construct();
+	_cubeMapCached->Construct(); 
 
 	shared_ptr<BasicMesh> mesh;
 	mesh = RESOURCE_MANAGER->Get<BasicMesh>(L"CubeMap");
 	_cubeMapCached->SetBasicMesh(mesh);
 	_cubeMapCached->SetBasicMaterial(cubeMapMat);
 
-	AddActor(_cubeMapCached);
+	_cubeMapCached->BeginPlay();
+
+	RENDER_MANAGER->SetCubeMapActor(_cubeMapCached);
+	
 
 	if (bSetEnvLighting)
-		SetEnvLightTexture(textureName);
+	{
+		_lightManager->SetEnvLightTexture(static_pointer_cast<IBLMaterial>(cubeMapMat));
+	}
 }
 
-void Scene::SetEnvLightTexture(const wstring& textureName)
-{
-	_lightManager->SetEnvLightTexture(textureName);
-}
 
 void Scene::TurnEnvLightOnOff(bool bOn)
 {
 	_lightManager->TurnEnvLightOnOff(bOn);
+}
+
+void Scene::SetWireFrameMode(bool bModeOn)
+{
+	RENDER_MANAGER->SetWireFrameMode(bModeOn);
 }
 
 shared_ptr<LightActor> Scene::AddSpotLight()
@@ -360,8 +369,8 @@ void Scene::CreateShadowMapDebugActor()
 
 	shared_ptr<Material> material = make_shared<Material>();
 
-	shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"DebugShader.hlsl");
-	material->SetShaderInfo(shaderInfo);
+	//shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"DebugShader.hlsl");
+	//material->SetShaderInfo(shaderInfo);
 	RESOURCE_MANAGER->Add(L"ShadowMapDebugMaterial", material);
 
 	_shadowMapDebugActor->SetBasicMesh(mesh);

@@ -27,9 +27,9 @@ cbuffer FilterDataBuffer : register(b0)
     float4 options;
 }
 
-Texture2D FilterTargetTexture : register(FILTER_TARGET_REG_NUM);
-Texture2D OriginalTexture : register(FILTER_ORIGINAL_REG_NUM);
-Texture3D LUTTexture : register(LUT_REG_NUM);
+Texture2D FilteredTexture : register(REG_FILTER_COMBINE_FILTERED);
+Texture2D OriginalTexture : register(REG_FILTER_COMBINE_ORIGIN);
+Texture3D LUTTexture : register(REG_LUT);
 
 static const float GAUSSIAN_WEIGHTS[5] = { 0.0545, 0.2442, 0.4026, 0.2442, 0.0545 };
 

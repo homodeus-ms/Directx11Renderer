@@ -2,15 +2,8 @@
 #include "Component.h"
 #include "Structs/EShaderStage.h"
 #include "Structs/ShaderParameterTypes.h"
-#include "Graphics/RenderPass/ShadowMapResources.h"
 
-class InputLayout;
-class VertexShader;
-class PixelShader;
-struct PipelineState;
-class BasicMesh;
-class Material;
-struct ShaderInfo;
+class MaterialBase;
 
 class RenderComponentBase : public Component
 {
@@ -23,36 +16,19 @@ public:
 	virtual void BeginPlay() override;
 	virtual void Render();
 	virtual void RenderDepthOnly(bool bForPointLight, int32 instanceCount);
+	virtual void RenderDrawNormal();
 
-	virtual vector<shared_ptr<Material>> GetMaterials() abstract;
+	virtual vector<shared_ptr<MaterialBase>> GetMaterials() abstract;
 	virtual void ChangeMaterialType(EMaterialType type) abstract;
+	
 
 protected:
-	virtual void SetInputLayout() abstract;
-	void SetVertexShader(shared_ptr<ShaderInfo> shaderInfo);
-	void SetPixelShader(shared_ptr<ShaderInfo> shaderInfo);
-	void GetDefaultStates();
 
 	void Draw(UINT vertexCount, UINT startVertexLocation = 0);
 	void DrawIndexed(UINT indexCount, UINT startIndexLocation = 0, INT baseVertexLocation = 0);
 	void DrawInstanced(UINT vertexCountPerInstance, UINT instanceCount, UINT startVertexLocation = 0, UINT startInstanceLocation = 0);
 	void DrawIndexedInstanced(UINT indexCountPerInstance, UINT instanceCount, UINT startIndexLocation = 0, INT baseVertexLocation = 0, UINT startInstanceLocation = 0);
 
-	void ClearGeometryShader();
-
-	shared_ptr<InputLayout> _inputLayout = nullptr;
-	shared_ptr<VertexShader> _vertexShader;
-	shared_ptr<PixelShader> _pixelShader;
-
-	// Pipeline States
-	PipelineState* _defaultStates;
-	PipelineState* _shadowStates;
-
 	bool _bRenderReady = false;
-
-	// ShadowMap
-	ShadowMapResources _shadowMapResources;
-
-	
 };
 

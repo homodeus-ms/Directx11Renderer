@@ -20,6 +20,6 @@ private:
 	wstring _LUTName{};
 	shared_ptr<LUT> _LUT = nullptr;
 	bool _bLUTChanged = false;
-	float _LutMixRatio = 1.f;
+	float _LutMixRatio = 0.3f;
 };
 

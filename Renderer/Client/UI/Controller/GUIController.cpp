@@ -3,12 +3,14 @@
 #include "LeftWindowController.h"
 #include "RightWindowController.h"
 #include "LogWindowController.h"
+#include "SubWindowController.h"
 
 GUIController::GUIController()
 {
 	_leftWindowController = make_shared<LeftWindowController>();
 	_rightWindowController = make_shared<RightWindowController>();
 	_logWindowController = make_shared<LogWindowController>();
+	_subWindowController = make_shared<SubWindowController>();
 }
 
 GUIController::~GUIController()
@@ -19,6 +21,7 @@ GUIController::~GUIController()
 void GUIController::BeginPlay()
 {
 	GUI->_onTick.BindObject(shared_from_this(), &GUIController::Tick);
+	GUI->_onSubWindowTick.BindObject(shared_from_this(), &GUIController::SubWindowTick);
 
 	assert(_leftWindowController != nullptr);
 	assert(_rightWindowController != nullptr);
@@ -27,16 +30,22 @@ void GUIController::BeginPlay()
 	_leftWindowController->BeginPlay();
 	_rightWindowController->BeginPlay();
 	_logWindowController->BeginPlay();
+	_subWindowController->BeginPlay();
 }
 
 void GUIController::Tick()
 {
-	
 	_leftWindowController->CreateLeftWindow();
 	_rightWindowController->CreateRightWindow();
 	_logWindowController->CreateDebugWindow();
+	
 	//CreateRightWindow();
 	
+}
+
+void GUIController::SubWindowTick()
+{
+	_subWindowController->CreateSubWindow();
 }
 
 

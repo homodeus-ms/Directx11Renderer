@@ -48,6 +48,8 @@ public:
 	void Read(void** data, uint32 dataSize);
 	void Read(OUT string& data);
 
+	static void CombineAndSaveMetallicRoughness(const string& savePath, const string& metallicName, const string& roughnessName);
+
 private:
 	HANDLE _handle = INVALID_HANDLE_VALUE;
 };

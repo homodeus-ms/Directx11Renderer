@@ -7,6 +7,7 @@ class ClientPawn : public Pawn
 
 public:
 	ClientPawn(const string& name = "Pawn");
+	ClientPawn(EActorType type, const string& name = "Pawn");
 	virtual ~ClientPawn();
 
 	virtual void BeginPlay() override;

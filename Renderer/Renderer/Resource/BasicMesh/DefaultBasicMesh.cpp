@@ -32,6 +32,13 @@ void DefaultBasicMesh::CreateSphere()
 	CreateBuffers();
 }
 
+void DefaultBasicMesh::CreateSphere(float radius, int numSlices, int numStacks, Vec2 texScale)
+{
+	_geometry = make_shared<Geometry<VertexUVNormalTangentData>>();
+	GeometryCreator::CreateSphere(_geometry, radius, numSlices, numStacks, texScale);
+	CreateBuffers();
+}
+
 void DefaultBasicMesh::CreateSquareRoom(int32 size)
 {
 	_geometry = make_shared<Geometry<VertexUVNormalTangentData>>();

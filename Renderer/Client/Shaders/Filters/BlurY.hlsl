@@ -7,7 +7,7 @@ float4 PS(VertexUVOutput input) : SV_Target
     int i;
     for (i = 0; i < 5; i++)
     {
-        color += GAUSSIAN_WEIGHTS[i] * FilterTargetTexture.Sample(FilterSampler, input.uv + float2(0.f, dy) * float(i - 2)).rgb;
+        color += GAUSSIAN_WEIGHTS[i] * FilteredTexture.Sample(FilterSampler, input.uv + float2(0.f, dy) * float(i - 2)).rgb;
     }
     
     return float4(color, 1.f);

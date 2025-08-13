@@ -16,7 +16,13 @@ Converter::~Converter()
 
 void Converter::LoadRawAssetFile(wstring file)
 {
-	wstring fileStr = _rawAssetPath + file;
+	wstring filewStr = _rawAssetPath + file;
+	string fileStr = Utils::ToString(filewStr);
+
+	if (GetExtension(file) == L".gltf")
+	{
+		_bIsGLTF = true;
+	}
 
 	auto p = std::filesystem::path(fileStr);
 	if (!std::filesystem::exists(p))
@@ -25,14 +31,26 @@ void Converter::LoadRawAssetFile(wstring file)
 		assert(false);
 	}
 
-	_scene = _importer->ReadFile(
-		Utils::ToString(fileStr),
-		aiProcess_ConvertToLeftHanded |
-		aiProcess_Triangulate |
-		aiProcess_GenUVCoords |
-		aiProcess_GenNormals |
-		aiProcess_CalcTangentSpace
-	);
+	if (_bIsGLTF)
+	{
+		_scene = _importer->ReadFile(
+			fileStr,
+			aiProcess_ConvertToLeftHanded |
+			aiProcess_Triangulate |
+			aiProcess_CalcTangentSpace
+		);
+	}
+	else
+	{
+		_scene = _importer->ReadFile(
+			fileStr,
+			aiProcess_ConvertToLeftHanded |
+			aiProcess_Triangulate |
+			aiProcess_GenUVCoords |
+			aiProcess_GenNormals |
+			aiProcess_CalcTangentSpace
+		);
+	}
 
 	if (_scene == nullptr)
 	{
@@ -109,8 +127,23 @@ void Converter::ReadMeshData(aiNode* node, int32 bone)
 				::memcpy(&vertex.uv, &srcMesh->mTextureCoords[0][v], sizeof(Vec2));
 
 			// Normal
-			if (srcMesh->HasNormals())
-				::memcpy(&vertex.normal, &srcMesh->mNormals[v], sizeof(Vec3));
+			//if (_bIsGLTF)
+			//{
+			//	// 축 교정, * -1.f revert
+			//	vertex.normal.x = -srcMesh->mNormals[v].x;
+			//	vertex.normal.y = -srcMesh->mNormals[v].z;
+			//	vertex.normal.z = srcMesh->mNormals[v].y;
+			//	vertex.normal.Normalize();
+			//}
+			//else
+			{
+				if (srcMesh->HasNormals())
+					::memcpy(&vertex.normal, &srcMesh->mNormals[v], sizeof(Vec3));
+			}
+
+			// Tangent
+			if (srcMesh->HasTangentsAndBitangents())
+				::memcpy(&vertex.tangent, &srcMesh->mTangents[v], sizeof(Vec3));
 
 			mesh->vertices.push_back(vertex);
 		}
@@ -182,6 +215,12 @@ void Converter::ExportMaterialData(wstring savePath)
 
 void Converter::ReadMaterialData(const wstring& pathForMissing)
 {
+	if (_bIsGLTF)
+	{
+		ReadPBRMaterialData(pathForMissing);
+		return;
+	}
+
 	for (uint32 i = 0; i < _scene->mNumMaterials; i++)
 	{
 		aiMaterial* srcMaterial = _scene->mMaterials[i];
@@ -225,8 +264,89 @@ void Converter::ReadMaterialData(const wstring& pathForMissing)
 	}
 }
 
+void Converter::ReadPBRMaterialData(const wstring& path)
+{
+	for (uint32 i = 0; i < _scene->mNumMaterials; i++)
+	{
+		aiMaterial* srcMaterial = _scene->mMaterials[i];
+
+		if (srcMaterial->GetName().length == 0)
+			continue;
+
+		// PBR 재질 구조체
+		shared_ptr<PBRMaterial> material = make_shared<PBRMaterial>();
+		material->name = srcMaterial->GetName().C_Str();
+
+		aiColor4D baseColorFactor(1.f, 1.f, 1.f, 1.f);
+		if (AI_SUCCESS == srcMaterial->Get(AI_MATKEY_BASE_COLOR, baseColorFactor))
+		{
+			material->albedoColor = Color(
+				baseColorFactor.r,
+				baseColorFactor.g,
+				baseColorFactor.b,
+				baseColorFactor.a
+			);
+		}
+
+		// Metallic & Roughness Factor
+		srcMaterial->Get(AI_MATKEY_METALLIC_FACTOR, material->metallicFactor);
+		srcMaterial->Get(AI_MATKEY_ROUGHNESS_FACTOR, material->roughnessFactor);
+	
+
+		aiString file;
+
+		// BaseColor Texture (Diffuse 역할)
+		if (srcMaterial->GetTexture(aiTextureType_BASE_COLOR, 0, &file) == AI_SUCCESS)
+		{
+			material->albedoFile = GetFoundTexturePath(file.C_Str());
+			//SetFoundTexturePath(material->albedoFile, file.C_Str(), path, MissingTextureFindKeyword::Diffuse);
+		}
+		else if (srcMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &file) == AI_SUCCESS)
+		{
+			// 혹시 BaseColor 타입을 지원하지 않는 Assimp 버전이면 Diffuse로 대체
+			material->albedoFile = GetFoundTexturePath(file.C_Str());
+			//SetFoundTexturePath(material->albedoFile, file.C_Str(), path, MissingTextureFindKeyword::Diffuse);
+		}
+
+		// Metallic-Roughness Texture
+		if (srcMaterial->GetTexture(aiTextureType_METALNESS, 0, &file) == AI_SUCCESS)
+		{
+			material->metallicRoughnessFile = GetFoundTexturePath(file.C_Str());
+			//SetFoundTexturePath(material->metallicRoughnessFile, file.C_Str(), path, MissingTextureFindKeyword::MetallicRoughness);
+		}
+		else if (srcMaterial->GetTexture(aiTextureType_UNKNOWN, 0, &file) == AI_SUCCESS)
+		{
+			// 일부 Assimp 빌드에서는 METALNESS가 UNKNOWN으로 들어올 수 있음
+			material->metallicRoughnessFile = GetFoundTexturePath(file.C_Str());
+			//SetFoundTexturePath(material->metallicRoughnessFile, file.C_Str(), path, MissingTextureFindKeyword::MetallicRoughness);
+		}
+
+		// Normal Texture
+		if (srcMaterial->GetTexture(aiTextureType_NORMALS, 0, &file) == AI_SUCCESS)
+		{
+			material->normalFile = GetFoundTexturePath(file.C_Str());
+			//SetFoundTexturePath(material->normalFile, file.C_Str(), path, MissingTextureFindKeyword::Normal);
+		}
+
+		// Emissive
+		if (srcMaterial->GetTexture(aiTextureType_EMISSIVE, 0, &file) == AI_SUCCESS)
+		{
+			material->emissiveFile = GetFoundTexturePath(file.C_Str());
+			//SetFoundTexturePath(material->emissiveFile, file.C_Str(), path, MissingTextureFindKeyword::Emissive);
+		}
+
+		_PBRMaterials.push_back(material);
+	}
+}
+
 void Converter::WriteCustomMaterialFile(wstring finalPath)
 {
+	if (_bIsGLTF)
+	{
+		WritePBRMaterialFile(finalPath);
+		return;
+	}
+
 	auto path = filesystem::path(finalPath);
 
 	// 폴더가 없으면 만든다.
@@ -292,6 +412,75 @@ void Converter::WriteCustomMaterialFile(wstring finalPath)
 		element->SetAttribute("B", material->emissive.z);
 		element->SetAttribute("A", material->emissive.w);
 		node->LinkEndChild(element);
+	}
+
+	document->SaveFile(Utils::ToString(finalPath).c_str());
+
+	_materials.clear();
+}
+
+void Converter::WritePBRMaterialFile(wstring finalPath)
+{
+	auto path = filesystem::path(finalPath);
+
+	// 폴더가 없으면 만든다.
+	filesystem::create_directory(path.parent_path());
+
+	string folder = path.parent_path().string();
+
+	shared_ptr<tinyxml2::XMLDocument> document = make_shared<tinyxml2::XMLDocument>();
+
+	tinyxml2::XMLDeclaration* decl = document->NewDeclaration();
+	document->LinkEndChild(decl);
+
+	tinyxml2::XMLElement* root = document->NewElement("Materials");
+	document->LinkEndChild(root);
+
+	for (shared_ptr<PBRMaterial> material : _PBRMaterials)
+	{
+		tinyxml2::XMLElement* node = document->NewElement("Material");
+		root->LinkEndChild(node);
+
+		tinyxml2::XMLElement* element = nullptr;
+
+		element = document->NewElement("Name");
+		element->SetText(material->name.c_str());
+		node->LinkEndChild(element);
+
+		element = document->NewElement("AlbedoFile");
+		element->SetText(WriteTexture(folder, material->albedoFile).c_str());
+		node->LinkEndChild(element);
+
+		element = document->NewElement("MetallicRoughnessFile");
+		element->SetText(WriteTexture(folder, material->metallicRoughnessFile).c_str());
+		node->LinkEndChild(element);
+
+		element = document->NewElement("NormalFile");
+		element->SetText(WriteTexture(folder, material->normalFile).c_str());
+		node->LinkEndChild(element);
+
+		if (!material->emissiveFile.empty())
+		{
+			element = document->NewElement("EmissiveFile");
+			element->SetText(WriteTexture(folder, material->emissiveFile).c_str());
+			node->LinkEndChild(element);
+		}
+
+		element = document->NewElement("AlbedoColor");
+		element->SetAttribute("R", material->albedoColor.x);
+		element->SetAttribute("G", material->albedoColor.y);
+		element->SetAttribute("B", material->albedoColor.z);
+		element->SetAttribute("A", material->albedoColor.w);
+		node->LinkEndChild(element);
+
+		element = document->NewElement("MetallicFactor");
+		element->SetAttribute("MetallicFactor", material->metallicFactor);
+		node->LinkEndChild(element);
+
+		element = document->NewElement("RoughnessFactor");
+		element->SetAttribute("RoughnessFactor", material->roughnessFactor);
+		node->LinkEndChild(element);
+
 	}
 
 	document->SaveFile(Utils::ToString(finalPath).c_str());
@@ -368,7 +557,7 @@ string Converter::WriteTexture(string saveFolder, string file)
 	return fileName;
 }
 
-void Converter::SetFoundTexturePath(string& setTarget, const string& path, const wstring& pathForMissing, MissingTextureFindKeyword keyword)
+void Converter::SetFoundTexturePath(string& setTarget, const string path, const wstring& pathForMissing, MissingTextureFindKeyword keyword)
 {
 	if (!path.empty() && path[0] != '*')
 	{
@@ -383,6 +572,15 @@ void Converter::SetFoundTexturePath(string& setTarget, const string& path, const
 		}
 		setTarget = missingPath;
 	}
+}
+
+string Converter::GetFoundTexturePath(const string& path)
+{
+	if (!path.empty() && path[0] != '*')
+	{
+		return path;
+	}
+	return "";
 }
 
 string Converter::FindMissingTextureInFBXFolder(const wstring& findTargetPath, MissingTextureFindKeyword keyword)
@@ -449,7 +647,12 @@ string Converter::FindMissingTextureInFBXFolder(const wstring& findTargetPath, M
 	return "";
 }
 
-
+wstring Converter::GetExtension(const wstring& filename)
+{
+	wstring ext(filesystem::path(filename).extension().wstring());
+	transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+	return ext;
+}
 
 void Converter::ReadObjFile(const wstring& path)
 {
@@ -517,4 +720,6 @@ void Converter::Cleanup()
 	_bones.clear();
 	_meshes.clear();
 	_materials.clear();
+
+	_bIsGLTF = false;
 }

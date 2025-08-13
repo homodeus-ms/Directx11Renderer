@@ -1,6 +1,7 @@
 #pragma once
 #include "Structs/LightTypes.h"
 
+class MaterialBase;
 class LightManager;
 class LightActor;
 class SpotLight;
@@ -22,10 +23,12 @@ public:
 	void OnLightManagerCreatedCallback();
 	void OnBloomFilterCreated(float* bloomRange, float* filterStrength);
 	void OnFilterWithBlendFactorCreated(float* blendFactor);
-
+	void OnToneMappingFilterCreated(float* exposure, float* gamma);
+	void OnSubWindowHidden();
 private:
 	void CacheVariables();
 	void ShowFPS();
+	void ControlWireFrame();
 	void DrawGlobalLightWidget();
 	void DrawSpotLightWidget();
 	void DrawPointLightWidget();
@@ -55,6 +58,7 @@ private:
 	
 	bool _bShowWindow = true;
 	bool _bVariableCached = false;
+	bool _bWireFrameMode = false;
 
 	// Light Move Common
 	shared_ptr<LightActor> _orbitActor = nullptr;
@@ -91,22 +95,24 @@ private:
 	ImVec2 _pointLightLabelSize;
 
 	// Actor - Material
-	const uint32 _EMaterialTypeCount = GetEMaterialTypeCount();
-	const vector<string> MATERIAL_TYPE_NAMES = { "Default", "RimLight", "Toon", "Monotone"};
+	const uint32 _EMaterialTypeCount = GetEMaterialTypeCount() - 1;
+	const vector<string> MATERIAL_TYPE_NAMES = { "Default", "RimLight", "Toon", "Monotone", "PBR"};
 	vector<ImVec2> _materialButtonLabelSize;
 	vector<weak_ptr<Actor>> _actors;
-	vector<vector<shared_ptr<Material>>> _actorMaterials;
+	vector<vector<shared_ptr<MaterialBase>>> _actorMaterials;
 	vector<vector<vector<Widget_Slider4*>>> _actorSliders{};
 	vector<EMaterialType> _materialType;
+	float* _heightScale = nullptr;
+	float* _metallic = nullptr;
+	float* _roughness = nullptr;
 
 	// Env Setting
 	shared_ptr<Actor> _cubeMap = nullptr;
 	// TEMP 3-CubeMap
-	enum { CACHED_CUBE_MAP_COUNT = 7 };
+	enum { CACHED_CUBE_MAP_COUNT = 4 };
 	int32 _currCubeMapIndex = -1;
 	string CUBE_MAP_NAMES[CACHED_CUBE_MAP_COUNT] = { 
-		"NightCity1", "NightCity2", "NightPath", 
-		"SnowForest", "Museum", "DawnField", "DayLight1"};
+		"Cloudy", "InsideGym", "NightEnv1", "EveningSky" };
 	ImVec2 _cubeMapLabelSize;
 	bool _bEnvLightingOn = false;
 
@@ -116,6 +122,8 @@ private:
 
 	// Filter
 	bool _bAllFilterOn = true;
+	float* _exposure = nullptr;
+	float* _gamma = nullptr;
 
 	bool _bBloomFilterOn = false; 
 	float* _bloomRange = nullptr;
@@ -129,9 +137,12 @@ private:
 
 	vector<const char*> _LUTNames = { 
 		"BlueArchitecture", "CrispAutumn" , 
-		"DarkAndSomber", "Waves", "HardBoost", "LongBeachMorning",
+		"DarkAndSomber", "HardBoost", "LongBeachMorning",
 		"LushGreen", "OrangeAndBlue", "SoftBlackAndWhite"
 	};
 	
+
+	// Sub Window
+	bool _bSubWindowOpen = false;
 };
 

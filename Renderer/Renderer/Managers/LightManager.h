@@ -3,6 +3,7 @@
 
 class LightActor;
 class LoadedTexture;
+class IBLMaterial;
 
 class LightManager
 {
@@ -22,7 +23,7 @@ public:
 
 	void TurnDirectionalLightOnOff(bool bTurnOn);
 	void ReduceLight(shared_ptr<LightActor> actor);
-	void SetEnvLightTexture(const wstring& textureName);
+	void SetEnvLightTexture(shared_ptr<IBLMaterial> iblMaterial);
 	void TurnEnvLightOnOff(bool bOn);
 
 private:
@@ -34,10 +35,7 @@ private:
 	uint8 _currentPointLightCount = 0;
 
 	shared_ptr<LightActor> _globalLightCache;
+	shared_ptr<IBLMaterial> _iblMaterial = nullptr;
 	
-	shared_ptr<LoadedTexture> _envTextureSpec;
-	shared_ptr<LoadedTexture> _envTextureDiff;
-	shared_ptr<struct SRVBindingInfo> _envSpecBindingInfo;
-	shared_ptr<struct SRVBindingInfo> _envDiffBindingInfo;
 };
 

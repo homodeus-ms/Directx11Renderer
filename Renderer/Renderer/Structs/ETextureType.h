@@ -1,26 +1,53 @@
 #pragma once
 #include "ShaderParameterTypes.h"
 
-enum class ETextureType : uint8
+enum class EMatTextureType : uint8
 {
-	Diffuse,
+	Albedo,
 	Normal,
+	Height,
+	AO,
 	Specular,
+	MetallicRoughness,
+	Roughness,
+	Emissive,
+
+	End,
+};
+
+enum class EIBLTextureType : uint8
+{
+	Env = static_cast<uint8>(EMatTextureType::End),
 	IBL_Spec,
 	IBL_Diff,
-	Shadow,
-	Filter,
+	IBL_BRDF,
+
+	End,
+};
+
+enum class EFilterTextureType : uint8
+{
+	Filtered = static_cast<uint8>(EIBLTextureType::End),
+	Original,
 	LUT,
 
 	End,
 };
 
-enum { TEXTURE_TYPE_COUNT = static_cast<uint8>(ETextureType::End) };
-
-enum
+enum class EShadowTextureType : uint8
 {
-	SHADOW_CUBE_MAP_SLOT_NUM = static_cast<uint8>(ETextureType::Shadow) + MAX_SHADOW_MAP_COUNT,
-	FILTER_TARGET_SLOT_NUM = SHADOW_CUBE_MAP_SLOT_NUM + 1,
-	FILTER_ORIGINAL_SLOT_NUM = FILTER_TARGET_SLOT_NUM + 1,
-	LUT_SLOT_NUM = FILTER_ORIGINAL_SLOT_NUM + 1,
+	ShadowCube = static_cast<uint8>(EFilterTextureType::End),
+	Shadow,
+
+	End = static_cast<uint8>(EShadowTextureType::Shadow) + MAX_SHADOW_MAP_COUNT,
 };
+
+enum 
+{ 
+	MAT_TEXTURE_TYPE_COUNT = static_cast<uint8>(EMatTextureType::End),
+	IBL_TEXTURE_TYPE_COUNT = static_cast<uint8>(EIBLTextureType::End) - static_cast<uint8>(EIBLTextureType::Env),
+	FILTER_TEXTURE_TYPE_COUNT = static_cast<uint8>(EFilterTextureType::End) - static_cast<uint8>(EFilterTextureType::Filtered),
+	SHADOW_TEXTURE_TYPE_COUNT = static_cast<uint8>(EShadowTextureType::End) - static_cast<uint8>(EShadowTextureType::ShadowCube),
+};
+
+

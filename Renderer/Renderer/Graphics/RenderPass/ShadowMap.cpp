@@ -13,6 +13,10 @@
 #include "Resource/Texture/ShadowTexture.h"
 #include "Resource/Texture/ShadowCubeTexture.h"
 #include "Components/Transform.h"
+#include "Managers/RenderManager.h"
+#include "Graphics/RenderPass/CommonRenderResource.h"
+#include "Graphics/RenderPass/PSO.h"
+#include "Graphics/PipelineState/PipelineState.h"
 
 ShadowMap::ShadowMap()
 {
@@ -32,11 +36,17 @@ void ShadowMap::Construct()
 {
 	CreateShadowTexture();
 	SetShadowViewport();
+	_shadowPSO = GET_SINGLE(CommonRenderResource)->_shadowPSO;
+	_shadowPointLightPSO = GET_SINGLE(CommonRenderResource)->_shadowPointLightPSO;
+
 	CreateShadowMapResources();
 }
 
-void ShadowMap::CreateShadowMap(vector<shared_ptr<Actor>>& actors, const vector<shared_ptr<LightActor>>& lights)
+void ShadowMap::CreateAndDrawShadowMap(vector<shared_ptr<Actor>>& actors, const vector<shared_ptr<LightActor>>& lights)
 {
+	if (actors.empty())
+		return;
+
 	vector<shared_ptr<LightActor>> directSpotLights;
 	shared_ptr<LightActor> pointLight = nullptr;
 	vector<Matrix> VPs;
@@ -71,9 +81,12 @@ void ShadowMap::CreateShadowMap(vector<shared_ptr<Actor>>& actors, const vector<
 	}
 
 	assert(directSpotLights.size() == VPs.size() && VPs.size() <= MAX_SHADOW_MAP_COUNT);
-
+	
 	// Directional Light, SpotLight
 	SHADER_PARAM_MANAGER->PushLightVPs(VPs);
+
+	// Set Shadow PSO
+	GET_SINGLE(RenderManager)->SetPipelineState(_shadowPSO);
 	for (int32 i = 0; i < VPs.size(); ++i)
 	{
 		DrawShadowMap(actors, i);
@@ -84,6 +97,9 @@ void ShadowMap::CreateShadowMap(vector<shared_ptr<Actor>>& actors, const vector<
 	{
 		SHADER_PARAM_MANAGER->PushPointLightShadowDesc(PointVPs, pointLight->GetTransform()->GetWorldPosition());
 		SHADER_PARAM_MANAGER->PushShadowCubeMapSRV(_shadowCubeTexture->GetSRVBindingInfo());
+
+		// Set PointLight Shadow PSO
+		GET_SINGLE(RenderManager)->SetPipelineState(_shadowPointLightPSO);
 		DrawShadowCubeMap(pointLight, actors);
 	}
 }
@@ -113,7 +129,7 @@ void ShadowMap::DrawShadowCubeMap(shared_ptr<LightActor> light, const vector<sha
 	CONTEXT->OMSetRenderTargets(1, RTV.GetAddressOf(), nullptr);
 	CONTEXT->ClearRenderTargetView(RTV.Get(), _cubeMapClearColor);
 	CONTEXT->RSSetViewports(1, &_shadowViewport);
-
+	
 	for (shared_ptr<Actor> actor : actors)
 	{
 		if (actor->IsCastShadowedActor())

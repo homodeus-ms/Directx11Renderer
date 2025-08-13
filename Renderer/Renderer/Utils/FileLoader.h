@@ -5,18 +5,19 @@
 
 class StaticMesh;
 class SkeletalMesh;
-class Material;
+class MaterialBase;
 
 class FileLoader
 {
 public:
-	shared_ptr<StaticMesh> LoadMeshOrNull(const wstring& key, const wstring& filenameInAssetFolder, bool bIsStaticMesh);
+	shared_ptr<StaticMesh> LoadMeshOrNull(const wstring& key, const wstring& filenameInAssetFolder, bool bIsStaticMesh, bool bIsPBRMaterial = false);
 	
 private:
 	const wstring ASSET_PATH = L"../Resources/Assets/";
 
 	void ReadMeshData(const wstring& filepath);
 	void ReadMaterialData(const wstring& filepath);
+	void ReadPBRMaterialData(const wstring& filepath);
 
 	shared_ptr<StaticMesh> CreateAndBindStaticMesh();
 	shared_ptr<SkeletalMesh> CreateAndBindSkeletalMesh();
@@ -24,9 +25,9 @@ private:
 
 	// Helper Funcs
 	uint32 GetMaterialCount() { return static_cast<uint32>(_materials.size()); }
-	vector<shared_ptr<Material>>& GetMaterials() { return _materials; }
-	shared_ptr<Material> GetMaterialByIndex(uint32 index) { return _materials[index]; }
-	shared_ptr<Material> GetMaterialByName(const wstring& name);
+	vector<shared_ptr<MaterialBase>>& GetMaterials() { return _materials; }
+	shared_ptr<MaterialBase> GetMaterialByIndex(uint32 index) { return _materials[index]; }
+	shared_ptr<MaterialBase> GetMaterialByName(const wstring& name);
 
 	uint32 GetMeshCount() { return static_cast<uint32>(_meshes.size()); }
 	vector<shared_ptr<ImportedMesh>>& GetMeshes() { return _meshes; }
@@ -42,7 +43,8 @@ private:
 	void NormalizeVectices();
 	void CreateEachMeshBuffers();
 
-	void SetTextureToMaterial(const char* keyname, const wstring& parentPath, shared_ptr<Material> material, ETextureType textureType);
+	void SetTextureToMaterial(const char* keyname, const wstring& parentPath, shared_ptr<MaterialBase> material, EMatTextureType textureType);
+	
 	Color ReadColorInfo(tinyxml2::XMLElement* node);
 
 	bool GetFullPathByFileNameRecursive(const wstring& filename, wstring& OUT meshPath, wstring& OUT materialPath);
@@ -52,6 +54,6 @@ private:
 	shared_ptr<ImportedBone> _root;
 	vector<shared_ptr<ImportedBone>> _bones;
 	vector<shared_ptr<ImportedMesh>> _meshes;
-	vector<shared_ptr<Material>> _materials;
+	vector<shared_ptr<MaterialBase>> _materials;
 };
 

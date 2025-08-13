@@ -21,7 +21,7 @@ public:
 	void RemoveFilter(EFilterType type);
 	void SetFilterOnOff(bool bFilterOn) { _bFilterOn = bFilterOn; }
 	void SetLUTType(const wstring& LUTName);
-
+	void GetToneMappingPtrs(OUT float** exposure, OUT float** gamma);
 
 private:
 	void SendRemovableFilters();
@@ -30,6 +30,7 @@ private:
 	unordered_set<EFilterType> _activateFilters;
 	list<Filter*> _filters;
 	list<Filter*> _removableFilters;
+	Filter* _toneMappingFilter = nullptr;
 
 	//Filter* _finalFilter = nullptr;
 	PipelineState* _filterStates{};

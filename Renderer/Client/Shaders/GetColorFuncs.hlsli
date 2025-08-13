@@ -5,18 +5,18 @@
 #include "Global.hlsli"
 #include "Light.hlsli"
 
-float4 GetToonShadingByGlobalLight(float4 litColor, float3 normal, float2 uv)
+float4 GetToonShadingByGlobalLight(float3 litColor, float3 normal, float2 uv)
 {
     float3 diffuse = BLACK.xyz;
     
     float lDotN = saturate(dot(-GlobalLight.direction, normal));
-    float4 sampled = DiffuseMap.Sample(LinearSampler, uv);
+    float4 sampled = AlbedoMap.Sample(LinearSampler, uv);
     diffuse = sampled.xyz * GlobalLight.diffuse.xyz * Material.diffuse.xyz * lDotN;
     
     diffuse = saturate(diffuse);
     diffuse = ceil(diffuse * 3) / 3.f;
     
-    return float4(litColor.xyz * diffuse.xyz * 1.5, 1.f);
+    return float4(litColor * diffuse * 1.5f, 1.f);
 }
 
 

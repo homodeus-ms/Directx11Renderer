@@ -1,5 +1,6 @@
 #include "Utils.h"
 
+
 bool Utils::IsStartWith(const std::string& str, const std::string& withThis)
 {
 	std::string::size_type index = str.find(withThis);
@@ -61,3 +62,4 @@ std::string Utils::ToString(wstring value)
 {
 	return string(value.begin(), value.end());
 }
+

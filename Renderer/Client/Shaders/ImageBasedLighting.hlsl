@@ -18,8 +18,8 @@ MeshOutput VS(VertexTangentInput input)
 
 float4 PS(MeshOutput input) : SV_Target
 {
-    float4 spec = TextureCubeSpec.Sample(LinearSampler, input.normal);
-    float4 diffuse = TextureCubeDiff.Sample(LinearSampler, input.normal);
+    float4 spec = IBLSpec.Sample(LinearSampler, input.normal);
+    float4 diffuse = IBLDiff.Sample(LinearSampler, input.normal);
     spec *= Material.specular;
     diffuse *= Material.diffuse;
     

@@ -1,15 +1,18 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "FileLoader.h"
 #include <filesystem>
 #include "Utils.h"
 #include "FileUtils.h"
 #include "tinyxml2.h"
-#include "Resource/Material.h"
+#include "Resource/Material/MaterialBase.h"
+#include "Resource/Material/Material.h"
+#include "Resource/Material/IBLMaterial.h"
 #include "Resource/ResourceBase.h"
 #include "Resource/StaticMesh.h"
 #include "Resource/SkeletalMesh.h"
+#include "Resource/Texture/LoadedTexture.h"
 
-shared_ptr<StaticMesh> FileLoader::LoadMeshOrNull(const wstring& key, const wstring& filename, bool bIsStaticMesh)
+shared_ptr<StaticMesh> FileLoader::LoadMeshOrNull(const wstring& key, const wstring& filename, bool bIsStaticMesh, bool bIsPBRMaterial)
 {
 	if (shared_ptr<StaticMesh> exist = RESOURCE_MANAGER->Get<StaticMesh>(key))
 		return exist;
@@ -22,7 +25,7 @@ shared_ptr<StaticMesh> FileLoader::LoadMeshOrNull(const wstring& key, const wstr
 		return nullptr;
 
 	ReadMeshData(meshPath);
-	ReadMaterialData(materialPath);
+	bIsPBRMaterial ? ReadPBRMaterialData(materialPath) : ReadMaterialData(materialPath);
 
 	shared_ptr<StaticMesh> mesh = nullptr;
 	if (bIsStaticMesh)
@@ -108,8 +111,7 @@ void FileLoader::ReadMeshData(const wstring& filepath)
 
 void FileLoader::ReadMaterialData(const wstring& filepath)
 {
-	string logMsg = "ReadMaterial from " + Utils::ToString(filepath);
-	LOG(Log, logMsg);
+	
 
 	auto parentPath = std::filesystem::path(filepath).parent_path();
 	wstring parentPathStr = parentPath.wstring();
@@ -130,21 +132,21 @@ void FileLoader::ReadMaterialData(const wstring& filepath)
 		node = materialNode->FirstChildElement();
 		material->SetName(Utils::ToWString(node->GetText()));
 
-		// Diffuse Texture
+		// Albedo Texture
 		node = node->NextSiblingElement();
 		if (const char* textureName = node->GetText())
-			SetTextureToMaterial(textureName, parentPathStr, material, ETextureType::Diffuse);
+			SetTextureToMaterial(textureName, parentPathStr, material, EMatTextureType::Albedo);
 
 		// Specular Texture
 		node = node->NextSiblingElement();
 		if (const char* textureName = node->GetText())
-			SetTextureToMaterial(textureName, parentPathStr, material, ETextureType::Specular);
+			SetTextureToMaterial(textureName, parentPathStr, material, EMatTextureType::Specular);
 
 
 		// Normal Texture
 		node = node->NextSiblingElement();
 		if (const char* textureName = node->GetText())
-			SetTextureToMaterial(textureName, parentPathStr, material, ETextureType::Normal);
+			SetTextureToMaterial(textureName, parentPathStr, material, EMatTextureType::Normal);
 
 
 		// Ambient
@@ -182,20 +184,132 @@ void FileLoader::ReadMaterialData(const wstring& filepath)
 	}
 }
 
+void FileLoader::ReadPBRMaterialData(const wstring& filepath)
+{
+	// TEMP
+	// 현재 .gltf (albedo + normal + metallicRoughness 로 이뤄진 머테리얼을 읽어오고 있음)
+	// 그외의 파일은 또 수정해야함
+
+	auto parentPath = std::filesystem::path(filepath).parent_path();
+	wstring parentPathStr = parentPath.wstring();
+
+	tinyxml2::XMLDocument* document = new tinyxml2::XMLDocument();
+	tinyxml2::XMLError error = document->LoadFile(Utils::ToString(filepath).c_str());
+	assert(error == tinyxml2::XML_SUCCESS);
+
+	tinyxml2::XMLElement* root = document->FirstChildElement();
+	tinyxml2::XMLElement* materialNode = root->FirstChildElement();
+
+	while (materialNode)
+	{
+		shared_ptr<Material> material = make_shared<Material>();
+		MaterialDesc& matDesc = material->GetMaterialDesc();
+		matDesc.MaterialType = EMaterialType::PBR;
+
+		tinyxml2::XMLElement* node = nullptr;
+
+		node = materialNode->FirstChildElement();
+		const char* name = node->GetText();
+
+		if (!name || ::strlen(name) == 0)
+		{
+			materialNode = materialNode->NextSiblingElement();
+			continue;
+		}
+
+		material->SetName(Utils::ToWString(name));
+
+		// Albedo Texture
+		node = node->NextSiblingElement();
+		if (const char* textureName = node->GetText())
+		{
+			SetTextureToMaterial(textureName, parentPathStr, material, EMatTextureType::Albedo);
+			matDesc.bUseAlbedoMap = true;
+		}
+
+		// MetallicRoughness Texture
+		node = node->NextSiblingElement();
+		string valueName = string(node->Value());
+
+		if (valueName.starts_with("MetallicRoughness"))
+		{
+			if (const char* textureName = node->GetText())
+			{
+				SetTextureToMaterial(textureName, parentPathStr, material, EMatTextureType::MetallicRoughness);
+				material->SetIsUsingMetallicRoughnessMap(true);
+				matDesc.bUseMetallicRoughnessMap = true;
+			}
+		}
+		else
+		{
+			// Metallic, Roughness가 따로 있는 경우 MetallicRoughness로 합쳐서 사용
+			//const char* metallicName = node->GetText();
+			//node = node->NextSiblingElement();
+			//const char* roughnessName = node->GetText();
+			//
+			//if (metallicName && roughnessName)
+			//{
+			//	CombineAndSetMetallicRoughnessTextureToMaterial(metallicName, roughnessName, parentPathStr, material);
+			//	matDesc.bUseMetallicRoughnessMap = true;
+			//}
+		}
+
+		// Normal Texture
+		node = node->NextSiblingElement();
+		if (const char* textureName = node->GetText())
+		{
+			SetTextureToMaterial(textureName, parentPathStr, material, EMatTextureType::Normal);
+			matDesc.bUseNormalMap = true;
+		}
+
+		// Emissive Texture는 있을수도 없을수도 있음. 없다면 바로 다음이 Color
+		node = node->NextSiblingElement();
+		const char* nextName = node->Name();
+		if (::strcmp(nextName, "EmissiveFile") == 0)
+		{
+			const char* textureName = node->GetText();
+			SetTextureToMaterial(textureName, parentPathStr, material, EMatTextureType::Emissive);
+			matDesc.bUseEmissiveMap = true;
+		}
+		else
+		{
+			// Color
+			const Color& color = ReadColorInfo(node);
+			matDesc.diffuse = color;
+		}
+		
+		// MetallicFactor
+		{
+			node = node->NextSiblingElement();
+			matDesc.metallic = node->FloatAttribute("MetallicFactor");
+		}
+		// RoughnessFactor
+		{
+			node = node->NextSiblingElement();
+			matDesc.roughness = node->FloatAttribute("RoughnessFactor");
+		}
+
+		_materials.push_back(material);
+
+		// Next Material
+		materialNode = materialNode->NextSiblingElement();
+	}
+}
+
 shared_ptr<StaticMesh> FileLoader::CreateAndBindStaticMesh()
 {
 	shared_ptr<StaticMesh> staticMesh = make_shared<StaticMesh>();
 
 	for (const auto& mesh : _meshes)
 	{
-		// �̹� ã������ ��ŵ
+		// 이미 찾았으면 스킵
 		if (mesh->bone != nullptr)
 			continue;
 
 		mesh->bone = GetBoneByIndex(mesh->boneIndex);
 	}
 
-	// Mesh�� Material ĳ��
+	// Mesh에 Material 캐싱
 	for (const shared_ptr<ImportedMesh>& mesh : _meshes)
 	{
 		vector<SkeletalMeshVertexType>& vertices = mesh->geometry->GetVertices();
@@ -209,7 +323,7 @@ shared_ptr<StaticMesh> FileLoader::CreateAndBindStaticMesh()
 		//NormalizeVectices(vertices);
 		//mesh->CreateBuffers();
 
-		// �̹� ã������ ��ŵ
+		// 이미 찾았으면 스킵
 		if (mesh->material != nullptr)
 			continue;
 
@@ -235,7 +349,7 @@ shared_ptr<SkeletalMesh> FileLoader::CreateAndBindSkeletalMesh()
 
 // Helper Funcs
 
-shared_ptr<Material> FileLoader::GetMaterialByName(const wstring& name)
+shared_ptr<MaterialBase> FileLoader::GetMaterialByName(const wstring& name)
 {
 	for (auto& material : _materials)
 	{
@@ -314,7 +428,7 @@ void FileLoader::CreateEachMeshBuffers()
 	}
 }
 
-void FileLoader::SetTextureToMaterial(const char* keyname, const wstring& parentPath, shared_ptr<Material> material, ETextureType textureType)
+void FileLoader::SetTextureToMaterial(const char* keyname, const wstring& parentPath, shared_ptr<MaterialBase> material, EMatTextureType textureType)
 {
 	if (!keyname)
 		return;

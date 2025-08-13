@@ -21,6 +21,14 @@ public:
 	OnTest _onTestDelegate;
 
 private:
+
+	void LoadDDSs();
+	void LoadLUTs();
+	void LoadMaterials();
+	void LoadTextures();
+	void CreateBasicObjects();
+	void CreateStaticModels();
+
 	shared_ptr<ClientPawn> _clientPawn;
 	shared_ptr<class Actor> _cameraActor;
 	shared_ptr<LightActor> _spotLight1;

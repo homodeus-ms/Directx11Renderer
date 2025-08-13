@@ -5,6 +5,7 @@ class Filter;
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(OnBloomFilterCreatedDelegate, float* /* BloomRange */, float* /* FilterStrength*/);
 DECLARE_MULTICAST_DELEGATE_OneParam(OnFilterWithBlendFactorCreatedDelegate, float* /* BlendFactor */);
+DECLARE_MULTICAST_DELEGATE_TwoParams(OnToneMappingFilterCreatedDelegate, float* /* Exposure */, float* /* Gamma */);
 
 class FilterFactory
 {
@@ -19,7 +20,7 @@ public:
 	//OnCombineFilterCreatedDelegate& GetCombineFilterCreatedDelegate() { return _onCombineFilterCreated; }
 	OnBloomFilterCreatedDelegate _onBloomFilterCreated;
 	OnFilterWithBlendFactorCreatedDelegate _onFilterWithBlendFactorCreated;
-	
+	OnToneMappingFilterCreatedDelegate _onToneMappingFilterCreated;
 	
 	Filter* InitCreatedFilter(Filter* newFilter, const wstring& psShaderName, uint32 viewportX = VIEW_X, uint32 viewportY = VIEW_Y);
 	Filter* GetCopyFilter();
@@ -30,6 +31,9 @@ public:
 	Filter* GetUpSamplingFilter();
 	Filter* GetCombineFilter();
 	Filter* GetLUTFilter();
+	Filter* GetToneMappingFilter();
+
+	void GetToneMappingValuePtrs(Filter* filter, OUT float** exposure, OUT float** gamma);
 
 	const wstring FILTER_COMMON_VS_PATH = L"Filters/FilterCommonVS.hlsl";
 	const uint32 DOWN_SAMPLE_RATIO = 16;

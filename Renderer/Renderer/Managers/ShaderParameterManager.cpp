@@ -1,7 +1,9 @@
 ﻿#include "pch.h"
 #include "ShaderParameterManager.h"
 #include "Components/CameraComponent.h"
-#include "Resource/Material.h"
+#include "Resource/Material/MaterialBase.h"
+#include "Resource/Material/IBLMaterial.h"
+#include "Resource/Material/Material.h"
 #include "Graphics/RenderPass/ShadowMapResources.h"
 
 
@@ -9,18 +11,19 @@ void ShaderParameterManager::BeginPlay()
 {
 	// Register Default Constant Buffers
 	
-	RegisterBuffer<GlobalDesc>("Global", static_cast<uint8>(EConstBufferRegisterNumber::Global), EShaderStage::Both);
-	RegisterBuffer<TransformDesc>("Transform", static_cast<uint8>(EConstBufferRegisterNumber::Transform), EShaderStage::VsStage);
+	RegisterBuffer<GlobalDesc>("Global", static_cast<uint8>(EConstBufferRegisterNumber::Global), EShaderStage::Both | EShaderStage::GsStage);
+	RegisterBuffer<TransformDesc>("Transform", static_cast<uint8>(EConstBufferRegisterNumber::Transform), EShaderStage::VsStage | EShaderStage::GsStage);
 	RegisterBuffer<DirectionalLightDesc>("DirectionalLight", static_cast<uint8>(EConstBufferRegisterNumber::DirectionalLight), EShaderStage::PsStage);
 	RegisterBuffer<SpotLightBuffer>("SpotLight", static_cast<uint8>(EConstBufferRegisterNumber::SpotLight), EShaderStage::PsStage);
 	RegisterBuffer<PointLightBuffer>("PointLight", static_cast<uint8>(EConstBufferRegisterNumber::PointLight), EShaderStage::PsStage);
 	
-	RegisterBuffer<MaterialDesc>("Material", static_cast<uint8>(EConstBufferRegisterNumber::Material), EShaderStage::PsStage);
+	RegisterBuffer<MaterialDesc>("Material", static_cast<uint8>(EConstBufferRegisterNumber::Material), EShaderStage::Both);
 	RegisterBuffer<BoneBuffer>("BoneBuffer", static_cast<uint8>(EConstBufferRegisterNumber::BoneBuffer), EShaderStage::VsStage);
 	RegisterBuffer<BoneIndex>("BoneIndex", static_cast<uint8>(EConstBufferRegisterNumber::BoneIndex), EShaderStage::VsStage);
 	RegisterBuffer<ShadowDataDesc>("Shadow", static_cast<uint8>(EConstBufferRegisterNumber::ShadowData), EShaderStage::Both);
 	RegisterBuffer<PointShadowDataDesc>("PointShadow", static_cast<uint8>(EConstBufferRegisterNumber::PointShadowData), EShaderStage::PsStage | EShaderStage::GsStage);
-	
+	RegisterBuffer<ForUIDebugDesc>("ForUIDebug", static_cast<uint8>(EConstBufferRegisterNumber::ForUIDebug), EShaderStage::Both);
+
 	// 특수하게 정의 되어 있는 const Buffers, Global하게 사용하는 cbuffer와 slot번호가 겹쳐서 사용함
 	RegisterBuffer<PointShadowDataDesc>("LightIndex", 0, EShaderStage::VsStage);
 	RegisterBuffer<FilterData>("FilterData", 0, EShaderStage::PsStage);
@@ -33,6 +36,7 @@ void ShaderParameterManager::Update()
 void ShaderParameterManager::PushGlobalData(const Matrix& view, const Matrix& projection)
 {
 	GlobalDesc desc;
+	
 	desc.V = view;
 	desc.P = projection;
 	desc.VP = desc.V * desc.P;
@@ -44,8 +48,24 @@ void ShaderParameterManager::PushGlobalData(const Matrix& view, const Matrix& pr
 	UpdateData("Global", desc);
 }
 
+void ShaderParameterManager::PushGlobalData(const Matrix& view, const Matrix& projection, const Matrix& reflectMatrix)
+{
+	GlobalDesc desc;
+
+	desc.V = view;
+	desc.P = projection;
+	desc.VP = reflectMatrix * desc.V * desc.P;
+
+	Matrix invV = view.Invert();
+	desc.CameraPosition = { invV._41, invV._42, invV._43 };
+	desc.bEnvLightUsing = _bEnvLigthOn ? 1 : 0;
+
+	UpdateData("Global", desc);
+}
+
 void ShaderParameterManager::PushTransformData(const TransformDesc& desc)
 {
+	
 	UpdateData("Transform", desc);
 }
 
@@ -92,10 +112,21 @@ void ShaderParameterManager::PushBoneIndex(const BoneIndex& desc)
 	UpdateData("BoneIndex", desc);
 }
 
-void ShaderParameterManager::PushMaterial(shared_ptr<Material> material)
+void ShaderParameterManager::PushMaterial(shared_ptr<MaterialBase> material)
 {
 	PushMaterialData(material->GetMaterialDesc());
-	_srvBindings = material->GetSRVBindingInfos();
+	const vector<SRVBindingInfo>& srvs = material->GetSRVBindingInfos();
+	assert(srvs.size() == _matSRVBindings.size());
+
+	for (uint32 i = 0; i < srvs.size(); ++i)
+		_matSRVBindings[i] = srvs[i];
+
+	if (material->IsUsingHeightMap())
+	{
+		ForUIDebugDesc desc;
+		desc.heightScale = material->GetHeightScale();
+		PushUIDebugDesc(desc);
+	}
 }
 
 void ShaderParameterManager::PushMaterialData(const MaterialDesc& desc)
@@ -113,23 +144,26 @@ void ShaderParameterManager::PushFilterData(const FilterData& data)
 	info.dirty = false;
 }
 
-void ShaderParameterManager::PushEnvLight(shared_ptr<SRVBindingInfo> info)
+void ShaderParameterManager::PushUIDebugDesc(const ForUIDebugDesc& desc)
 {
-	if (info->slot == static_cast<uint8>(ETextureType::IBL_Spec))
+	UpdateData("ForUIDebug", desc);
+}
+
+void ShaderParameterManager::PushIBLInfoOnce(shared_ptr<IBLMaterial> iblMaterial)
+{
+	const vector<SRVBindingInfo>& infos = iblMaterial->GetSRVBindingInfos();
+	_iblSRVBindings[0] = infos[0];
+	_iblSRVBindings[1] = infos[1];
+	_iblSRVBindings[2] = infos[2];
+	_iblSRVBindings[3] = infos[3];
+
+	// Update까지 바로 IBL은 계속 바뀌는 것이 아니므로 한 번만 셋팅
+	for (const SRVBindingInfo& info : _iblSRVBindings)
 	{
-		_envLightSpecInfo = info;
-		CONTEXT->PSSetShaderResources(_envLightSpecInfo->slot, 1, _envLightSpecInfo->srv.GetAddressOf());
-	}
-	else if (info->slot == static_cast<uint8>(ETextureType::IBL_Diff))
-	{
-		_envLightDiffInfo = info;
-		CONTEXT->PSSetShaderResources(_envLightDiffInfo->slot, 1, _envLightDiffInfo->srv.GetAddressOf());
+		CONTEXT->PSSetShaderResources(info.slot, 1, info.srv.GetAddressOf());
 	}
 
-	if (_envLightSpecInfo && _envLightDiffInfo)
-		PushEnvLightOnOff(true);
-
-	//_bEnvLightDirty = true;
+	PushEnvLightOnOff(true);
 }
 
 void ShaderParameterManager::PushEnvLightOnOff(bool bOn)
@@ -234,7 +268,7 @@ void ShaderParameterManager::BindAllDirtyBuffers()
 	}
 
 	// SRVs From Material
-	for (const auto& info : _srvBindings)
+	for (const auto& info : _matSRVBindings)
 	{
 		if (IsStageVS(info.stage))
 			CONTEXT->VSSetShaderResources(info.slot, 1, info.srv.GetAddressOf());

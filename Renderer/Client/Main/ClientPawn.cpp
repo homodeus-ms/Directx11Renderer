@@ -6,6 +6,11 @@ ClientPawn::ClientPawn(const string& name)
 {
 }
 
+ClientPawn::ClientPawn(EActorType type, const string& name)
+	: Super(type, name)
+{
+}
+
 ClientPawn::~ClientPawn()
 {
 }

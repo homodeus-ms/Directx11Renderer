@@ -17,6 +17,7 @@ enum class EConstBufferRegisterNumber : uint8
 	BoneIndex,
 	ShadowData,
 	PointShadowData,
+	ForUIDebug = 13,
 };
 
 enum class EMaterialType : uint32
@@ -25,6 +26,8 @@ enum class EMaterialType : uint32
 	RimLight = 1,
 	Toon = 2,
 	Monotone = 3,
+	EnvMap = 4,
+	PBR = 5,
 
 	END,
 };
@@ -79,6 +82,7 @@ struct GlobalDesc
 struct TransformDesc
 {
 	Matrix W = Matrix::Identity;
+	Matrix invW = Matrix::Identity;
 };
 
 struct SpotLightBuffer
@@ -99,12 +103,33 @@ struct MaterialDesc
 {
 	Color ambient = Color(1.f, 1.f, 1.f, 1.f);
 	Color diffuse = Color(1.f, 1.f, 1.f, 1.f);
-	Color specular = Color(1.f, 1.f, 1.f, 1.f); 
+	Color specular = Color(1.f, 1.f, 1.f, 20.f); 
 	Color emissive = Color(0.f, 0.f, 0.f, 1.f);
+	float metallic = 0.f;
+	float roughness = 0.f;
 	uint32 bUnLit = 0;
 	uint32 bGetIBL = 1;
 	EMaterialType MaterialType = EMaterialType::Default;
-	float pad = 0;
+	uint32 bUseHeightMap = 0;
+	uint32 bUseAlbedoMap = 0;
+	uint32 bUseNormalMap = 0;
+	uint32 bUseMetallicRoughnessMap = 0;
+	uint32 bUseAOMap = 0;
+	uint32 bUseEmissiveMap = 0;
+	float pad = 0.f;
+
+	// Emissive는 따로 셋팅
+	void UsePBR()
+	{
+		bUseHeightMap = 1;
+		bUseAlbedoMap = 1;
+		bUseNormalMap = 1;
+		bUseMetallicRoughnessMap = 1;
+		bUseAOMap = 1;
+		metallic = 0.4f;
+		roughness = 0.5f;
+		MaterialType = EMaterialType::PBR;
+	}
 };
 
 
@@ -144,6 +169,12 @@ struct FilterData
 	float dx;
 	float dy;
 	float brightnessThreshold;
-	float strength;
+	float strength = 0.4f;
 	Vec4 options;
+};
+
+struct ForUIDebugDesc
+{
+	float heightScale = 1.f;
+	float pad[3];
 };

@@ -5,10 +5,8 @@
 #include "Managers/ShaderParameterManager.h"
 
 DirectionalLight::DirectionalLight()
+	: _desc(Color(0.2f, 0.2f, 0.2f, 1.f), Color(0.4f, 0.4f, 0.4f, 1.f), Color(0.4f, 0.4f, 0.4f, 1.f))
 {
-	_desc.ambient = Vec4(0.2f, 0.2f, 0.2f, 1.f);
-	_desc.diffuse = Vec4(0.4f, 0.4f, 0.4f, 1.f);
-	_desc.specular = Vec4(0.4f, 0.4f, 0.4f, 1.f);
 	_desc.direction = Vec3(-1.f, -1.f, 1.f);
 	_desc.direction.Normalize();
 	_desc.isOn = 1;

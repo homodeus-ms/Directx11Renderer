@@ -6,7 +6,9 @@
 #include "Components/CameraComponent.h"
 #include "Resource/BasicMesh/BasicMesh.h"
 #include "Resource/Texture/LoadedTexture.h"
-#include "Resource/Material.h"
+#include "Resource/Material/MaterialBase.h"
+#include "Resource/Material/Material.h"
+
 #include "Resource/StaticMesh.h"
 #include "Graphics/Buffer/InputLayout.h"
 #include "Graphics/Buffer/VertexBuffer.h"
@@ -28,23 +30,9 @@ StaticMeshRenderer::~StaticMeshRenderer()
 {
 }
 
-void StaticMeshRenderer::SetInputLayout()
-{
-	const vector<D3D11_INPUT_ELEMENT_DESC>& desc = StaticMeshVertexType::descs;
-	_inputLayout = make_shared<InputLayout>();
-	_inputLayout->Create(desc, _vertexShader->GetBlob());
-}
-
-vector<shared_ptr<Material>> StaticMeshRenderer::GetMaterials()
+vector<shared_ptr<MaterialBase>> StaticMeshRenderer::GetMaterials()
 {
 	return _staticMesh->GetMaterials();
-}
-
-void StaticMeshRenderer::SetShaderInfo(shared_ptr<ShaderInfo> shaderInfo)
-{
-	_shaderInfo = shaderInfo;
-	SetVertexShader(_shaderInfo);
-	SetPixelShader(_shaderInfo);
 }
 
 void StaticMeshRenderer::ChangeMaterialType(EMaterialType type)
@@ -54,7 +42,7 @@ void StaticMeshRenderer::ChangeMaterialType(EMaterialType type)
 
 void StaticMeshRenderer::Construct()
 {
-	_bRenderReady = _shaderInfo != nullptr && _staticMesh != nullptr;
+	_bRenderReady = _staticMesh != nullptr;
 }
 
 void StaticMeshRenderer::BeginPlay()
@@ -78,7 +66,8 @@ void StaticMeshRenderer::Render()
 
 	// Transform
 	auto world = GetOwnerTransform()->GetWorldMatrix();
-	SHADER_PARAM_MANAGER->PushTransformData(TransformDesc{ world });
+	auto invWorld = GetOwnerTransform()->GetInvWorldMatrix();
+	SHADER_PARAM_MANAGER->PushTransformData(TransformDesc{ world, invWorld });
 
 	// Mesh, Materials
 	const auto& meshes = _staticMesh->GetMeshes();
@@ -124,7 +113,8 @@ void StaticMeshRenderer::RenderDepthOnly(bool bForPointLight, int32 instanceCoun
 
 	// Transform
 	auto world = GetOwnerTransform()->GetWorldMatrix();
-	SHADER_PARAM_MANAGER->PushTransformData(TransformDesc{ world });
+	auto invWorld = GetOwnerTransform()->GetInvWorldMatrix();
+	SHADER_PARAM_MANAGER->PushTransformData(TransformDesc{ world, invWorld });
 	SHADER_PARAM_MANAGER->BindAllDirtyBuffers();
 
 	// Mesh, Materials
@@ -146,7 +136,28 @@ void StaticMeshRenderer::RenderDepthOnly(bool bForPointLight, int32 instanceCoun
 		CONTEXT->IASetIndexBuffer(mesh->indexBuffer->GetComPtr().Get(), DXGI_FORMAT_R32_UINT, 0);
 		
 		DrawIndexed(mesh->indexBuffer->GetCount());
-
-		ClearGeometryShader();
 	}
 }
+
+void StaticMeshRenderer::RenderDrawNormal()
+{
+	auto world = GetOwnerTransform()->GetWorldMatrix();
+	auto invWorld = GetOwnerTransform()->GetInvWorldMatrix();
+	SHADER_PARAM_MANAGER->PushTransformData(TransformDesc{ world, invWorld });
+
+	// Mesh, Materials
+	const auto& meshes = _staticMesh->GetMeshes();
+	for (int32 i = 0; i < meshes.size(); ++i)
+	{
+		auto mesh = meshes[i];
+		SHADER_PARAM_MANAGER->BindAllDirtyBuffers();
+
+		uint32 stride = mesh->vertexBuffer->GetStride();
+		uint32 offset = mesh->vertexBuffer->GetOffset();
+		CONTEXT->IASetVertexBuffers(0, 1, mesh->vertexBuffer->GetComPtr().GetAddressOf(), &stride, &offset);
+		
+		Draw(mesh->vertexBuffer->GetCount(), 0);
+	}
+}
+
+

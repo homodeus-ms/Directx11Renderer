@@ -6,6 +6,8 @@ enum class MissingTextureFindKeyword
 	Diffuse,
 	Normal,
 	Specular,
+	MetallicRoughness,
+	Emissive,
 };
 
 class Converter
@@ -22,17 +24,20 @@ public:
 	void ReadModelData(aiNode* node, int32 index, int32 parent);
 	void ReadMeshData(aiNode* node, int32 bone);
 	void ReadMaterialData(const wstring& pathForMissing);
+	void ReadPBRMaterialData(const wstring& path);
 
 	void WriteCustomMeshFile(wstring finalPath, bool bIsSkeletalMesh);
 	void WriteCustomMaterialFile(wstring finalPath);
+	void WritePBRMaterialFile(wstring finalPath);
 	string WriteTexture(string saveFolder, string file);
 
 	void Cleanup();
 
 public:
-	void SetFoundTexturePath(string& setTarget, const string& path, const wstring& pathForMissing, MissingTextureFindKeyword keyword);
+	void SetFoundTexturePath(string& setTarget, const string path, const wstring& pathForMissing, MissingTextureFindKeyword keyword);
+	string GetFoundTexturePath(const string& path);
 	string FindMissingTextureInFBXFolder(const wstring& findTargetPath, MissingTextureFindKeyword keyword);
-	
+	wstring GetExtension(const wstring& filename);
 
 	// obj, mtl
 	void ReadObjFile(const wstring& path);
@@ -48,5 +53,9 @@ public:
 	vector<shared_ptr<ASBone>> _bones;
 	vector<shared_ptr<ASMesh>> _meshes;
 	vector<shared_ptr<ASMaterial>> _materials;
+	vector<shared_ptr<PBRMaterial>> _PBRMaterials;
+
+	// for gltf
+	bool _bIsGLTF = false;
 };
 

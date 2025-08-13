@@ -13,5 +13,6 @@ enum class EFilterType : uint8
 	Gaussian,
 	Bloom,
 	LUT_ColorGrading,
+	ToneMapping,
 	End,
 };

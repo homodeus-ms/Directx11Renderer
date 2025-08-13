@@ -5,6 +5,7 @@
 #include "BloomPreFilter.h"
 #include "CombineFilter.h"
 #include "ColorGradingLUTFilter.h"
+#include "ToneMappingFilter.h"
 
 FilterFactory::~FilterFactory()
 {
@@ -19,6 +20,13 @@ void FilterFactory::CreateFilter(EFilterType type, OUT list<Filter*>& filters)
 	case EFilterType::BlurY_Gaussian: filters.push_back(GetBlurY_GaussianFilter()); break;
 	case EFilterType::DownSampling: filters.push_back(GetDownSamplingFilter()); break;
 	case EFilterType::UpSampling: filters.push_back(GetUpSamplingFilter()); break;
+	case EFilterType::ToneMapping: 
+	{
+		filters.push_back(GetToneMappingFilter()); 
+		ToneMappingFilter* toneMappingFilter = static_cast<ToneMappingFilter*>(filters.back());
+		_onToneMappingFilterCreated.Broadcast(toneMappingFilter->GetExposurePtr(), toneMappingFilter->GetGammaPtr());
+		break;
+	}
 	case EFilterType::LUT_ColorGrading:
 	{ 
 		filters.push_back(GetLUTFilter()); 
@@ -132,6 +140,19 @@ Filter* FilterFactory::GetLUTFilter()
 {
 	Filter* filter = new ColorGradingLUTFilter();
 	return InitCreatedFilter(filter, L"Filters/ColorGradingLUT.hlsl", GWinSizeX, GWinSizeY);
+}
+
+Filter* FilterFactory::GetToneMappingFilter()
+{
+	Filter* filter = new ToneMappingFilter();
+	return InitCreatedFilter(filter, L"Filters/ToneMapping.hlsl", GWinSizeX, GWinSizeY);;
+}
+
+void FilterFactory::GetToneMappingValuePtrs(Filter* filter, OUT float** exposure, OUT float** gamma)
+{
+	ToneMappingFilter* tFilter = static_cast<ToneMappingFilter*>(filter);
+	*exposure = tFilter->GetExposurePtr();
+	*gamma = tFilter->GetGammaPtr();
 }
 
 

@@ -9,7 +9,9 @@
 #include "Resource/BasicMesh/DefaultBasicMesh.h"
 #include "Resource/BasicMesh/CubeMapBasicMesh.h"
 #include "Resource/BasicMesh/VertexUVBasicMesh.h"
-#include "Resource/Material.h"
+#include "Resource/Material/MaterialBase.h"
+#include "Resource/Material/Material.h"
+#include "Resource/Material/IBLMaterial.h"
 #include "Resource/StaticMesh.h"
 #include "Graphics/Shader/Shader.h"
 #include "Graphics/Shader/ShaderInfo.h"
@@ -20,6 +22,7 @@ void ResourceManager::BeginPlay()
 	CreateDefaultMesh();
 	CreateDefaultMaterials();
 	_fileLoader = make_unique<FileLoader>();
+
 }
 
 void ResourceManager::CreateDefaultMesh()
@@ -40,20 +43,30 @@ void ResourceManager::CreateDefaultMesh()
 		Add(L"Sphere", mesh);
 	}
 	{
+		shared_ptr<BasicMesh> mesh = make_shared<DefaultBasicMesh>();
+		mesh->CreateSphere(0.4f, 100, 100, {1.f, 1.f});
+		Add(L"CustomSphere", mesh);
+	}
+	{
 		shared_ptr<BasicMesh> mesh = make_shared<CubeMapBasicMesh>();
 		mesh->CreateCubeMap();
 		Add(L"CubeMap", mesh);
 	}
+	{
+		shared_ptr<BasicMesh> mesh = make_shared<DefaultBasicMesh>();
+		mesh->CreateGrid(50, 50);
+		Add(L"Grid", mesh);
+	}
 }
 
-shared_ptr<StaticMesh> ResourceManager::LoadMeshFromAssetFolder(const wstring& key, const wstring& filename, bool bIsStaticMesh)
+shared_ptr<StaticMesh> ResourceManager::LoadMeshFromAssetFolder(const wstring& key, const wstring& filename, bool bIsStaticMesh, bool bIsPBRMesh)
 {
 	if (shared_ptr<StaticMesh> get = Get<StaticMesh>(key))
 		return get;
 
 	assert(_fileLoader != nullptr);
 
-	shared_ptr<StaticMesh> mesh = _fileLoader->LoadMeshOrNull(key, filename, bIsStaticMesh);
+	shared_ptr<StaticMesh> mesh = _fileLoader->LoadMeshOrNull(key, filename, bIsStaticMesh, bIsPBRMesh);
 
 	if (mesh == nullptr)
 	{
@@ -89,7 +102,7 @@ void ResourceManager::CreateDefaultMaterials()
 	// Red
 	{
 		shared_ptr<Material> material = make_shared<Material>();
-		material->SetDiffuseMap(Get<LoadedTexture>(L"WhiteTexture"));
+		material->SetAlbedoMap(Get<LoadedTexture>(L"WhiteTexture"));
 		{
 			MaterialDesc& desc = material->GetMaterialDesc();
 			desc.ambient = Vec4(0.8f);
@@ -98,30 +111,15 @@ void ResourceManager::CreateDefaultMaterials()
 			desc.emissive = Vec4(0.f, 0.f, 0.0f, 1.f);
 			desc.bUnLit = 0;
 		}
-		shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"BasicMeshShader.hlsl");
-		material->SetShaderInfo(shaderInfo);
+		//shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"BasicMeshShader.hlsl");
+		//material->SetShaderInfo(shaderInfo);
 		Add(L"BasicRed", material);
 	}
 
-	{
-		shared_ptr<Material> material = make_shared<Material>();
-		material->SetDiffuseMap(Get<LoadedTexture>(L"WhiteTexture"));
-		{
-			MaterialDesc& desc = material->GetMaterialDesc();
-			desc.ambient = Vec4(0.8f);
-			desc.diffuse = Vec4(1.f, 0.f, 0.f, 1.f);
-			desc.specular = Vec4(1.f);
-			desc.emissive = Vec4(0.f, 0.f, 0.0f, 1.f);
-			desc.bUnLit = 0;
-		}
-		shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"BasicMeshShader.hlsl");
-		material->SetShaderInfo(shaderInfo);
-		Add(L"BasicRed", material);
-	}
 	// Blue
 	{
 		shared_ptr<Material> material = make_shared<Material>();
-		material->SetDiffuseMap(Get<LoadedTexture>(L"WhiteTexture"));
+		material->SetAlbedoMap(Get<LoadedTexture>(L"WhiteTexture"));
 		{
 			MaterialDesc& desc = material->GetMaterialDesc();
 			desc.ambient = Vec4(0.8f);
@@ -130,15 +128,15 @@ void ResourceManager::CreateDefaultMaterials()
 			desc.emissive = Vec4(0.f, 0.f, 0.0f, 1.f);
 			desc.bUnLit = 0;
 		}
-		shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"BasicMeshShader.hlsl");
-		material->SetShaderInfo(shaderInfo);
+		//shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"BasicMeshShader.hlsl");
+		//material->SetShaderInfo(shaderInfo);
 		Add(L"BasicBlue", material);
 	}
 
 	// Green
 	{
 		shared_ptr<Material> material = make_shared<Material>();
-		material->SetDiffuseMap(Get<LoadedTexture>(L"WhiteTexture"));
+		material->SetAlbedoMap(Get<LoadedTexture>(L"WhiteTexture"));
 		{
 			MaterialDesc& desc = material->GetMaterialDesc();
 			desc.ambient = Vec4(0.8f);
@@ -147,15 +145,15 @@ void ResourceManager::CreateDefaultMaterials()
 			desc.emissive = Vec4(0.f, 0.f, 0.0f, 1.f);
 			desc.bUnLit = 0;
 		}
-		shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"BasicMeshShader.hlsl");
-		material->SetShaderInfo(shaderInfo);
+		//shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"BasicMeshShader.hlsl");
+		//material->SetShaderInfo(shaderInfo);
 		Add(L"BasicGreen", material);
 	}
 
 	// Yellow
 	{
 		shared_ptr<Material> material = make_shared<Material>();
-		material->SetDiffuseMap(Get<LoadedTexture>(L"WhiteTexture"));
+		material->SetAlbedoMap(Get<LoadedTexture>(L"WhiteTexture"));
 		{
 			MaterialDesc& desc = material->GetMaterialDesc();
 			desc.ambient = Vec4(0.8f);
@@ -164,15 +162,15 @@ void ResourceManager::CreateDefaultMaterials()
 			desc.emissive = Vec4(0.f, 0.f, 0.0f, 1.f);
 			desc.bUnLit = 0;
 		}
-		shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"BasicMeshShader.hlsl");
-		material->SetShaderInfo(shaderInfo);
+		//shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"BasicMeshShader.hlsl");
+		//material->SetShaderInfo(shaderInfo);
 		Add(L"BasicYellow", material);
 	}
 
 	// White
 	{
 		shared_ptr<Material> material = make_shared<Material>();
-		material->SetDiffuseMap(Get<LoadedTexture>(L"WhiteTexture"));
+		material->SetAlbedoMap(Get<LoadedTexture>(L"WhiteTexture"));
 		{
 			MaterialDesc& desc = material->GetMaterialDesc();
 			desc.ambient = Vec4(0.9f);
@@ -181,8 +179,8 @@ void ResourceManager::CreateDefaultMaterials()
 			desc.emissive = Vec4(0.f, 0.f, 0.0f, 1.f);
 			desc.bUnLit = 0;
 		}
-		shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"BasicMeshShader.hlsl");
-		material->SetShaderInfo(shaderInfo);
+		//shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"BasicMeshShader.hlsl");
+		//material->SetShaderInfo(shaderInfo);
 		Add(L"BasicWhite", material);
 	}
 }

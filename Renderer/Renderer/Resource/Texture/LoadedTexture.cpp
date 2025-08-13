@@ -2,6 +2,9 @@
 #include "Resource/Texture/LoadedTexture.h"
 #include <filesystem>
 #include <directxtk/DDSTextureLoader.h>
+#include <dxgi.h>                       
+#include <dxgi1_4.h>                    
+#include <fp16.h>
 
 
 LoadedTexture::LoadedTexture()
@@ -16,13 +19,22 @@ void LoadedTexture::Load(const wstring& path)
 {
 	std::filesystem::path filepath(path);
 	wstring ext = filepath.extension().wstring();
-
 	DirectX::TexMetadata md;
 
 	if (ext == L".tga")
 	{
 		HRESULT hr = DirectX::LoadFromTGAFile(path.c_str(), &md, _img);
 		check(hr);
+
+		if (md.format == DXGI_FORMAT_R8G8B8A8_UNORM)
+		{
+			DirectX::ScratchImage converted;
+			hr = DirectX::Convert(_img.GetImages(), _img.GetImageCount(), md, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, TEX_FILTER_DEFAULT, 0.0f, converted);
+			check(hr);
+
+			_img = std::move(converted);
+			md.format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+		}
 	}
 	else if (ext == L".dds")
 	{
@@ -44,9 +56,16 @@ void LoadedTexture::Load(const wstring& path)
 
 		return;
 	}
+	else if (ext == L".exr")
+	{
+		HRESULT hr = GetMetadataFromEXRFile(path.c_str(), md);
+		check(hr);
+		
+		hr = LoadFromEXRFile(path.c_str(), NULL, _img);
+	}
 	else
 	{
-		HRESULT hr = ::LoadFromWICFile(path.c_str(), WIC_FLAGS_NONE, &md, _img);
+		HRESULT hr = ::LoadFromWICFile(path.c_str(), WIC_FLAGS_FORCE_SRGB, &md, _img);
 		check(hr);
 	}
 
@@ -63,7 +82,7 @@ void LoadedTexture::Load(const wstring& path)
 	desc.Height = static_cast<UINT>(loadedImage->height);
 	desc.MipLevels = 0;     // 전체 mipmap 생성
 	desc.ArraySize = 1;
-	desc.Format = loadedImage->format; //DXGI_FORMAT_R8G8B8A8_UNORM;
+	desc.Format = loadedImage->format;
 	desc.SampleDesc.Count = 1;
 	desc.Usage = D3D11_USAGE_DEFAULT;
 	desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
@@ -86,13 +105,10 @@ void LoadedTexture::Load(const wstring& path)
 	hr = DEVICE->CreateShaderResourceView(_texture.Get(), &srvDesc, _SRV.GetAddressOf());
 	check(hr);
 	
-	//hr = ::CreateShaderResourceView(DEVICE.Get(), _img.GetImages(), _img.GetImageCount(), md, _SRV.GetAddressOf());
-	//check(hr);
-
 	CONTEXT->GenerateMips(_SRV.Get());
 
+	// TEMP : For Check
 	D3D11_TEXTURE2D_DESC tempDesc = {};
 	_texture->GetDesc(&tempDesc);
-	std::cout << "MipLevels: " << tempDesc.MipLevels << std::endl;
 }
 

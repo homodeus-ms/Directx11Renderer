@@ -37,7 +37,7 @@ public:
 	Vec3 GetLook();
 
 	Matrix GetWorldMatrix();
-
+	Matrix GetInvWorldMatrix();
 	
 	bool HasParent() { return _parent.lock() != nullptr; }
 	shared_ptr<Transform> GetParent() { return _parent.lock(); }

@@ -4,8 +4,6 @@
 #include <fcntl.h>
 #include <io.h>
 #include "Engine/Renderer.h"
-
-#include "NormalDemo.h"
 #include "LoadMaterialDemo.h"
 
 shared_ptr<EngineClientFlowManager> g_FlowManager;

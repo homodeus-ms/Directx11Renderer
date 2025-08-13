@@ -91,7 +91,8 @@ void Filter::Render()
 		CONTEXT->PSSetShader(_pixelShader->GetComPtr().Get(), nullptr, 0);
 
 	// TEMP : ShaderParameterManager 를 사용하게 하는 게 좋을 것 같은데?
-	CONTEXT->PSSetShaderResources(FILTER_TARGET_SLOT_NUM, UINT(_SRVs.size()), _SRVs.data());
+	uint8 slot = static_cast<uint8>(EFilterTextureType::Filtered);
+	CONTEXT->PSSetShaderResources(slot, UINT(_SRVs.size()), _SRVs.data());
 	SHADER_PARAM_MANAGER->PushFilterData(_filterData);
 
 	uint32 stride = _filterQuad->GetVertexBuffer()->GetStride();

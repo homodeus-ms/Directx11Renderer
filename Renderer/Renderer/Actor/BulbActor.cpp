@@ -3,7 +3,8 @@
 #include "Components/Transform.h"
 #include "Resource/Texture/LoadedTexture.h"
 #include "Resource/BasicMesh/BasicMesh.h"
-#include "Resource/Material.h"
+#include "Resource/Material/MaterialBase.h"
+#include "Resource/Material/Material.h"
 #include "Graphics/Shader/ShaderInfo.h"
 #include "Managers/ShaderParameterManager.h"
 #include "Managers/SceneManager.h"
@@ -32,8 +33,6 @@ void BulbActor::Construct()
 		desc.bUnLit = 1;
 	}
 
-	shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"BasicMeshShader.hlsl");
-	_material->SetShaderInfo(shaderInfo);
 	RESOURCE_MANAGER->Add(L"Bulb", _material);
 
 	GetTransform()->SetWorldPosition({ 0.f, 5.f, 0.f });

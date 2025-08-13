@@ -24,6 +24,8 @@ public:
 	static void CreateCube(shared_ptr<Geometry<VertexUVNormalTangentData>> geometry);
 	static void CreateGrid(shared_ptr<Geometry<VertexUVNormalTangentData>> geometry, int32 sizeX, int32 sizeZ);
 	static void CreateSphere(shared_ptr<Geometry<VertexUVNormalTangentData>> geometry);
+	static void CreateSphere(shared_ptr<Geometry<VertexUVNormalTangentData>> geometry, 
+		float radius, int numSlices, int numStacks, Vec2 texScale);
 	static void CreateSquareRoom(shared_ptr<Geometry<VertexUVNormalTangentData>> geometry, int32 size = 80);
 };
 

@@ -37,7 +37,7 @@ void Texture3D::CreateTexture(uint32 size, const vector<Vec3>& data)
 	DEVICE->CreateShaderResourceView(_texture.Get(), &srvDesc, _SRV.GetAddressOf());
 
 	_srvBindingInfo = make_shared<SRVBindingInfo>();
-	_srvBindingInfo->slot = LUT_SLOT_NUM;
+	_srvBindingInfo->slot = static_cast<uint8>(EFilterTextureType::LUT);
 	_srvBindingInfo->stage = EShaderStage::PsStage;
 	_srvBindingInfo->srv = _SRV;
 }
