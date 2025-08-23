@@ -59,7 +59,9 @@ public:
 	void PushMaterialData(const MaterialDesc& desc);
 
 	// Filter
-	void PushFilterData(const FilterData& data);
+	void PushFilterDataImmediately(const FilterData& data);
+	void PushPostEffectDescImmediately(const PostEffectData& data);
+	void PushShaderToyDataImmediately(const ShaderToyData& data);
 
 	// ForUIDebug
 	void PushUIDebugDesc(const ForUIDebugDesc& desc);
@@ -77,6 +79,7 @@ public:
 	//void UpdateShadowCubeMapVPs(const vector<Matrix>& VPs, uint32 currUsingIndex);
 	
 	//void SetUseShadowCubeTrue();
+
 	void PushShadowMapSRV(shared_ptr<SRVBindingInfo> info);
 	void PushShadowCubeMapSRV(shared_ptr<SRVBindingInfo> info);  // TEMP
 	

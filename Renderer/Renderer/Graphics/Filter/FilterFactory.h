@@ -22,7 +22,7 @@ public:
 	OnFilterWithBlendFactorCreatedDelegate _onFilterWithBlendFactorCreated;
 	OnToneMappingFilterCreatedDelegate _onToneMappingFilterCreated;
 	
-	Filter* InitCreatedFilter(Filter* newFilter, const wstring& psShaderName, uint32 viewportX = VIEW_X, uint32 viewportY = VIEW_Y);
+	Filter* InitCreatedFilter(Filter* newFilter, const wstring& psShaderName, uint32 viewportX = VIEW_X, uint32 viewportY = VIEW_Y, uint32 viewportTopLeftX = 0);
 	Filter* GetCopyFilter();
 	Filter* GetBloomPreFilter();
 	Filter* GetBlurX_GaussianFilter();

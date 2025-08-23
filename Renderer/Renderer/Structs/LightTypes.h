@@ -19,7 +19,7 @@ struct LightDesc
 	LightDesc(Color A, Color D, Color S, Color E = { 0.f, 0.f, 0.f, 1.f })
 		: ambient(A), diffuse(D), specular(S), emissive(E)
 		, color(D.x, D.y, D.z)
-		, radiance((color.x + color.y + color.z) * 2 / 3.f) {}
+		, radiance((color.x + color.y + color.z) * 8 / 3.f) {}
 	
 	Color ambient;
 	Color diffuse;
@@ -59,7 +59,7 @@ struct SpotLightDesc : public LightDesc
 	Vec3 direction{ 0.f, 0.f, 1.f };
 	float range = 80.f;
 	Vec3 attenuation = { 1.f, 0.1f, 0.05f }; // constant, linear, quadratic
-	float spotPower = 8.f;
+	float spotPower = 3.f;
 	uint32 isOn = 1;
 	float pad[2]{};
 };

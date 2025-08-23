@@ -50,6 +50,7 @@ public:
 	void SetWireFrameMode(bool bModeOn);
 
 	// Shadow Map
+	void SetShowDepthMap(bool bShow);
 	bool ShouldDrawDebugShadowMap() { return _bDrawDebugShadowMap; }
 	void SetDrawShadowMap(bool bDraw) { _bDrawDebugShadowMap = bDraw; }
 
@@ -83,7 +84,7 @@ private:
 	shared_ptr<CameraActor> _topViewCamera;
 	
 	shared_ptr<Actor> _cubeMapCached = nullptr;
-	shared_ptr<Actor> _shadowMapDebugActor = nullptr;
+	//shared_ptr<Actor> _shadowMapDebugActor = nullptr;
 	bool _bDrawDebugShadowMap = false;
 };
 

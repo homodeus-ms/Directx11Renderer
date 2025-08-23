@@ -106,6 +106,7 @@ cbuffer GlobalBuffer : register(CBUFFER_NUM_GLOBAL)
     ROW_MAT V;
     ROW_MAT P;
     ROW_MAT VP;
+    ROW_MAT invP;
     float3 CameraPosition;
     uint bEnvLightUsing;
 };
@@ -162,10 +163,12 @@ Texture2D BRDFMap : register(REG_BRDF);
 
 TextureCube ShadowCubeMap : register(REG_SHADOW_CUBE);
 Texture2D ShadowMaps[MAX_ACTIVE_SHADOW_LIGHT] : register(REG_SHADOW);
+Texture2D DepthMap : register(REG_DEPTH_MAP);
 
 // SamplerState
 SamplerState LinearSampler : register(s0);
 SamplerState ClampSampler : register(s1);
+SamplerComparisonState ComparisionSampler : register(s2);
 
 SamplerState PointSampler
 {

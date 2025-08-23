@@ -1,17 +1,17 @@
 #include "pch.h"
-#include "ShadowCubeTexture.h"
+#include "CubeDepthMapTexture.h"
 #include "Structs/ShaderParameterTypes.h"
 #include "Graphics/RenderPass/ShadowMapResources.h"
 
-ShadowCubeTexture::ShadowCubeTexture()
+CubeDepthMapTexture::CubeDepthMapTexture()
 {
 }
 
-ShadowCubeTexture::~ShadowCubeTexture()
+CubeDepthMapTexture::~CubeDepthMapTexture()
 {
 }
 
-void ShadowCubeTexture::CreateTexture()
+void CubeDepthMapTexture::CreateTexture(EShadowTextureType type)
 {
 	// Texture
 	{
@@ -45,7 +45,7 @@ void ShadowCubeTexture::CreateTexture()
 
 		// SRV Binding Info
 		_srvBindingInfo = make_shared<SRVBindingInfo>();
-		_srvBindingInfo->slot = static_cast<uint8>(EShadowTextureType::ShadowCube);
+		_srvBindingInfo->slot = static_cast<uint8>(type);
 		_srvBindingInfo->stage = EShaderStage::PsStage;
 		_srvBindingInfo->srv = _SRV;
 	}

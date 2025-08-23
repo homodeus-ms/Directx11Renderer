@@ -20,50 +20,35 @@ void ImGuiManager::BeginPlay()
 	// Setup Platform/Renderer backends
 	ImGui_ImplWin32_Init(RENDERER->GetGameDesc().hWnd);
 	ImGui_ImplDX11_Init(DEVICE.Get(), CONTEXT.Get());
-
-	CreateSubContext();
 }
 
 // NewFrame() → UI 코드 호출 → Render()
 void ImGuiManager::Tick()
 {
 	HWND focused = GetForegroundWindow();
+
 	if (focused == _mainHwnd) 
 	{
 		ImGui::SetCurrentContext(_mainContext);
-	}
-	else if (focused == _subHwnd) 
-	{
-		ImGui::SetCurrentContext(_subContext);
-	}
 
-	//ImGui::SetCurrentContext(_mainContext);
-	if (ImGui::GetCurrentContext() == _mainContext)
-	{
 		ImGui_ImplDX11_NewFrame();
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
 
 		_onTick.Broadcast();
 	}
-
-	if (ImGui::GetCurrentContext() == _subContext)
+	else if (focused == _subHwnd) 
 	{
 		if (_bShowSubWindow)
 		{
+			ImGui::SetCurrentContext(_subContext);
+
 			ImGui::SetCurrentContext(_subContext);
 			ImGui_ImplDX11_NewFrame();
 			ImGui_ImplWin32_NewFrame();
 			ImGui::NewFrame();
 
 			_onSubWindowTick.Broadcast();
-
-			// TEST
-			//ImGui::SetNextWindowPos({ 0, 0 }, ImGuiCond_Once);
-			//ImGui::SetNextWindowSize({ 500, 250 }, ImGuiCond_Once);
-			//ImGui::Begin("SubWindow", nullptr);
-			//ImGui::Text("Test Sub UI, Is it Work??\n Is It?\n");
-			//ImGui::End();
 		}
 	}
 }
@@ -78,8 +63,7 @@ void ImGuiManager::Render()
 
 		GRAPHICS->RenderEnd();
 	}
-
-	if (ImGui::GetCurrentContext() == _subContext)
+	else if (ImGui::GetCurrentContext() == _subContext)
 	{
 		if (_bShowSubWindow)
 		{
@@ -92,15 +76,14 @@ void ImGuiManager::Render()
 			GRAPHICS->SubWindowRenderEnd();
 		}
 	}
-	
 }
 
 void ImGuiManager::CreateSubContext()
 {
 	assert(_subHwnd == NULL && _subContext == nullptr);
 
-	_subHwnd = RENDERER->CreateSubWindow(500, 400);
-	GRAPHICS->CreateResourcesForSubWindows(_subHwnd, 500, 400);
+	_subHwnd = RENDERER->CreateSubWindow(SubWindowX, SubWindowY);
+	GRAPHICS->CreateResourcesForSubWindows(_subHwnd, SubWindowX, SubWindowY);
 
 	_subContext = ImGui::CreateContext();
 	ImGui::SetCurrentContext(_subContext);

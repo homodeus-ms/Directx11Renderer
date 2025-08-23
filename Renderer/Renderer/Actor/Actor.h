@@ -22,6 +22,8 @@ enum class EActorType : uint8
 	ReflectActor,
 };
 
+DECLARE_MULTICAST_DELEGATE(OnTransformChangedDelegate);
+
 class Actor : public enable_shared_from_this<Actor>
 {
 public:
@@ -35,6 +37,7 @@ public:
 	virtual void FixedTick();
 
 	void Render();
+	void RenderDepthMap();
 	void RenderShadowMap(bool bForPointLight, int32 instanceCount = 0);
 	void RenderDrawNormal();
 
@@ -46,12 +49,14 @@ public:
 	shared_ptr<Component> GetFixedComponent(EComponentType type);
 	shared_ptr<Transform> GetTransform();
 	shared_ptr<Transform> GetOrAddTransform();
+	shared_ptr<Component> GetReflectComponentOrNull();
+	
 	void AddComponent(shared_ptr<Component> component);
 	bool IsRenderedActor();
 
 	// Mesh, Material
 	vector<shared_ptr<MaterialBase>> GetMaterials();
-
+	shared_ptr<MeshBase> GetMesh() { return _mesh; }
 	void SetBasicMesh(const shared_ptr<BasicMesh>& mesh);
 	void SetBasicMaterial(const shared_ptr<MaterialBase>& material);
 	void SetStaticMesh(const shared_ptr<StaticMesh>& staticMesh);
@@ -61,8 +66,8 @@ public:
 
 	// Transform
 	bool IsTransformChanged() { return _bTransformChanged; }
-	virtual void SetTransformChanged(bool bChanged) { _bTransformChanged = bChanged; }
-
+	virtual void SetTransformChanged(bool bChanged);
+	
 	// ShadowMap
 	bool IsCastShadowedActor() { return _bCastShadow; }
 	void SetIsCastShadowedActor(bool bShadowed) { _bCastShadow = bShadowed; }
@@ -71,9 +76,11 @@ public:
 	bool ShouldDrawNormal() { return _bDrawNormal; }
 	void SetDrawNormal(bool bDraw) { _bDrawNormal = bDraw; };
 
-protected:
+	OnTransformChangedDelegate _onTransformChanged;
 
+protected:
 	array<shared_ptr<Component>, FIXED_COMPONENT_COUNT> _components;
+	vector<shared_ptr<Component>> _addedComponent;
 	
 	// Renderer Cache
 	shared_ptr<RenderComponentBase> _renderer = nullptr;
@@ -81,8 +88,11 @@ protected:
 	EActorType _actorType;
 	EResourceType _meshType{};
 	string _actorName{};
+	shared_ptr<MeshBase> _mesh;
 
 private:
+	bool HasNoSameComponentType(shared_ptr<Component> component);
+
 	bool _bCastShadow = true;
 	bool _bTransformChanged = true;
 	bool _bIsRenderedActor = true;

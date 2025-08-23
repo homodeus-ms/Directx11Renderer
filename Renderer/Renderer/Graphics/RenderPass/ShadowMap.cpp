@@ -10,8 +10,8 @@
 #include "Graphics/Shader/GeometryShader.h"
 #include "Graphics/Shader/PixelShader.h"
 #include "Resource/Texture/LoadedTexture.h"
-#include "Resource/Texture/ShadowTexture.h"
-#include "Resource/Texture/ShadowCubeTexture.h"
+#include "Resource/Texture/DepthMapTexture.h"
+#include "Resource/Texture/CubeDepthMapTexture.h"
 #include "Components/Transform.h"
 #include "Managers/RenderManager.h"
 #include "Graphics/RenderPass/CommonRenderResource.h"
@@ -30,6 +30,7 @@ ShadowMap::~ShadowMap()
 	}
 
 	SAFE_DELETE(_shadowCubeTexture);
+	SAFE_DELETE(_depthMapTexture);
 }
 
 void ShadowMap::Construct()
@@ -38,8 +39,23 @@ void ShadowMap::Construct()
 	SetShadowViewport();
 	_shadowPSO = GET_SINGLE(CommonRenderResource)->_shadowPSO;
 	_shadowPointLightPSO = GET_SINGLE(CommonRenderResource)->_shadowPointLightPSO;
+	_depthMapPSO = GET_SINGLE(CommonRenderResource)->_getDepthMapPSO;
+}
 
-	CreateShadowMapResources();
+shared_ptr<SRVBindingInfo> ShadowMap::DrawDepthMap(const vector<shared_ptr<Actor>>& actors)
+{
+	ComPtr<ID3D11DepthStencilView> dsv = _depthMapTexture->GetDSV();
+	CONTEXT->OMSetRenderTargets(0, nullptr, dsv.Get());
+	CONTEXT->ClearDepthStencilView(dsv.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+	CONTEXT->RSSetViewports(1, &_shadowViewport);
+
+	// 모든 물체의 depth 기록
+	for (shared_ptr<Actor> actor : actors)
+	{
+		actor->Render();
+	}
+
+	return _depthMapTexture->GetSRVBindingInfo();
 }
 
 void ShadowMap::CreateAndDrawShadowMap(vector<shared_ptr<Actor>>& actors, const vector<shared_ptr<LightActor>>& lights)
@@ -86,7 +102,8 @@ void ShadowMap::CreateAndDrawShadowMap(vector<shared_ptr<Actor>>& actors, const 
 	SHADER_PARAM_MANAGER->PushLightVPs(VPs);
 
 	// Set Shadow PSO
-	GET_SINGLE(RenderManager)->SetPipelineState(_shadowPSO);
+	RENDER_MANAGER->SetPipelineState(_shadowPSO);
+	CONTEXT->PSSetSamplers(2, 0, _shadowPSO->_pipelineState->_samplerState.GetAddressOf()); // Comparision Sampler
 	for (int32 i = 0; i < VPs.size(); ++i)
 	{
 		DrawShadowMap(actors, i);
@@ -106,7 +123,7 @@ void ShadowMap::CreateAndDrawShadowMap(vector<shared_ptr<Actor>>& actors, const 
 
 void ShadowMap::DrawShadowMap(const vector<shared_ptr<Actor>>& actors, int32 index)
 {
-	SHADER_PARAM_MANAGER->PushShadowMapSRV(_shadowTextures[index]->GetSRVBindingInfo());
+	SHADER_PARAM_MANAGER->PushShadowMapSRV (_shadowTextures[index]->GetSRVBindingInfo());
 	SHADER_PARAM_MANAGER->PushCurrentLightVPIndex(index);
 
 	ComPtr<ID3D11DepthStencilView> dsv = _shadowTextures[index]->GetDSV();
@@ -118,7 +135,9 @@ void ShadowMap::DrawShadowMap(const vector<shared_ptr<Actor>>& actors, int32 ind
 	for (shared_ptr<Actor> actor : actors)
 	{
 		if (actor->IsCastShadowedActor())
-			actor->RenderShadowMap(false);
+		{
+			actor->Render();
+		}
 	}
 }
 
@@ -143,13 +162,16 @@ void ShadowMap::CreateShadowTexture()
 {
 	for (int32 i = 0; i < MAX_SHADOW_MAP_COUNT; ++i)
 	{
-		ShadowTexture* t = new ShadowTexture();
-		t->CreateTexture();
+		DepthMapTexture* t = new DepthMapTexture();
+		t->CreateTexture(EShadowTextureType::Shadow);
 		_shadowTextures[i] = t;
 	}
 
-	_shadowCubeTexture = new ShadowCubeTexture();
-	_shadowCubeTexture->CreateTexture();
+	_shadowCubeTexture = new CubeDepthMapTexture();
+	_shadowCubeTexture->CreateTexture(EShadowTextureType::ShadowCube);
+
+	_depthMapTexture = new DepthMapTexture();
+	_depthMapTexture->CreateTexture(EShadowTextureType::DepthMap);
 }
 
 void ShadowMap::SetShadowViewport()
@@ -161,34 +183,3 @@ void ShadowMap::SetShadowViewport()
 	_shadowViewport.MinDepth = 0.0f;
 	_shadowViewport.MaxDepth = 1.0f;
 }
-
-void ShadowMap::CreateShadowMapResources()
-{
-	_defaultShaderInfo = make_shared<ShaderInfo>(SHADER_NAME);
-	_defaultShaderInfo->AddGSShaderInfo();
-	_pointLightShaderInfo = make_shared<ShaderInfo>(POINT_LIGHT_SHADER_NAME);
-	_pointLightShaderInfo->AddGSShaderInfo();
-
-	_resources.defaultVertexShader = make_shared<VertexShader>();
-	_resources.defaultVertexShader->Create(_defaultShaderInfo->_shaderPath, _defaultShaderInfo->_vsEntryName, _defaultShaderInfo->_vsVersion);
-
-	_resources.pointLightVertexShader = make_shared<VertexShader>();
-	_resources.pointLightVertexShader->Create(_pointLightShaderInfo->_shaderPath, _pointLightShaderInfo->_vsEntryName, _pointLightShaderInfo->_vsVersion);
-
-	_resources.pointLightGeometryShader = make_shared<GeometryShader>();
-	_resources.pointLightGeometryShader->Create(_pointLightShaderInfo->_shaderPath, _pointLightShaderInfo->_gsEntryName, _pointLightShaderInfo->_gsVersion);
-
-	_resources.pointLightPixelShader = make_shared<PixelShader>();
-	_resources.pointLightPixelShader->Create(_pointLightShaderInfo->_shaderPath, _pointLightShaderInfo->_psEntryName, _pointLightShaderInfo->_psVersion);
-
-
-	{
-		const vector<D3D11_INPUT_ELEMENT_DESC>& desc = VertexData::descs;
-		_resources.inputLayout = make_shared<InputLayout>();
-		ComPtr<ID3DBlob> blob = _resources.defaultVertexShader->GetBlob();
-		_resources.inputLayout->Create(desc, blob);
-	}
-}
-
-
-

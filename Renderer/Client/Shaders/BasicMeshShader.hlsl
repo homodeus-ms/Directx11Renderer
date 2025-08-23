@@ -3,7 +3,7 @@
 #include "GetColorFuncs.Hlsli"
 
 MeshOutput VS(VertexTangentInput input)
-{
+{ 
     MeshOutput output;
     
     float4 pos = mul(input.position, W);

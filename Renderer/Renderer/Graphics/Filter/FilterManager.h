@@ -16,7 +16,8 @@ public:
 	virtual ~FilterManager();
 
 	void Construct();
-	void RenderFilters();
+	void RenderFilters(ComPtr<ID3D11ShaderResourceView> preRendered = nullptr);
+
 	void AddFilter(EFilterType type);
 	void RemoveFilter(EFilterType type);
 	void SetFilterOnOff(bool bFilterOn) { _bFilterOn = bFilterOn; }

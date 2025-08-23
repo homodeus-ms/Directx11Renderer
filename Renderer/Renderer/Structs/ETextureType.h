@@ -38,8 +38,9 @@ enum class EShadowTextureType : uint8
 {
 	ShadowCube = static_cast<uint8>(EFilterTextureType::End),
 	Shadow,
+	DepthMap = static_cast<uint8>(EShadowTextureType::Shadow) + MAX_SHADOW_MAP_COUNT,
 
-	End = static_cast<uint8>(EShadowTextureType::Shadow) + MAX_SHADOW_MAP_COUNT,
+	End,
 };
 
 enum 

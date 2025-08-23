@@ -25,6 +25,9 @@ public:
 	float* GetHeightScalePtr() { return &_heightScale; }
 	float* GetMetallicValuePtr() { return &_desc.metallic; }
 	float* GetRoughnessValuePtr() { return &_desc.roughness; }
+	EMaterialType GetMaterialType() { return _desc.MaterialType; }
+	float* GetBlendFactorPtr() { return &_blendFactor; }
+	float GetBlendFactor() { return _blendFactor; }
 
 	//shared_ptr<ShaderInfo> GetShaderInfo() { return _shaderInfo; }
 	//void SetShaderInfo(shared_ptr<ShaderInfo> shaderInfo) { _shaderInfo = shaderInfo; }
@@ -41,6 +44,7 @@ public:
 	virtual void SetEnvMap(shared_ptr<LoadedTexture> envMap) {}
 	virtual void SetIBLSpecularMap(shared_ptr<LoadedTexture> iblSpecularMap) {}
 	virtual void SetIBLDiffuseMap(shared_ptr<LoadedTexture> iblDiffuseMap) {}
+	void SetBlendFactor(float blendFactor) { _blendFactor = blendFactor; } 
 	 
 	virtual void SetTextureMap(EMatTextureType type, shared_ptr<LoadedTexture> texture) {}
 	virtual void SetIsUsingMetallicRoughnessMap(bool bIsUsing) {}
@@ -56,5 +60,6 @@ protected:
 
 	// For Control From UI
 	float _heightScale = 1.f;
+	float _blendFactor = 1.f;
 };
 

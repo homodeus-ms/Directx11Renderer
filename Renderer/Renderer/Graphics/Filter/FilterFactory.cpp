@@ -87,10 +87,10 @@ void FilterFactory::RemoveFilter(list<Filter*> filters)
 		SAFE_DELETE(filter);
 }
 
-Filter* FilterFactory::InitCreatedFilter(Filter* newFilter, const wstring& psShaderName, uint32 viewportX, uint32 viewportY)
+Filter* FilterFactory::InitCreatedFilter(Filter* newFilter, const wstring& psShaderName, uint32 viewportX, uint32 viewportY, uint32 viewportTopLeftX)
 {
 	shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(FILTER_COMMON_VS_PATH, psShaderName);
-	newFilter->Initialize(shaderInfo, viewportX, viewportY);
+	newFilter->Initialize(shaderInfo, viewportX, viewportY, viewportTopLeftX);
 	return newFilter;
 }
 
@@ -145,7 +145,7 @@ Filter* FilterFactory::GetLUTFilter()
 Filter* FilterFactory::GetToneMappingFilter()
 {
 	Filter* filter = new ToneMappingFilter();
-	return InitCreatedFilter(filter, L"Filters/ToneMapping.hlsl", GWinSizeX, GWinSizeY);;
+	return InitCreatedFilter(filter, L"Filters/ToneMapping.hlsl", VIEW_X, VIEW_Y, GWinSizeX - VIEW_X);;
 }
 
 void FilterFactory::GetToneMappingValuePtrs(Filter* filter, OUT float** exposure, OUT float** gamma)

@@ -8,7 +8,7 @@
 #include "Graphics/Buffer/IndexBuffer.h"
 #include "Graphics/Shader/VertexShader.h"
 #include "Graphics/Shader/PixelShader.h"
-#include "Resource/Texture/FilterTexture.h"
+#include "Resource/Texture/RenderTexture.h"
 #include "Managers/ShaderParameterManager.h"
 
 
@@ -22,7 +22,7 @@ Filter::~Filter()
 {
 }
 
-void Filter::Initialize(shared_ptr<ShaderInfo> shaderInfo, uint32 w, uint32 h)
+void Filter::Initialize(shared_ptr<ShaderInfo> shaderInfo, uint32 w, uint32 h, uint32 viewportStartX)
 {
 	_filterQuad = make_shared<VertexUVBasicMesh>();
 	_filterQuad->CreateQuad();
@@ -36,10 +36,10 @@ void Filter::Initialize(shared_ptr<ShaderInfo> shaderInfo, uint32 w, uint32 h)
 	_inputLayout = make_shared<InputLayout>();
 	_inputLayout->Create(desc, _vertexShader->GetBlob());
 	
-	CreateViewport(w, h);
+	CreateViewport(w, h, viewportStartX);
 
-	_texture = make_shared<FilterTexture>();
-	_texture->CreateTexture(w, h);
+	_texture = make_shared<RenderTexture>();
+	_texture->CreateTexture(w, h, static_cast<uint8>(EFilterTextureType::Filtered));
 
 	_filterData.dx = 1.f / w;
 	_filterData.dy = 1.f / h;
@@ -93,7 +93,7 @@ void Filter::Render()
 	// TEMP : ShaderParameterManager 를 사용하게 하는 게 좋을 것 같은데?
 	uint8 slot = static_cast<uint8>(EFilterTextureType::Filtered);
 	CONTEXT->PSSetShaderResources(slot, UINT(_SRVs.size()), _SRVs.data());
-	SHADER_PARAM_MANAGER->PushFilterData(_filterData);
+	SHADER_PARAM_MANAGER->PushFilterDataImmediately(_filterData);
 
 	uint32 stride = _filterQuad->GetVertexBuffer()->GetStride();
 	uint32 offset = _filterQuad->GetVertexBuffer()->GetOffset();
@@ -105,11 +105,11 @@ void Filter::Render()
 	
 }
 
-void Filter::CreateViewport(uint32 w, uint32 h)
+void Filter::CreateViewport(uint32 w, uint32 h, uint32 topLeftX)
 {
 	ZeroMemory(&_viewport, sizeof(D3D11_VIEWPORT));
 	
-	_viewport.TopLeftX = 0;
+	_viewport.TopLeftX = topLeftX;
 	_viewport.TopLeftY = 0;
 	_viewport.Width = static_cast<float>(w);
 	_viewport.Height = static_cast<float>(h);

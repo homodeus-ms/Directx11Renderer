@@ -3,6 +3,7 @@
 #include "../Shader/VertexShader.h"
 #include "../Shader/GeometryShader.h"
 #include "../Shader/PixelShader.h"
+#include "../Shader/ComputeShader.h"
 #include "../Shader/ShaderInfo.h"
 #include "../Buffer/InputLayout.h"
 #include "../Buffer/VertexData.h"
@@ -87,16 +88,48 @@ void CommonRenderResource::Initialize()
 		_normalPSO->_topology = D3D11_PRIMITIVE_TOPOLOGY_POINTLIST;
 	}
 
+	// Get DepthMap PSO
+	{
+		_getDepthMapPSO = make_shared<PSO>();
+		shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"GetDepthMap.hlsl");
+
+		_getDepthMapPSO->_VS = make_shared<VertexShader>();
+		_getDepthMapPSO->_VS->Create(shaderInfo->_vsShaderPath, shaderInfo->_vsEntryName, shaderInfo->_vsVersion);
+		
+		_getDepthMapPSO->_inputLayout = make_shared<InputLayout>();
+		_getDepthMapPSO->_inputLayout->Create(VertexData::descs, _getDepthMapPSO->_VS->GetBlob());
+	
+		_getDepthMapPSO->_pipelineState = PipelineState::GetShadowStates();
+		_getDepthMapPSO->_topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	}
+
+	// Show DepthMap PSO
+	{
+		_showDepthMapPSO = make_shared<PSO>();
+		shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"ShowDepthMap.hlsl");
+
+		_showDepthMapPSO->_VS = make_shared<VertexShader>();
+		_showDepthMapPSO->_VS->Create(shaderInfo->_vsShaderPath, shaderInfo->_vsEntryName, shaderInfo->_vsVersion);
+		_showDepthMapPSO->_PS = make_shared<PixelShader>();
+		_showDepthMapPSO->_PS->Create(shaderInfo->_psShaderPath, shaderInfo->_psEntryName, shaderInfo->_psVersion);
+
+		//_showDepthMapPSO->_inputLayout = make_shared<InputLayout>();
+		//_showDepthMapPSO->_inputLayout->Create(VertexData::descs, _showDepthMapPSO->_VS->GetBlob());
+	
+		_showDepthMapPSO->_pipelineState = PipelineState::GetShadowStates();
+		_showDepthMapPSO->_topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
+	}
+
 	// Shadow PSO
 	{
 		_shadowPSO = make_shared<PSO>();
-		shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"GetDepthShader.hlsl");
+		shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"GetShadowMap.hlsl");
 
 		_shadowPSO->_VS = make_shared<VertexShader>();
 		_shadowPSO->_VS->Create(shaderInfo->_vsShaderPath, shaderInfo->_vsEntryName, shaderInfo->_vsVersion);
 		
 		_shadowPSO->_inputLayout = make_shared<InputLayout>();
-		_shadowPSO->_inputLayout->Create(VertexData::descs, _shadowPSO->_VS->GetBlob());
+		_shadowPSO->_inputLayout->Create(VertexUVNormalTangentData::descs, _shadowPSO->_VS->GetBlob());
 		
 		_shadowPSO->_pipelineState = PipelineState::GetShadowStates();
 		_shadowPSO->_topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
@@ -105,7 +138,7 @@ void CommonRenderResource::Initialize()
 	// Shadow PointLight PSO
 	{
 		_shadowPointLightPSO = make_shared<PSO>();
-		shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"GetDepthShaderForPoint.hlsl");
+		shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"GetShadowMapForPointLight.hlsl");
 		shaderInfo->AddGSShaderInfo();
 
 		_shadowPointLightPSO->_VS = make_shared<VertexShader>();
@@ -125,7 +158,7 @@ void CommonRenderResource::Initialize()
 	// Draw Stencil PSO
 	{
 		_drawStencilPSO = make_shared<PSO>();
-		shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"BasicMeshShader.hlsl");
+		shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"WriteStencil.hlsl");
 
 		_drawStencilPSO->_VS = make_shared<VertexShader>();
 		_drawStencilPSO->_VS->Create(shaderInfo->_vsShaderPath, shaderInfo->_vsEntryName, shaderInfo->_vsVersion);
@@ -160,6 +193,48 @@ void CommonRenderResource::Initialize()
 		_usingStencilPSO->_topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 		
 		_usingStencilPSO->_stencilRef = 1;
+	}
+
+	// post Effect PSO
+	{
+		_postEffectPSO = make_shared<PSO>();
+		shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"PostEffect.hlsl");
+
+		_postEffectPSO->_VS = make_shared<VertexShader>();
+		_postEffectPSO->_VS->Create(shaderInfo->_vsShaderPath, shaderInfo->_vsEntryName, shaderInfo->_vsVersion);
+		_postEffectPSO->_PS = make_shared<PixelShader>();
+		_postEffectPSO->_PS->Create(shaderInfo->_psShaderPath, shaderInfo->_psEntryName, shaderInfo->_psVersion);
+
+		_postEffectPSO->_inputLayout = make_shared<InputLayout>();
+		_postEffectPSO->_inputLayout->Create(VertexData::descs, _postEffectPSO->_VS->GetBlob());
+		
+		_postEffectPSO->_pipelineState = PipelineState::GetDefaultStates();
+		_postEffectPSO->_topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	}
+
+	// shaderToy PSO
+	{
+		_shaderToyPSO = make_shared<PSO>();
+		shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"GetQuadVS.hlsl", L"SeaScape.hlsl");
+		//shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"GetQuadVS.hlsl", L"ShaderToy1.hlsl");
+
+		_shaderToyPSO->_VS = make_shared<VertexShader>();
+		_shaderToyPSO->_VS->Create(shaderInfo->_vsShaderPath, shaderInfo->_vsEntryName, shaderInfo->_vsVersion);
+		_shaderToyPSO->_PS = make_shared<PixelShader>();
+		_shaderToyPSO->_PS->Create(shaderInfo->_psShaderPath, shaderInfo->_psEntryName, shaderInfo->_psVersion);
+		
+		_shaderToyPSO->_inputLayout = make_shared<InputLayout>();
+		_shaderToyPSO->_inputLayout->Create(VertexData::descs, _shaderToyPSO->_VS->GetBlob());
+		
+		_shaderToyPSO->_pipelineState = PipelineState::GetDefaultStates();
+		_shaderToyPSO->_topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	}
+
+	// Test Compute PSO
+	{
+		_testComputePSO = make_shared<PSO>();
+		_testComputePSO->_CS = make_shared<ComputeShader>();
+		_testComputePSO->_CS->Create(L"CSPrac1.hlsl", "main", "cs_5_0");
 	}
 }
 

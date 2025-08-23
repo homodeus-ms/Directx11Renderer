@@ -1,17 +1,17 @@
 ﻿#include "pch.h"
-#include "ShadowTexture.h"
+#include "DepthMapTexture.h"
 #include "Graphics/RenderPass/ShadowMapResources.h"
 #include "Structs/ShaderParameterTypes.h"
 
-ShadowTexture::ShadowTexture()
+DepthMapTexture::DepthMapTexture()
 {
 }
 
-ShadowTexture::~ShadowTexture()
+DepthMapTexture::~DepthMapTexture()
 {
 }
 
-void ShadowTexture::CreateTexture()
+void DepthMapTexture::CreateTexture(EShadowTextureType type)
 {
 	// Texture
 	{
@@ -57,7 +57,7 @@ void ShadowTexture::CreateTexture()
 
 		// SRV Binding Info
 		_srvBindingInfo = make_shared<SRVBindingInfo>();
-		_srvBindingInfo->slot = static_cast<uint8>(EShadowTextureType::Shadow);
+		_srvBindingInfo->slot = static_cast<uint8>(type);
 		_srvBindingInfo->stage = EShaderStage::PsStage;
 		_srvBindingInfo->srv = _SRV;
 	}

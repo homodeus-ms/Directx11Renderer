@@ -8,8 +8,12 @@ void Graphics::BeginPlay(HWND hwnd)
 {
 	_hwnd = hwnd;
 
+	TestCS();
+	return;
+
 	CreateDeviceAndSwapChain();
 	CreateRTVAndSRV();
+	CreateUAV();
 	CreateDepthStencilView();
 	SetViewport();
 
@@ -24,7 +28,7 @@ void Graphics::RenderMSAABegin()
 	_deviceContext->OMSetRenderTargets(1, _floatMSAARTV.GetAddressOf(), _depthStencilView.Get());
 	_deviceContext->ClearRenderTargetView(_floatMSAARTV.Get(), (float*)(&RENDERER->GetGameDesc().clearColor));
 	_deviceContext->ClearDepthStencilView(_depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
-	_deviceContext->RSSetViewports(1, &_viewport);
+	_deviceContext->RSSetViewports(1, &_viewportFull);
 }
 
 void Graphics::RenderBegin()
@@ -74,12 +78,6 @@ void Graphics::ClearStencil()
 
 void Graphics::CreateDeviceAndSwapChain()
 {
-	UINT deviceFlags = 0;
-
-#if defined(_DEBUG)
-	deviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
-#endif
-
 	DXGI_SWAP_CHAIN_DESC desc;
 	ZeroMemory(&desc, sizeof(desc));
 	{
@@ -100,6 +98,17 @@ void Graphics::CreateDeviceAndSwapChain()
 		desc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 	}
 
+	CreateDeviceAndSwapChain(desc);
+}
+
+void Graphics::CreateDeviceAndSwapChain(const DXGI_SWAP_CHAIN_DESC& desc)
+{
+	UINT deviceFlags = 0;
+
+#if defined(_DEBUG)
+	deviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
+
 	HRESULT hr = ::D3D11CreateDeviceAndSwapChain(
 		nullptr,
 		D3D_DRIVER_TYPE_HARDWARE,
@@ -118,8 +127,6 @@ void Graphics::CreateDeviceAndSwapChain()
 	check(hr);
 }
 
-
-
 void Graphics::CreateRTVAndSRV()
 {
 	ComPtr<ID3D11Texture2D> backBuffer = nullptr;
@@ -128,6 +135,7 @@ void Graphics::CreateRTVAndSRV()
 	// 최종 출력용 RTV
 	hr = _device->CreateRenderTargetView(backBuffer.Get(), nullptr, _renderTargetView.GetAddressOf());
 	check(hr);
+
 
 	// MSAA RTV
 	hr = _device->CheckMultisampleQualityLevels(DXGI_FORMAT_R16G16B16A16_FLOAT, 4, &_numQualityLevels);
@@ -169,7 +177,20 @@ void Graphics::CreateRTVAndSRV()
 
 	hr = _device->CreateShaderResourceView(_resolvedTexture.Get(), NULL, _resolvedSRV.GetAddressOf());
 	check(hr);
+}
 
+void Graphics::CreateUAV()
+{
+	ComPtr<ID3D11Texture2D> backBuffer;
+	_swapChain->GetBuffer(0, IID_PPV_ARGS(backBuffer.GetAddressOf()));
+
+	D3D11_UNORDERED_ACCESS_VIEW_DESC desc;
+	::ZeroMemory(&desc, sizeof(desc));
+	desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+	desc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
+	desc.Texture2D.MipSlice = 0;
+	HRESULT hr = _device->CreateUnorderedAccessView(backBuffer.Get(), &desc, _UAV.GetAddressOf());
+	check(hr);
 }
 
 void Graphics::CreateDepthStencilView()
@@ -225,6 +246,61 @@ void Graphics::SetViewport()
 	_viewport.Height = static_cast<float>(VIEW_Y);;
 	_viewport.MinDepth = 0.0f;
 	_viewport.MaxDepth = 1.0f;
+
+	_viewportFull.TopLeftX = 0;
+	_viewportFull.TopLeftY = 0;
+	_viewportFull.Width = static_cast<float>(GWinSizeX);
+	_viewportFull.Height = static_cast<float>(GWinSizeY);;
+	_viewportFull.MinDepth = 0.0f;
+	_viewportFull.MaxDepth = 1.0f;
+}
+
+void Graphics::TestCS()
+{
+	const D3D_DRIVER_TYPE driverType = D3D_DRIVER_TYPE_HARDWARE;
+	// const D3D_DRIVER_TYPE driverType = D3D_DRIVER_TYPE_WARP;
+
+	UINT createDeviceFlags = 0;
+#if defined(DEBUG) || defined(_DEBUG)
+	createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
+
+	const D3D_FEATURE_LEVEL featureLevels[2] = {
+		D3D_FEATURE_LEVEL_11_0, // 더 높은 버전이 먼저 오도록 설정
+		D3D_FEATURE_LEVEL_9_3 };
+	D3D_FEATURE_LEVEL featureLevel;
+
+	DXGI_SWAP_CHAIN_DESC sd;
+	ZeroMemory(&sd, sizeof(sd));
+	sd.BufferDesc.Width = GWinSizeX;
+	sd.BufferDesc.Height = GWinSizeY;
+	sd.BufferDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+	sd.BufferCount = 2;
+	sd.BufferDesc.RefreshRate.Numerator = 60;
+	sd.BufferDesc.RefreshRate.Denominator = 1;
+	sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT |
+		DXGI_USAGE_UNORDERED_ACCESS; // Compute Shader
+	sd.OutputWindow = _hwnd;
+	sd.Windowed = TRUE;
+	sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+	sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+	sd.SampleDesc.Count = 1; // _FLIP_은 MSAA 미지원
+	sd.SampleDesc.Quality = 0;
+
+	HRESULT hr = D3D11CreateDeviceAndSwapChain(
+		0, driverType, 0, createDeviceFlags, featureLevels, 1,
+		D3D11_SDK_VERSION, &sd, _swapChain.GetAddressOf(),
+		_device.GetAddressOf(), &featureLevel, _deviceContext.GetAddressOf());
+
+	check(hr);
+
+
+	CreateRTVAndSRV();
+	CreateUAV();
+	CreateDepthStencilView();
+	SetViewport();
+
+	GET_SINGLE(CommonRenderResource)->Initialize();
 }
 
 void Graphics::CreateResourcesForSubWindows(HWND subHwnd, int width, int height)

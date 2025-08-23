@@ -16,6 +16,9 @@
 #include "Graphics/RenderPass/ShadowMap.h"
 #include "Graphics/Filter/FilterFactory.h"
 #include "Graphics/Filter/FilterManager.h"
+#include "PopUpController.h"
+#include "Managers/RenderManager.h"
+#include "Graphics/RenderPass/PostEffect.h"
 
 LeftWindowController::LeftWindowController()
 {
@@ -73,6 +76,10 @@ LeftWindowController::~LeftWindowController()
 
 void LeftWindowController::BeginPlay()
 {
+	_popUpController = make_shared<PopUpController>();
+	_popUpController->_onPopUpClosed.BindObject(shared_from_this(), &LeftWindowController::OnPopUpClosed);
+	_popUpController->BeginPlay();
+
 	SCENE->_onLightManagerCreated.BindObject(shared_from_this(), &LeftWindowController::OnLightManagerCreatedCallback);
 	SCENE->_onRenderedActorRegistered.BindObject(shared_from_this(), &LeftWindowController::OnActorRegistered);
 	//GET_SINGLE(FilterFactory)->_onBloomFilterCreated.BindObject(
@@ -96,21 +103,16 @@ void LeftWindowController::CreateLeftWindow()
 	DrawGlobalLightWidget();
 	DrawSpotLightWidget();
 	DrawPointLightWidget();
-	DrawActorControlWidget();
+	HandlePopUpWindow();
+	HandleShowDepthMap();
 	DrawCubeMap();
-	DrawShowDebugShadowMapSelector();
+	HandlePostEffectControl();
+	//DrawActorControlWidget();
+	//DrawShowDebugShadowMapSelector();
 	DrawFilterControls();
-
-	
-	// TEMP
-	if (ImGui::Button("Open Sub Window"))
-	{
-		_bSubWindowOpen = !_bSubWindowOpen;
-	}
+	HandleSubWindow();
 
 	ImGui::End();
-
-	_bSubWindowOpen ? GUI->ShowSubWindow() : GUI->HideSubWindow();
 }
 
 void LeftWindowController::OnLightManagerCreatedCallback()
@@ -326,7 +328,7 @@ void LeftWindowController::DrawGlobalLightWidget()
 		if (_bGlobalLightOn && ImGui::CollapsingHeader("details"))
 		{
 			TickSliders(_globalLightSliders);
-			
+
 			_bGlobalLightOnMove = _orbitActor == _globalLightActor;
 			ImGui::Checkbox("Move Active(on Space Key) ", &_bGlobalLightOnMove);
 			if (_bGlobalLightOnMove)
@@ -401,6 +403,15 @@ void LeftWindowController::DrawPointLightWidget()
 			if (_bPointLightOnMove[i])
 				HandleMoveLight(_pointLightActors[i]);
 		}
+	}
+}
+
+void LeftWindowController::HandleShowDepthMap()
+{
+	if (ImGui::Checkbox("Show Depth Map", &_bDrawDepthMap))
+	{
+		//_bDrawDepthMap = !_bDrawDepthMap;
+		SCENE->SetShowDepthMap(_bDrawDepthMap);
 	}
 }
 
@@ -714,6 +725,67 @@ void LeftWindowController::LUDSelected()
 	SCENE->SetLUTType(Utils::ToWString(resourceName));
 }
 
+void LeftWindowController::HandleSubWindow()
+{
+	if (ImGui::Button("Open Sub Window"))
+	{
+		if (!_bSubWindowInitialized)
+		{
+			GUI->CreateSubContext();
+			_bSubWindowInitialized = true;
+		}
+
+		_bSubWindowOpen = !_bSubWindowOpen;
+	}
+
+	_bSubWindowOpen ? GUI->ShowSubWindow() : GUI->HideSubWindow();
+}
+
+void LeftWindowController::HandlePopUpWindow()
+{
+	if (ImGui::Button("Actor Controls"))
+	{
+		_bPopUpOpen = !_bPopUpOpen;
+		ImGui::OpenPopup("ActorControls");
+	}
+
+	if (_bPopUpOpen)
+	{
+		_popUpController->CreatePopUpUI();
+	}
+}
+
+void LeftWindowController::HandlePostEffectControl()
+{
+	if (_postEffect == nullptr)
+		_postEffect = RENDER_MANAGER->GetPostEffect();
+
+	if (!_postEffect)
+		return;
+	else
+		_postEffectData = _postEffect->GetPostEffectDataPtr();
+
+	assert(_postEffectData != nullptr);
+
+	ImGui::Text("| Post Effect - Fog |");
+
+	int32* mode = &_postEffectData->mode;
+	float* depthScale = &_postEffectData->depthScale;
+	float* fogStrength = &_postEffectData->fogStrength;
+	float* fogColor = (float*)&_postEffectData->fogColor;
+
+	const char* rabels[3] = {"Original", "FogScene", "DepthOnly"};
+
+	ImGui::SliderInt("Mode", mode, 0, 2, rabels[*mode]);
+	if (*mode != 0)
+	{
+		ImGui::SliderFloat3("FogColor", fogColor, 0.f, 1.f, "%0.2f");
+		ImGui::SliderFloat("Depth Scale", depthScale, 0.f, 1.f, "%0.2f");
+		ImGui::SliderFloat("Fog Strength", fogStrength, 0.1f, 3.f, "%0.2f");
+	}
+
+}
+
 void LeftWindowController::OnBloomFilterCreated(float* bloomRange, float* filterStrength)
 {
 	_bloomRange = bloomRange;
@@ -734,6 +806,11 @@ void LeftWindowController::OnToneMappingFilterCreated(float* exposure, float* ga
 void LeftWindowController::OnSubWindowHidden()
 {
 	_bSubWindowOpen = false;
+}
+
+void LeftWindowController::OnPopUpClosed()
+{
+	_bPopUpOpen = false;
 }
 
 

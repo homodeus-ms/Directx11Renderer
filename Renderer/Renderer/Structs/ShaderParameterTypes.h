@@ -17,6 +17,7 @@ enum class EConstBufferRegisterNumber : uint8
 	BoneIndex,
 	ShadowData,
 	PointShadowData,
+	Temporal_Common_Use = 10,
 	ForUIDebug = 13,
 };
 
@@ -75,6 +76,7 @@ struct GlobalDesc
 	Matrix V = Matrix::Identity;
 	Matrix P = Matrix::Identity;
 	Matrix VP = Matrix::Identity;
+	Matrix invP = Matrix::Identity;
 	Vec3 CameraPosition{};
 	uint32 bEnvLightUsing = 0;
 };
@@ -116,7 +118,7 @@ struct MaterialDesc
 	uint32 bUseMetallicRoughnessMap = 0;
 	uint32 bUseAOMap = 0;
 	uint32 bUseEmissiveMap = 0;
-	float pad = 0.f;
+	float pad{};
 
 	// Emissive는 따로 셋팅
 	void UsePBR()
@@ -177,4 +179,30 @@ struct ForUIDebugDesc
 {
 	float heightScale = 1.f;
 	float pad[3];
+};
+
+struct PostEffectData
+{
+	Vec3 fogColor = { 0.8f, 0.55f, 0.1f };
+	int32 mode = 0;
+	float depthScale = 0.01f;
+	float fogStrength = 1.f;
+	float pad[2]{};
+};
+
+struct ShaderToyData
+{
+	Vec3 iResolution = Vec3(VIEW_X, VIEW_Y, 1.f); // viewport resolution (in pixels)
+	float iTime = 30.f; // shader playback time (in seconds)
+
+	float iTimeDelta{}; // render time (in seconds)
+	float iFrameRate{}; // shader frame rate
+	int32 iFrame = 0;
+	float _padding{};
+
+	//Vec4 iChannelTime{}; // channel playback time (in seconds)
+	//Vec3 iChannelResolution[4]{}; // channel resolution (in pixels)
+	//float _padding2{};
+	//Vec4 iMouse{}; // mouse pixel coords. xy: current (if MLB down), zw: click
+	//Vec4 iDate{}; // (year, month, day, time in seconds)
 };

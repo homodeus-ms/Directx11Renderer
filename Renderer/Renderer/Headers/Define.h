@@ -16,6 +16,9 @@ constexpr uint32 GUI_RightWindowSizeY = 600;
 constexpr uint32 GUI_DebugWindowSizeX = GWinSizeX;
 constexpr uint32 GUI_DebugWindowSizeY = 120;
 
+constexpr uint32 SubWindowX = 300;
+constexpr uint32 SubWindowY = 500;
+
 enum { VIEW_X = GWinSizeX - GUI_LeftWindowSizeX, VIEW_Y = GWinSizeY };
 
 #define DECLARE_SINGLE(classname)			\

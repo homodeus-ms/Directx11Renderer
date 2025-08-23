@@ -14,6 +14,7 @@
 #include "Resource/StaticMesh.h"
 #include "Components/StaticMeshRenderer.h"
 #include "Components/Transform.h"
+#include "Components/ReflectComponent.h"
 #include "Actor/LightActor.h"
 #include "Components/LightComponent/LightComponent.h"
 #include "Components/LightComponent/DirectionalLight.h"
@@ -33,11 +34,11 @@ void LoadMaterialDemo::Construct()
 	g_FlowManager->BeginPlay();
 
 
-	LoadMaterials();
-	LoadDDSs();
-	LoadLUTs();
-	CreateBasicObjects();
-	CreateStaticModels();
+	//LoadMaterials();
+	//LoadDDSs();
+	//LoadLUTs();
+	//CreateBasicObjects();
+	//CreateStaticModels();
 
 }
 
@@ -244,12 +245,14 @@ void LoadMaterialDemo::CreateBasicObjects()
 	// 바닥 평면
 	if (1)
 	{
-		shared_ptr<Actor> pawn = make_shared<ClientPawn>("Floor");
+		shared_ptr<Actor> pawn = make_shared<ClientPawn>(EActorType::ReflectActor, "Floor");
 		pawn->Construct();
-
-		//pawn->GetOrAddTransform()->SetLocalScale({ 40.f, 40.f, 40.f });
-		//pawn->GetOrAddTransform()->SetLocalRotation({ 3.14f / 2, 0.0f, 0.f });
+		//pawn->GetOrAddTransform()->SetLocalScale({ 10.f, 10.f, 10.f });
 		pawn->GetOrAddTransform()->SetWorldPosition({ 0.f, 0.f, 0.f });
+
+		shared_ptr<ReflectComponent> reflectComponent = static_pointer_cast<ReflectComponent>(pawn->GetReflectComponentOrNull());
+		assert(reflectComponent != nullptr);
+		reflectComponent->SetFaceNormal({ 0.f, 1.f, 0.f });
 
 		shared_ptr<BasicMesh> mesh;
 		mesh = RESOURCE_MANAGER->Get<BasicMesh>(L"Grid");
@@ -306,13 +309,13 @@ void LoadMaterialDemo::CreateBasicObjects()
 		}
 
 		// 거울
-		if (1)
+		if (0)
 		{
 			shared_ptr<Actor> mirror = make_shared<ClientPawn>(EActorType::ReflectActor, "Mirror");
 			mirror->Construct();
 			shared_ptr<BasicMesh> mesh;
 			mesh = RESOURCE_MANAGER->Get<BasicMesh>(L"Quad");
-			shared_ptr<MaterialBase> mat = RESOURCE_MANAGER->Get<Material>(L"BasicWhite")->Clone();
+			shared_ptr<MaterialBase> mat = RESOURCE_MANAGER->Get<Material>(L"BasicRed")->Clone();
 
 			mirror->SetBasicMesh(mesh);
 			mirror->SetBasicMaterial(mat);
@@ -322,10 +325,20 @@ void LoadMaterialDemo::CreateBasicObjects()
 			mirror->GetOrAddTransform()->SetWorldPosition({ 5.f, 10.f, 7.f });
 			mirror->SetIsCastShadowedActor(false);
 
+			shared_ptr<ReflectComponent> reflectComponent = static_pointer_cast<ReflectComponent>(mirror->GetReflectComponentOrNull());
+			assert(reflectComponent != nullptr);
+			Vec3 faceNormal = { 0.f, 0.f, -1.f };
+			Matrix worldMat = mirror->GetTransform()->GetWorldMatrix();
+			worldMat.Translation(Vec3::Zero);
+			faceNormal = faceNormal.TransformNormal(faceNormal, worldMat);
+			faceNormal.Normalize();
+			reflectComponent->SetFaceNormal(faceNormal);
+
 			SCENE->AddActor(mirror);
 		}
 
-		if (1)
+		// 거울2
+		if (0)
 		{
 			shared_ptr<Actor> mirror = make_shared<ClientPawn>(EActorType::ReflectActor, "Mirror2");
 			mirror->Construct();
@@ -340,6 +353,15 @@ void LoadMaterialDemo::CreateBasicObjects()
 			//mirror->GetTransform()->SetLocalRotation({ 0.f, -3.14f / 2, 0.f });
 			mirror->GetOrAddTransform()->SetWorldPosition({ -10.f, 10.f, 5.f });
 			mirror->SetIsCastShadowedActor(false);
+
+			shared_ptr<ReflectComponent> reflectComponent = static_pointer_cast<ReflectComponent>(mirror->GetReflectComponentOrNull());
+			assert(reflectComponent != nullptr);
+			Vec3 faceNormal = { 0.f, 0.f, -1.f };
+			Matrix worldMat = mirror->GetTransform()->GetWorldMatrix();
+			worldMat.Translation(Vec3::Zero);
+			faceNormal = faceNormal.TransformNormal(faceNormal, worldMat);
+			faceNormal.Normalize();
+			reflectComponent->SetFaceNormal(faceNormal);
 
 			SCENE->AddActor(mirror);
 		}

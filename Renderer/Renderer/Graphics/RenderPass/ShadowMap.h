@@ -5,8 +5,8 @@
 class Actor;
 class LightActor;
 struct SRVBindingInfo;
-class ShadowTexture;
-class ShadowCubeTexture;
+class DepthMapTexture;
+class CubeDepthMapTexture;
 class PSO;
 
 class ShadowMap
@@ -16,31 +16,28 @@ public:
 	~ShadowMap();
 
 	void Construct();
+	shared_ptr<SRVBindingInfo> DrawDepthMap(const vector<shared_ptr<Actor>>& actors);
 	void CreateAndDrawShadowMap(vector<shared_ptr<Actor>>& actors, const vector<shared_ptr<LightActor>>& lights);
-	const ShadowMapResources& GetShadowMapResources() { return _resources; }
 	
 private:
 	void CreateShadowTexture();
 	void SetShadowViewport();
-	void CreateShadowMapResources();
+
 	void DrawShadowMap(const vector<shared_ptr<Actor>>& actors, int32 index);
 	void DrawShadowCubeMap(shared_ptr<LightActor> light, const vector<shared_ptr<Actor>>& actors);
 
-	array<ShadowTexture*, MAX_SHADOW_MAP_COUNT> _shadowTextures{};
-	ShadowCubeTexture* _shadowCubeTexture{};
+	DepthMapTexture* _depthMapTexture;
+	array<DepthMapTexture*, MAX_SHADOW_MAP_COUNT> _shadowTextures{};
+	CubeDepthMapTexture* _shadowCubeTexture{};
 	D3D11_VIEWPORT _shadowViewport{};
 
+	shared_ptr<PSO> _depthMapPSO;
 	shared_ptr<PSO> _shadowPSO;
 	shared_ptr<PSO> _shadowPointLightPSO;
 
 	uint32 _currIndex = 0;
 	const float _cubeMapClearColor[4] = {1.f, 0.f, 0.f, 1.f};
-	const wstring SHADER_NAME = L"GetDepthShader.hlsl";
-	const wstring POINT_LIGHT_SHADER_NAME = L"GetDepthShaderForPoint.hlsl";
 
-	ShadowMapResources _resources{};
-	shared_ptr<struct ShaderInfo> _defaultShaderInfo{};
-	shared_ptr<struct ShaderInfo> _pointLightShaderInfo{};
 
 };
 

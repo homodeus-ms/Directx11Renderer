@@ -24,6 +24,7 @@
 #define CBUFFER_NUM_BONEINDEX b7
 #define CBUFFER_NUM_SHADOW b8
 #define CBUFFER_NUM_POINT_SHADOW b9
+#define CBUFFER_NUM_TEMPORAL b10
 #define CBUFFER_NUM_FOR_UI_DEBUG b13
 
 #define MAX_DIRECTIONAL_LIGHT_COUNT 1
@@ -61,6 +62,6 @@
 
 #define REG_SHADOW_CUBE t15
 #define REG_SHADOW t16   // t16, t17, t18, t19  (Max Shadow : 4 )
-
+#define REG_DEPTH_MAP t20
 
 #endif /* DEFINES_HLSLI */

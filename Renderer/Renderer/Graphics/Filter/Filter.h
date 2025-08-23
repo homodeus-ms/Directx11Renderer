@@ -4,7 +4,7 @@
 #include "Structs/EFilterType.h"
 
 class VertexUVBasicMesh;
-class FilterTexture;
+class RenderTexture;
 class InputLayout;
 class VertexShader;
 class PixelShader;
@@ -19,7 +19,7 @@ public:
 	virtual void Tick() {};
 	void Render();
 
-	void Initialize(shared_ptr<ShaderInfo> shaderInfo, uint32 w = VIEW_X, uint32 h = VIEW_Y);
+	void Initialize(shared_ptr<ShaderInfo> shaderInfo, uint32 w = VIEW_X, uint32 h = VIEW_Y, uint32 viewportStartX = 0);
 	ComPtr<ID3D11ShaderResourceView> GetSRV();
 	FilterData& GetFilterData() { return _filterData; }
 	D3D11_VIEWPORT& GetViewport() { return _viewport; }
@@ -31,10 +31,10 @@ public:
 	
 
 public:
-	void CreateViewport(uint32 w, uint32 h);
+	void CreateViewport(uint32 w, uint32 h, uint32 topLeftX = 0);
 	EFilterType _filterType{};
 	shared_ptr<VertexUVBasicMesh> _filterQuad{};
-	shared_ptr<FilterTexture> _texture{};
+	shared_ptr<RenderTexture> _texture{};
 
 	D3D11_VIEWPORT _viewport{};
 

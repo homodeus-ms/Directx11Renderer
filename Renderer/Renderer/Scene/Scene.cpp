@@ -43,7 +43,7 @@ void Scene::Construct()
 
 	// ShadowMap
 	GET_SINGLE(RenderManager)->SetShadowMap(GRAPHICS->GetShadowMap());
-	CreateShadowMapDebugActor();
+	//CreateShadowMapDebugActor();
 
 	unordered_set<shared_ptr<Actor>> actors = _actors;
 	for (const shared_ptr<Actor>& actor : actors)
@@ -252,6 +252,11 @@ void Scene::SetWireFrameMode(bool bModeOn)
 	RENDER_MANAGER->SetWireFrameMode(bModeOn);
 }
 
+void Scene::SetShowDepthMap(bool bShow)
+{
+	RENDER_MANAGER->SetShowDepthMap(bShow);
+}
+
 shared_ptr<LightActor> Scene::AddSpotLight()
 {
 	const shared_ptr<LightActor>& added = _lightManager->IncreaseSpotLightOrNull();
@@ -357,26 +362,26 @@ void Scene::AddLightActor(shared_ptr<Actor> actor)
 
 void Scene::CreateShadowMapDebugActor()
 {
-	_shadowMapDebugActor = make_shared<Actor>(EActorType::DebugActor, "ShadowDebug");
-	
-	_shadowMapDebugActor->Construct();
-	_shadowMapDebugActor->GetTransform()->SetLocalScale({ 15.f, 15.f, 1.f });
-	_shadowMapDebugActor->GetTransform()->SetWorldPosition({ 0.f, 0.f, -10.f });
-	
+	//_shadowMapDebugActor = make_shared<Actor>(EActorType::DebugActor, "ShadowDebug");
+	//
+	//_shadowMapDebugActor->Construct();
+	//_shadowMapDebugActor->GetTransform()->SetLocalScale({ 15.f, 15.f, 1.f });
+	//_shadowMapDebugActor->GetTransform()->SetWorldPosition({ 0.f, 0.f, -10.f });
+	//
 
-	shared_ptr<VertexUVBasicMesh> mesh = make_shared<VertexUVBasicMesh>();
-	mesh->CreateQuad();
+	//shared_ptr<VertexUVBasicMesh> mesh = make_shared<VertexUVBasicMesh>();
+	//mesh->CreateQuad();
 
-	shared_ptr<Material> material = make_shared<Material>();
+	//shared_ptr<Material> material = make_shared<Material>();
 
-	//shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"DebugShader.hlsl");
-	//material->SetShaderInfo(shaderInfo);
-	RESOURCE_MANAGER->Add(L"ShadowMapDebugMaterial", material);
+	////shared_ptr<ShaderInfo> shaderInfo = make_shared<ShaderInfo>(L"DebugShader.hlsl");
+	////material->SetShaderInfo(shaderInfo);
+	//RESOURCE_MANAGER->Add(L"ShadowMapDebugMaterial", material);
 
-	_shadowMapDebugActor->SetBasicMesh(mesh);
-	_shadowMapDebugActor->SetBasicMaterial(material);
-	_shadowMapDebugActor->BeginPlay();
+	//_shadowMapDebugActor->SetBasicMesh(mesh);
+	//_shadowMapDebugActor->SetBasicMaterial(material);
+	//_shadowMapDebugActor->BeginPlay();
 
-	_renderedActors.push_back(_shadowMapDebugActor);
+	//_renderedActors.push_back(_shadowMapDebugActor);
 }
 

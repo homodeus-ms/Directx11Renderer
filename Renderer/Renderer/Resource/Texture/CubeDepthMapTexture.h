@@ -1,17 +1,17 @@
 #pragma once
-#include "ShadowTexture.h"
+#include "DepthMapTexture.h"
 
-class ShadowCubeTexture : public ShadowTexture
+class CubeDepthMapTexture : public DepthMapTexture
 {
 	using Super = Texture;
 
 public:
-	ShadowCubeTexture();
-	virtual ~ShadowCubeTexture();
+	CubeDepthMapTexture();
+	virtual ~CubeDepthMapTexture();
 
 	const array<ComPtr<ID3D11RenderTargetView>, 6>& GetRTVs() const { return _RTVs; }
 	ComPtr<ID3D11RenderTargetView> GetRTV() const { return _RTV; }
-	virtual void CreateTexture() override;
+	virtual void CreateTexture(EShadowTextureType type) override;
 
 private:
 	array<ComPtr<ID3D11RenderTargetView>, 6> _RTVs;

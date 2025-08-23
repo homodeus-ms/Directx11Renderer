@@ -9,6 +9,7 @@ class PointLight;
 class Widget_Slider4XN;
 class Widget_Slider3;
 class Widget_Slider4;
+class PostEffect;
 
 class LeftWindowController : public enable_shared_from_this<LeftWindowController>
 {
@@ -25,6 +26,8 @@ public:
 	void OnFilterWithBlendFactorCreated(float* blendFactor);
 	void OnToneMappingFilterCreated(float* exposure, float* gamma);
 	void OnSubWindowHidden();
+	void OnPopUpClosed();
+
 private:
 	void CacheVariables();
 	void ShowFPS();
@@ -32,6 +35,7 @@ private:
 	void DrawGlobalLightWidget();
 	void DrawSpotLightWidget();
 	void DrawPointLightWidget();
+	void HandleShowDepthMap();
 	void DrawActorControlWidget();
 	void DrawCubeMap();
 	void DrawShowDebugShadowMapSelector();
@@ -41,6 +45,10 @@ private:
 	void MoveLightOrbitOnSpaceKeyDown(shared_ptr<LightActor> light);
 	void DrawFilterControls();
 	void LUDSelected();
+	void HandleSubWindow();
+	void HandlePopUpWindow();
+	void HandlePostEffectControl();
+	
 
 	const vector<string> DEFAULT_VAR_NAMES = { "Ambient", "Diffuse", "Specular", "Emissive" };
 	enum { MAX_SHOW_ACTOR_COUNT = 3 };
@@ -94,6 +102,13 @@ private:
 	bool _bPointLightOnMove[3]{};
 	ImVec2 _pointLightLabelSize;
 
+	// DepthMap
+	bool _bDrawDepthMap = false;
+
+	// PostEffect
+	shared_ptr<PostEffect> _postEffect;
+	PostEffectData* _postEffectData;
+
 	// Actor - Material
 	const uint32 _EMaterialTypeCount = GetEMaterialTypeCount() - 1;
 	const vector<string> MATERIAL_TYPE_NAMES = { "Default", "RimLight", "Toon", "Monotone", "PBR"};
@@ -143,6 +158,10 @@ private:
 	
 
 	// Sub Window
+	bool _bSubWindowInitialized = false;
 	bool _bSubWindowOpen = false;
+
+	shared_ptr<class PopUpController> _popUpController;
+	bool _bPopUpOpen = false;
 };
 

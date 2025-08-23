@@ -161,21 +161,18 @@ float ComputeShadowFactor(float3 worldPosition, uint index, float bias)
     uv = (uv * 0.5f) + 0.5f;
     float currentDepth = clipCoord.z;
     
-    float4 sampled = BLACK;
+    float shadowFactor = 0.f;
     
     if (index == 0)
-        sampled = ShadowMaps[0].Sample(LinearSampler, uv);
+        shadowFactor = ShadowMaps[0].SampleCmpLevelZero(ComparisionSampler, uv, currentDepth - bias).r;
     else if (index == 1)
-        sampled = ShadowMaps[1].Sample(LinearSampler, uv);
-    else if (index == 1)
-        sampled = ShadowMaps[2].Sample(LinearSampler, uv);
+        shadowFactor = ShadowMaps[1].SampleCmpLevelZero(ComparisionSampler, uv, currentDepth - bias).r;
+    else if (index == 2) 
+        shadowFactor = ShadowMaps[2].SampleCmpLevelZero(ComparisionSampler, uv, currentDepth - bias).r;
     else
-        sampled = ShadowMaps[3].Sample(LinearSampler, uv);
+        shadowFactor = ShadowMaps[3].SampleCmpLevelZero(ComparisionSampler, uv, currentDepth - bias).r;
     
-    float shadowDepth = sampled.r;
-    float shadowFactor = currentDepth > shadowDepth + bias ? 0.0f : 1.0f;
-    
-    return shadowFactor;
+    return pow(shadowFactor, 10);
 }
 
 float ComputePointLightShadowFactor(float3 lightPos, float3 worldPosition, float bias)
@@ -183,12 +180,12 @@ float ComputePointLightShadowFactor(float3 lightPos, float3 worldPosition, float
     float3 lightToPixel = worldPosition - lightPos;
     float currentDepth = length(lightToPixel) / 100.f;
     
-    float shadowDepth = ShadowCubeMap.Sample(LinearSampler, normalize(lightToPixel)).r;
+    //float shadowDepth = ShadowCubeMap.Sample(LinearSampler, normalize(lightToPixel)).r;
+    //float shadowFactor = 1.f;
+    //if (currentDepth > shadowDepth - bias)
+    //    shadowFactor = 0.0f;
     
-    float shadowFactor = 1.f;
-    
-    if (currentDepth > shadowDepth - bias)
-        shadowFactor = 0.0f;
+    float shadowFactor = ShadowCubeMap.SampleCmpLevelZero(ComparisionSampler, normalize(lightToPixel), currentDepth - bias).r;
     
     return shadowFactor;
 }
@@ -271,12 +268,12 @@ float4 ComputeDefaultSpotLight(SpotLightDesc L, LightCalcParams params)
     float att = spot / dot(L.attenuation, float3(1.0f, d, d * d));
     
     ambient *= spot;
-    diffuse *= att;
-    specular *= att;
+    diffuse *= att * 3.f;
+    specular *= att * 3.f;
     
     int shadowMapIndex = L.shadowMapIndex;
     float shadowFactor = 1.f;
-    if (shadowMapIndex != -1)
+    if (shadowMapIndex != -1)  
     {
         shadowFactor = ComputeShadowFactor(params.worldPosition, (uint) shadowMapIndex, 0.01);
     }

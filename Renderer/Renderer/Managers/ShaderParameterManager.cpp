@@ -27,6 +27,9 @@ void ShaderParameterManager::BeginPlay()
 	// 특수하게 정의 되어 있는 const Buffers, Global하게 사용하는 cbuffer와 slot번호가 겹쳐서 사용함
 	RegisterBuffer<PointShadowDataDesc>("LightIndex", 0, EShaderStage::VsStage);
 	RegisterBuffer<FilterData>("FilterData", 0, EShaderStage::PsStage);
+	RegisterBuffer<PostEffectData>("PostEffectData", static_cast<uint8>(EConstBufferRegisterNumber::Temporal_Common_Use), EShaderStage::PsStage);
+	RegisterBuffer<PostEffectData>("ShaderToyData", static_cast<uint8>(EConstBufferRegisterNumber::Temporal_Common_Use), EShaderStage::PsStage);
+	
 }
 
 void ShaderParameterManager::Update()
@@ -40,6 +43,7 @@ void ShaderParameterManager::PushGlobalData(const Matrix& view, const Matrix& pr
 	desc.V = view;
 	desc.P = projection;
 	desc.VP = desc.V * desc.P;
+	desc.invP = projection.Invert();
 
 	Matrix invV = view.Invert();
 	desc.CameraPosition = { invV._41, invV._42, invV._43 };
@@ -134,11 +138,31 @@ void ShaderParameterManager::PushMaterialData(const MaterialDesc& desc)
 	UpdateData("Material", desc);
 }
 
-void ShaderParameterManager::PushFilterData(const FilterData& data)
+void ShaderParameterManager::PushFilterDataImmediately(const FilterData& data)
 {
 	UpdateData("FilterData", data);
 	// TEMP : 이걸 정리해야하는데?
 	BufferBindingInfo& info = _constbuffers["FilterData"];
+	ComPtr<ID3D11Buffer> comBuffer = info.buffer->GetComPtr();
+	CONTEXT->PSSetConstantBuffers(info.slot, 1, comBuffer.GetAddressOf());
+	info.dirty = false;
+}
+
+void ShaderParameterManager::PushPostEffectDescImmediately(const PostEffectData& data)
+{
+	UpdateData("PostEffectData", data);
+	
+	BufferBindingInfo& info = _constbuffers["PostEffectData"];
+	ComPtr<ID3D11Buffer> comBuffer = info.buffer->GetComPtr();
+	CONTEXT->PSSetConstantBuffers(info.slot, 1, comBuffer.GetAddressOf());
+	info.dirty = false;
+}
+
+void ShaderParameterManager::PushShaderToyDataImmediately(const ShaderToyData& data)
+{
+	UpdateData("ShaderToyData", data);
+
+	BufferBindingInfo& info = _constbuffers["ShaderToyData"];
 	ComPtr<ID3D11Buffer> comBuffer = info.buffer->GetComPtr();
 	CONTEXT->PSSetConstantBuffers(info.slot, 1, comBuffer.GetAddressOf());
 	info.dirty = false;

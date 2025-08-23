@@ -3,6 +3,7 @@
 class Shader;
 class VertexShader;
 class GeometryShader;
+class ComputeShader;
 class PixelShader;
 class InputLayout;
 struct PipelineState;
@@ -19,6 +20,7 @@ public:
 	shared_ptr<VertexShader> _VS;
 	shared_ptr<GeometryShader> _GS;
 	shared_ptr<PixelShader> _PS;
+	shared_ptr<ComputeShader> _CS = nullptr;
 	shared_ptr<InputLayout> _inputLayout;
 
 	PipelineState* _pipelineState = nullptr;

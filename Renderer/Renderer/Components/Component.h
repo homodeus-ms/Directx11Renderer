@@ -12,13 +12,16 @@ enum class EComponentType : uint8
 	Camera,
 	Animator,
 	Light,
+	FIXED_COMPONENT_END,
+
+	ReflectComponent,
 
 	End,
 };
 
 enum
 {
-	FIXED_COMPONENT_COUNT = static_cast<uint8>(EComponentType::End)
+	FIXED_COMPONENT_COUNT = static_cast<uint8>(EComponentType::FIXED_COMPONENT_END)
 };
 
 class Component

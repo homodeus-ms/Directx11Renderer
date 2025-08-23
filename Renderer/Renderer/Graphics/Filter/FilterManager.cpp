@@ -133,13 +133,14 @@ void FilterManager::SendRemovableFilters()
 	_removableFilters.clear();
 }
 
-void FilterManager::RenderFilters()
+void FilterManager::RenderFilters(ComPtr<ID3D11ShaderResourceView> preRendered)
 {
 	CONTEXT->IASetPrimitiveTopology(_filterStates->_topology);
 	CONTEXT->RSSetState(_filterStates->_rsState.Get());
 	CONTEXT->PSSetSamplers(0, 1, _filterStates->_samplerState.GetAddressOf());
 
-	ComPtr<ID3D11ShaderResourceView> inputSRV = GRAPHICS->GetResolvedSRV();
+	ComPtr<ID3D11ShaderResourceView> inputSRV = 
+		preRendered != nullptr ? preRendered : GRAPHICS->GetResolvedSRV();
 
 	if (_filters.empty() || !_bFilterOn)
 	{

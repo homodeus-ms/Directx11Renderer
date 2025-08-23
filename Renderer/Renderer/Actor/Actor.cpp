@@ -5,10 +5,12 @@
 #include "Components/Transform.h"
 #include "Components/CameraComponent.h"
 #include "Components/LightComponent/LightComponent.h"
+#include "Components/ReflectComponent.h"
 #include "LightActor.h"
 #include "Resource/BasicMesh/BasicMesh.h"
 #include "Resource/StaticMesh.h"
 #include "Resource/SkeletalMesh.h"
+
 
 Actor::Actor(EActorType actorType, const string& name)
 	: _actorType(actorType)
@@ -18,10 +20,9 @@ Actor::Actor(EActorType actorType, const string& name)
 	if (_actorType == EActorType::CameraActor)
 	{
 		_bIsRenderedActor = false;
+		_bCastShadow = false;
 	}
-
-	if (_actorType == EActorType::LightActor || _actorType == EActorType::CameraActor
-		|| _actorType == EActorType::DebugActor)
+	else if(_actorType == EActorType::LightActor || _actorType == EActorType::DebugActor)
 	{
 		_bCastShadow = false;
 	}
@@ -36,11 +37,19 @@ void Actor::Construct()
 {
 	GetOrAddTransform();
 
+	if (_actorType == EActorType::ReflectActor)
+	{
+		AddComponent(make_shared<ReflectComponent>());
+	}
+
 	for (shared_ptr<Component>& component : _components)
 	{
 		if (component)
 			component->Construct();
 	}
+
+	for (shared_ptr<Component>& addedComponent : _addedComponent)
+		addedComponent->Construct();
 }
 
 void Actor::BeginPlay()
@@ -50,6 +59,9 @@ void Actor::BeginPlay()
 		if (component)
 			component->BeginPlay();
 	}
+
+	for (shared_ptr<Component>& addedComponent : _addedComponent)
+		addedComponent->BeginPlay();
 }
 
 void Actor::Tick()
@@ -58,17 +70,12 @@ void Actor::Tick()
 	{
 		if (component)
 		{
-			if (component->GetType() == EComponentType::Light)
-			{
-				shared_ptr<LightActor> lA = static_pointer_cast<LightActor>(component->GetOwner());
-				if (!lA || lA->GetLightType() != ELightType::Directional)
-				{
-					int a = 3;
-				}
-			}
 			component->Tick();
 		}
 	}
+
+	for (shared_ptr<Component>& addedComponent : _addedComponent)
+		addedComponent->Tick();
 }
 
 void Actor::LateTick()
@@ -78,6 +85,9 @@ void Actor::LateTick()
 		if (component)
 			component->LateTick();
 	}
+
+	for (shared_ptr<Component>& addedComponent : _addedComponent)
+		addedComponent->LateTick();
 }
 
 void Actor::FixedTick()
@@ -87,12 +97,21 @@ void Actor::FixedTick()
 		if (component)
 			component->FixedTick();
 	}
+
+	for (shared_ptr<Component>& addedComponent : _addedComponent)
+		addedComponent->FixedTick();
 }
 
 void Actor::Render()
 {
 	if (_renderer)
 		_renderer->Render();
+}
+
+void Actor::RenderDepthMap()
+{
+	if (_renderer)
+		_renderer->RenderDepthOnly(false, 0);
 }
 
 void Actor::RenderShadowMap(bool bForPointLight, int32 instanceCount)
@@ -131,6 +150,16 @@ shared_ptr<Transform> Actor::GetOrAddTransform()
 	return GetTransform();
 }
 
+shared_ptr<Component> Actor::GetReflectComponentOrNull()
+{
+	for (shared_ptr<Component>& c : _addedComponent)
+	{
+		if (c->GetType() == EComponentType::ReflectComponent)
+			return c;
+	}
+	return nullptr;
+}
+
 void Actor::AddComponent(shared_ptr<Component> component)
 {
 	component->SetOwner(shared_from_this());
@@ -147,6 +176,11 @@ void Actor::AddComponent(shared_ptr<Component> component)
 		{
 			_renderer = static_pointer_cast<RenderComponentBase>(component);
 		}
+	}
+	else
+	{
+		if (HasNoSameComponentType(component))
+			_addedComponent.push_back(component);
 	}
 }
 
@@ -167,6 +201,7 @@ void Actor::SetBasicMesh(const shared_ptr<BasicMesh>& mesh)
 {
 	// TODO : Default Basic Mesh 처리를 어떻게 할지?
 	_meshType = mesh->GetType();
+	_mesh = mesh;
 	GetOrAddBasicMeshRenderer()->SetBasicMesh(mesh);
 }
 
@@ -178,6 +213,7 @@ void Actor::SetBasicMaterial(const shared_ptr<MaterialBase>& material)
 void Actor::SetStaticMesh(const shared_ptr<StaticMesh>& staticMesh)
 {
 	_meshType = staticMesh->GetType();
+	_mesh = staticMesh;
 	GetOrAddStaticMeshRenderer()->SetStaticMesh(staticMesh);
 }
 
@@ -214,5 +250,23 @@ shared_ptr<StaticMeshRenderer> Actor::GetOrAddStaticMeshRenderer()
 
 
 	return static_pointer_cast<StaticMeshRenderer>(staticMeshRenderer);
+}
+
+void Actor::SetTransformChanged(bool bChanged)
+{
+	_bTransformChanged = bChanged; 
+	_onTransformChanged.Broadcast();
+}
+
+bool Actor::HasNoSameComponentType(shared_ptr<Component> component)
+{
+	EComponentType newComponentType = component->GetType();
+	for (shared_ptr<Component>& c : _addedComponent)
+	{
+		if (c->GetType() == newComponentType)
+			return false;
+	}
+
+	return true;
 }
 

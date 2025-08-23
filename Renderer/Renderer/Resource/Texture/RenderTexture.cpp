@@ -1,16 +1,16 @@
 #include "pch.h"
-#include "FilterTexture.h"
+#include "RenderTexture.h"
 #include "Structs/ShaderParameterTypes.h"
 
-FilterTexture::FilterTexture()
+RenderTexture::RenderTexture()
 {
 }
 
-FilterTexture::~FilterTexture()
+RenderTexture::~RenderTexture()
 {
 }
 
-void FilterTexture::CreateTexture(uint32 w, uint32 h)
+void RenderTexture::CreateTexture(uint32 w, uint32 h, uint8 srvSlotNum)
 {
     {
         D3D11_TEXTURE2D_DESC desc;
@@ -46,7 +46,7 @@ void FilterTexture::CreateTexture(uint32 w, uint32 h)
         check(hr);
 
         _srvBindingInfo = make_shared<SRVBindingInfo>();
-        _srvBindingInfo->slot = static_cast<uint8>(EFilterTextureType::Filtered);
+        _srvBindingInfo->slot = srvSlotNum;
         _srvBindingInfo->stage = EShaderStage::PsStage;
         _srvBindingInfo->srv = _SRV;
     }

@@ -17,8 +17,8 @@ void SpotLight::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//Vec3 defaultSpotPosition = { 0.f, 4.f, -10.f }; 
-	Vec3 defaultSpotPosition = { -6.f, 12.f, -6.f };
+	Vec3 defaultSpotPosition = { 0.f, 10.f, -10.f }; 
+	//Vec3 defaultSpotPosition = { -5.f, 5.f, -5.f };
 	GetOwnerTransform()->SetWorldPosition(defaultSpotPosition);
 	Vec3 lookTarget = -defaultSpotPosition;
 	lookTarget.Normalize();
